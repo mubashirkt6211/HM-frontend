@@ -1,29 +1,25 @@
-import { PanelLeft, ArrowLeft, ArrowRight, AlarmClock, Trophy, LayoutDashboard, List, Kanban, ChevronDown, MoreHorizontal } from "lucide-react"
-import { useSidebar } from "@/components/ui/sidebar"
-import { cn } from "@/lib/utils"
+import { AlarmClock, Trophy, LayoutDashboard, List, Kanban, ChevronDown, MoreHorizontal, PanelLeft, Bell } from "lucide-react";
+
+import { useSidebar } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle"
+import { cn } from "@/lib/utils";
 
 export function Header() {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar } = useSidebar();
 
   return (
     <header className="flex flex-col border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-t-[20px] shrink-0 sticky top-0 z-10 w-full pt-4 px-6 md:px-10 no-scrollbar">
       {/* Top Row: Navigation & Breadcrumbs */}
       <div className="flex items-center justify-between h-8 mb-4">
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggleSidebar}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors"
-          >
-            <PanelLeft className="w-4 h-4" />
-          </button>
 
-          <div className="flex items-center gap-1 text-zinc-400">
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors opacity-50 cursor-not-allowed">
-              <ArrowRight className="w-4 h-4" />
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleSidebar}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors"
+            >
+              <PanelLeft className="w-5 h-5" />
             </button>
           </div>
 
