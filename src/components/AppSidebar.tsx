@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import logo from "@/assets/logo.png";
 
-import { ChevronDown, ChevronRight, LayoutGrid, Heart, CreditCard, Clock, Smile, Link2, ArrowRightLeft, FileText, Settings, HelpCircle, Bell } from "lucide-react";
+import { ChevronDown, LayoutGrid, Heart, CreditCard, Clock, Smile, Link2, ArrowRightLeft, FileText, Settings, HelpCircle, Bell } from "lucide-react";
 
 import {
     Sidebar,
@@ -13,11 +14,14 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarFooter,
+    useSidebar
 } from "@/components/ui/sidebar"
 
 import { cn } from "@/lib/utils"
 
 export function AppSidebar() {
+    const { state } = useSidebar();
+    const isCollapsed = state === "collapsed";
 
 
     const [paymentsOpen, setPaymentsOpen] = useState(true);
@@ -48,38 +52,26 @@ export function AppSidebar() {
             <div className="h-full flex flex-col">
 
                 {/* HEADER (Logo + Bell) */}
-                <SidebarHeader className="p-4 py-5 border-none bg-transparent">
-                    <div className="flex items-center justify-between">
+                <SidebarHeader className="p-4 py-5 border-none bg-transparent flex flex-col items-center">
+                    <div className={cn(
+                        "flex items-center w-full",
+                        isCollapsed ? "justify-center" : "justify-between"
+                    )}>
                         <div className="flex items-center gap-2">
-                            {/* Logo removed as requested */}
+                            <img src={logo} alt="Coconut Logo" className={cn(
+                                "object-contain transition-all",
+                                isCollapsed ? "w-10 h-10" : "w-12 h-12"
+                            )} />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors relative">
-                                <Bell className="w-5 h-5" />
-                                {/* Unread indicator */}
-                                <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-rose-500 border-2 border-white dark:border-zinc-900"></span>
-                            </button>
-                        </div>
+                        {!isCollapsed && (
+                            <div className="flex items-center gap-2">
+                                <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors relative">
+                                    <Bell className="w-5 h-5" />
+                                    <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-rose-500 border-2 border-white dark:border-zinc-900"></span>
+                                </button>
+                            </div>
+                        )}
                     </div>
-
-                    {/* SEARCH */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.3 }}
-                        className="relative mt-4"
-                    >
-                        <input
-                            type="text"
-                            placeholder="Search"
-                            className="w-full h-9 pl-3 pr-8 rounded-xl bg-white/50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/60 text-[13px] outline-none shadow-sm placeholder:text-zinc-500 text-zinc-900 dark:text-zinc-100 transition-colors focus:border-zinc-300 dark:focus:border-zinc-600"
-                        />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-                            <span className="text-[10px] text-zinc-400 bg-zinc-100/80 dark:bg-zinc-700/80 px-1.5 py-0.5 rounded-md font-medium border border-zinc-200 dark:border-zinc-700">
-                                /
-                            </span>
-                        </div>
-                    </motion.div>
                 </SidebarHeader>
 
                 {/* CONTENT */}
@@ -97,32 +89,36 @@ export function AppSidebar() {
 
 
                                 <motion.div variants={itemVariants}>
-                                    <NavItem icon={LayoutGrid} title="Overview" />
+                                    <NavItem icon={LayoutGrid} title="Overview" isCollapsed={isCollapsed} />
                                 </motion.div>
 
                                 <motion.div variants={itemVariants}>
-                                    <NavItem icon={Heart} title="Services" />
+                                    <NavItem icon={Heart} title="Services" isCollapsed={isCollapsed} />
                                 </motion.div>
 
                                 <motion.div variants={itemVariants} className="flex flex-col">
                                     <button
-                                        onClick={() => setPaymentsOpen(!paymentsOpen)}
-                                        className="w-full flex items-center justify-between transition-colors focus:outline-none relative"
+                                        onClick={() => !isCollapsed && setPaymentsOpen(!paymentsOpen)}
+                                        className={cn(
+                                            "w-full flex items-center justify-between transition-colors focus:outline-none relative",
+                                            isCollapsed && "cursor-default"
+                                        )}
                                     >
-                                        <NavItem icon={CreditCard} title="Payments" isActive className="flex-1 pointer-events-none" />
-                                        <div className="absolute right-3 p-1">
-                                            <motion.div
-                                                animate={{ rotate: paymentsOpen ? 0 : -90 }}
-                                                transition={{ duration: 0.2 }}
-                                            >
-                                                <ChevronDown className="w-4 h-4 text-zinc-400" />
-                                            </motion.div>
-                                        </div>
+                                        <NavItem icon={CreditCard} title="Payments" isActive className="flex-1 pointer-events-none" isCollapsed={isCollapsed} />
+                                        {!isCollapsed && (
+                                            <div className="absolute right-3 p-1">
+                                                <motion.div
+                                                    animate={{ rotate: paymentsOpen ? 0 : -90 }}
+                                                    transition={{ duration: 0.2 }}
+                                                >
+                                                    <ChevronDown className="w-4 h-4 text-zinc-400" />
+                                                </motion.div>
+                                            </div>
+                                        )}
                                     </button>
 
-                                    {/* NESTED ITEMS */}
                                     <AnimatePresence>
-                                        {paymentsOpen && (
+                                        {paymentsOpen && !isCollapsed && (
                                             <motion.div
                                                 initial={{ height: 0, opacity: 0 }}
                                                 animate={{ height: "auto", opacity: 1 }}
@@ -131,9 +127,9 @@ export function AppSidebar() {
                                                 className="overflow-hidden"
                                             >
                                                 <div className="ml-5 border-l border-zinc-200 dark:border-zinc-800 pl-3 my-1 flex flex-col gap-0.5">
-                                                    <NavItem icon={Link2} title="Payment links" isSubitem textClassName="text-zinc-900 dark:text-zinc-100 font-medium" />
-                                                    <NavItem icon={ArrowRightLeft} title="Transactions" isSubitem />
-                                                    <NavItem icon={FileText} title="Statements" isSubitem />
+                                                    <NavItem icon={Link2} title="Payment links" isSubitem textClassName="text-zinc-900 dark:text-zinc-100 font-medium" isCollapsed={isCollapsed} />
+                                                    <NavItem icon={ArrowRightLeft} title="Transactions" isSubitem isCollapsed={isCollapsed} />
+                                                    <NavItem icon={FileText} title="Statements" isSubitem isCollapsed={isCollapsed} />
                                                 </div>
                                             </motion.div>
                                         )}
@@ -168,22 +164,26 @@ export function AppSidebar() {
                                     <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
                                         <Smile className="w-5 h-5 text-zinc-500" />
                                     </div>
-                                    <div className="flex flex-col overflow-hidden">
-                                        <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                                            Avdey Design Inc.
-                                        </span>
-                                        <span className="text-[11px] text-zinc-500 truncate mt-0.5">
-                                            alex@avdey.design
-                                        </span>
-                                    </div>
-                                    <ChevronDown className="w-4 h-4 text-zinc-400 ml-auto shrink-0" />
+                                    {!isCollapsed && (
+                                        <>
+                                            <div className="flex flex-col overflow-hidden">
+                                                <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                                                    Avdey Design Inc.
+                                                </span>
+                                                <span className="text-[11px] text-zinc-500 truncate mt-0.5">
+                                                    alex@avdey.design
+                                                </span>
+                                            </div>
+                                            <ChevronDown className="w-4 h-4 text-zinc-400 ml-auto shrink-0" />
+                                        </>
+                                    )}
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>
 
                         <SidebarMenu className="gap-0.5">
-                            <NavItem icon={HelpCircle} title="Get help" />
-                            <NavItem icon={Settings} title="Settings" />
+                            <NavItem icon={HelpCircle} title="Get help" isCollapsed={isCollapsed} />
+                            <NavItem icon={Settings} title="Settings" isCollapsed={isCollapsed} />
                         </SidebarMenu>
                     </motion.div>
                 </SidebarFooter>
@@ -198,14 +198,16 @@ function NavItem({
     title,
     isActive,
     isSubitem,
+    isCollapsed,
     iconClassName,
     textClassName,
     className
 }: {
-    icon?: any
+    icon?: React.ElementType
     title: string
     isActive?: boolean
     isSubitem?: boolean
+    isCollapsed?: boolean
     iconClassName?: string
     textClassName?: string
     className?: string
@@ -219,17 +221,20 @@ function NavItem({
                 className={cn(
                     "flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] transition-all relative overflow-hidden group",
                     isActive
-                        ? "bg-zinc-100/80 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                        ? "bg-zinc-100/80 dark:bg-zinc-800 text-zinc-900 dark:white font-medium"
                         : "text-zinc-600 hover:bg-zinc-100/50 dark:text-zinc-400 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100",
-                    isSubitem ? "h-8 px-2 gap-2 text-[12px]" : "h-9"
+                    isSubitem ? "h-8 px-2 gap-2 text-[12px]" : "h-9",
+                    isCollapsed && "justify-center px-0"
                 )}
             >
                 <motion.div
-                    className="flex items-center gap-3 w-full"
-                    whileHover={{ x: 2 }}
+                    className={cn(
+                        "flex items-center gap-3",
+                        isCollapsed ? "justify-center w-auto" : "w-full"
+                    )}
+                    whileHover={{ x: isCollapsed ? 0 : 2 }}
                     whileTap={{ scale: 0.98 }}
                 >
-
                     {Icon ? (
                         <Icon
                             className={cn(
@@ -240,9 +245,13 @@ function NavItem({
                             )}
                         />
                     ) : (
-                        <div className={cn("w-4 h-4 shrink-0", isSubitem && "w-3.5 h-3.5")} /> // Spacer for alignment if no icon
+                        <div className={cn("w-4 h-4 shrink-0", isSubitem && "w-3.5 h-3.5")} />
                     )}
-                    <span className={cn("truncate", textClassName)}>{title}</span>
+                    {!isCollapsed && (
+                        <span className={cn("truncate transition-all duration-200", textClassName)}>
+                            {title}
+                        </span>
+                    )}
                 </motion.div>
             </SidebarMenuButton>
         </SidebarMenuItem>
