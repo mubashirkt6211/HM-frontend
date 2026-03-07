@@ -28,7 +28,9 @@ import {
     Video,
     Users2,
     ChevronRight,
-    Search
+    Search,
+    Activity,
+    HeartPulse
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -282,7 +284,25 @@ function TeamTab() {
         {
             name: "Dr. Léonard Dubois",
             role: "Neurologist",
-            img: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=2070&auto=format&fit=crop",
+            img: "https://i.pinimg.com/1200x/97/ff/27/97ff275080abc0f08aade3026ab3dee2.jpg",
+            rating: "4.98",
+            reviews: "312",
+            dist: "8.1km",
+            status: "Present"
+        },
+        {
+            name: "Dr. Léonard Dubois",
+            role: "Neurologist",
+            img: "https://i.pinimg.com/736x/ff/07/64/ff07643efddfd768f66017b4e87ca785.jpg",
+            rating: "4.98",
+            reviews: "312",
+            dist: "8.1km",
+            status: "Present"
+        },
+        {
+            name: "Dr. Léonard Dubois",
+            role: "Neurologist",
+            img: "https://i.pinimg.com/1200x/e8/52/72/e852726f2346ce95973a91143816bd7b.jpg",
             rating: "4.98",
             reviews: "312",
             dist: "8.1km",
@@ -296,12 +316,7 @@ function TeamTab() {
 
     return (
         <div className="space-y-8 pb-10">
-            {/* Team Actions Header */}
-            <div className="flex items-center gap-4">
-
-            </div>
-
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center bg-zinc-50 dark:bg-zinc-800/50 p-1 rounded-2xl border border-zinc-100 dark:border-zinc-700">
                     {["All", "Present", "Leave"].map((f) => (
                         <button
@@ -322,9 +337,11 @@ function TeamTab() {
                 <div className="relative">
                     <button
                         onClick={() => setShowAddMenu(!showAddMenu)}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-black text-white text-[13px] font-black shadow-xl shadow-white-200 dark:shadow-none dark:bg-white dark:text-black hover:bg-black active:scale-95 transition-all"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-black text-white dark:bg-white dark:text-black text-[13px] font-black shadow-xl shadow-zinc-200/50 dark:shadow-none hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-95 transition-all"
                     >
-                        <Plus className="w-4 h-4" /> Add <ChevronDown className={cn("w-4 h-4 transition-transform", showAddMenu && "rotate-180")} />
+                        <Plus className="w-3.5 h-3.5" />
+                        Add
+                        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showAddMenu && "rotate-180")} />
                     </button>
 
                     <AnimatePresence>
@@ -333,31 +350,51 @@ function TeamTab() {
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute right-0 mt-3 w-56 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl shadow-2xl p-2 z-50 overflow-hidden"
+                                className="absolute right-0 mt-3 w-60 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] p-2 z-50 overflow-hidden"
                             >
-                                <div className="p-2 space-y-1">
+                                <div className="p-1 space-y-1">
                                     <button className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-left group">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                                            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-800/50 group-hover:bg-white dark:group-hover:bg-zinc-800 transition-colors">
                                                 <Stethoscope className="w-4 h-4" />
                                             </div>
-                                            <span className="text-[13px] font-bold text-zinc-700 dark:text-zinc-300">New Specialist</span>
+                                            <div className="flex flex-col">
+                                                <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200">New Doctor</span>
+                                                <span className="text-[10px] text-zinc-400 font-medium">Add a specialist</span>
+                                            </div>
                                         </div>
                                         <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:translate-x-1 transition-transform" />
                                     </button>
+
                                     <button className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-left group">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
+                                            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-800/50 group-hover:bg-white dark:group-hover:bg-zinc-800 transition-colors">
+                                                <HeartPulse className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200">New Nurse</span>
+                                                <span className="text-[10px] text-zinc-400 font-medium">Add a care provider</span>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+
+                                    <button className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-left group">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 border border-purple-100/50 dark:border-purple-800/50 group-hover:bg-white dark:group-hover:bg-zinc-800 transition-colors">
                                                 <Users2 className="w-4 h-4" />
                                             </div>
-                                            <span className="text-[13px] font-bold text-zinc-700 dark:text-zinc-300">New Staff</span>
+                                            <div className="flex flex-col">
+                                                <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200">New Staff</span>
+                                                <span className="text-[10px] text-zinc-400 font-medium">Add a team member</span>
+                                            </div>
                                         </div>
                                         <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
-                                <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-1 mx-2" />
-                                <div className="p-2">
-                                    <button className="w-full p-3 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-500 text-[12px] font-black uppercase tracking-widest text-center transition-all">
+                                <div className="h-[1px] bg-zinc-100/80 dark:bg-zinc-800/80 my-1 mx-2" />
+                                <div className="p-1">
+                                    <button className="w-full p-3 rounded-2xl hover:bg-zinc-900 hover:text-white dark:hover:bg-white dark:hover:text-zinc-900 text-zinc-500 text-[11px] font-black uppercase tracking-widest text-center transition-all">
                                         Quick Attendance
                                     </button>
                                 </div>
@@ -371,7 +408,7 @@ function TeamTab() {
             {/* Doctors Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 min-h-[400px]">
                 <AnimatePresence mode="popLayout">
-                    {filteredDoctors.map((doc, i) => (
+                    {filteredDoctors.map((doc) => (
                         <motion.div
                             key={doc.name}
                             layout
