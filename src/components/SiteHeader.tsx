@@ -39,7 +39,7 @@ export function SiteHeader() {
 
         <ThemeToggle />
         <Avatar className="h-8 w-8 cursor-pointer border border-zinc-200/50 dark:border-zinc-800/50 hover:ring-2 hover:ring-zinc-100 dark:hover:ring-zinc-800 transition-all">
-          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+          <AvatarImage src="https://i.pinimg.com/1200x/39/86/91/398691f123726a5763e9c47980964fff.jpg" alt="@shadcn" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
       </div>
