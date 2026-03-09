@@ -167,7 +167,7 @@ export function AppSidebar() {
                                     {!isCollapsed && (
                                         <>
                                             <div className="flex flex-col overflow-hidden">
-                                                <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                                                <span className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                                                     Avdey Design Inc.
                                                 </span>
                                                 <span className="text-[11px] text-zinc-500 truncate mt-0.5">

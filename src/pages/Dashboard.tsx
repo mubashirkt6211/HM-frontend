@@ -24,26 +24,24 @@ import {
     MessageSquare,
     ExternalLink,
     ArrowUpRight,
-    Bell,
-    Video,
     Users2,
     ChevronRight,
-    Search,
-    Activity,
-    HeartPulse
+    HeartPulse,
+    DownloadCloudIcon,
+    PhoneCallIcon,
+    CalendarCheck2
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import claraAvatar from "@/assets/clara_avatar.png"
+import { Button } from "@/components/ui/button"
 
 export function Dashboard() {
     const [activeTab, setActiveTab] = useState("Dashboard");
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case "Infos":
-                return <InfosTab />;
             case "Dashboard":
                 return <DashboardTab />;
             case "Team":
@@ -92,16 +90,15 @@ export function Dashboard() {
             {/* 2. Tab Navigation & Action */}
             <div className="flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-1">
                 <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-                    <TabItem icon={Info} label="Infos" active={activeTab === "Infos"} onClick={() => setActiveTab("Infos")} />
                     <TabItem icon={LayoutGrid} label="Dashboard" active={activeTab === "Dashboard"} onClick={() => setActiveTab("Dashboard")} />
                     <TabItem icon={Users} label="Team" active={activeTab === "Team"} onClick={() => setActiveTab("Team")} />
                     <TabItem icon={Stethoscope} label="Patient" active={activeTab === "Patient"} onClick={() => setActiveTab("Patient")} />
                     <TabItem icon={FileText} label="Documents" active={activeTab === "Documents"} onClick={() => setActiveTab("Documents")} />
                     <TabItem icon={Star} label="Reviews" active={activeTab === "Reviews"} onClick={() => setActiveTab("Reviews")} />
                 </div>
-                <button className="hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-bold shadow-xl shadow-zinc-200 dark:shadow-none hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-95">
-                    Download PDF
-                </button>
+                <Button className="hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-bold shadow-xl shadow-zinc-200 dark:shadow-none hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-95">
+                    Download PDF <DownloadCloudIcon />
+                </Button>
             </div>
 
             {/* 3. Dynamic Tab Content */}
@@ -123,97 +120,220 @@ export function Dashboard() {
     );
 }
 
-// --- Tab Content Components ---
+// --- Visual Chart Component ---
 
-function InfosTab() {
+function VisualChart() {
+    const data = [45, 52, 48, 70, 65, 85, 78, 92, 88, 100];
+    const height = 100;
+    const width = 400;
+    const max = 100;
+    const stepX = width / (data.length - 1);
+
+    const points = data.map((d, i) => ({
+        x: i * stepX,
+        y: height - (d / max) * height
+    }));
+
+    // Smooth path logic (simplified)
+    const pathData = points.reduce((acc, point, i) => {
+        return i === 0 ? `M ${point.x},${point.y}` : `${acc} L ${point.x},${point.y}`;
+    }, "");
+
+    const areaData = `${pathData} L ${points[points.length - 1].x},${height} L 0,${height} Z`;
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card title="Personal Information" trailing={<Info className="w-4 h-4 text-zinc-400" />}>
-                <div className="mt-4 space-y-4">
-                    <InfoRow icon={Mail} label="Email" value="clara.lefevre@coconut.io" />
-                    <InfoRow icon={Phone} label="Phone" value="+33 6 12 34 56 78" />
-                    <InfoRow icon={MapPin} label="Location" value="Paris, France" />
-                    <InfoRow icon={Calendar} label="Joined" value="Jan 2023" />
-                </div>
-            </Card>
-            <Card title="Professional Summary" trailing={<Award className="w-4 h-4 text-zinc-400" />}>
-                <div className="mt-4">
-                    <p className="text-[14px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        Experienced Product Manager with a strong background in R&D and health-tech.
-                        Focused on building intuitive patient-centric solutions and fostering cross-functional team collaboration.
-                    </p>
-                    <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
-                        <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-widest">Key Skills</span>
-                        <div className="flex flex-wrap gap-2 mt-3">
-                            {["Product Strategy", "User Research", "Agile", "HealthTech"].map(skill => (
-                                <span key={skill} className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-[11px] font-bold border border-zinc-200/50 dark:border-zinc-700/50">
-                                    {skill}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </Card>
-            <Card title="Recent Activity" trailing={<Clock className="w-4 h-4 text-zinc-400" />}>
-                <div className="mt-4 space-y-4">
-                    <ActivityItem label="Created new patient portal" time="2h ago" />
-                    <ActivityItem label="Updated team roadmaps" time="5h ago" />
-                    <ActivityItem label="Reviewing user feedback" time="Yesterday" />
-                    <ActivityItem label="Approved Q2 budget" time="2 days ago" />
-                </div>
-            </Card>
+        <div className="relative w-full h-[180px] mt-8 group">
+            <svg
+                viewBox={`0 0 ${width} ${height}`}
+                className="w-full h-full overflow-visible"
+                preserveAspectRatio="none"
+            >
+                <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                    </linearGradient>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+
+                {/* Grid Lines */}
+                {[0, 25, 50, 75, 100].map((tick) => (
+                    <line
+                        key={tick}
+                        x1="0"
+                        y1={height - (tick / max) * height}
+                        x2={width}
+                        y2={height - (tick / max) * height}
+                        stroke="currentColor"
+                        className="text-zinc-100 dark:text-zinc-800/50"
+                        strokeWidth="1"
+                    />
+                ))}
+
+                <motion.path
+                    d={areaData}
+                    fill="url(#chartGradient)"
+                    initial={{ opacity: 0, scaleY: 0 }}
+                    animate={{ opacity: 1, scaleY: 1 }}
+                    style={{ transformOrigin: "bottom" }}
+                    transition={{ duration: 1, delay: 0.2 }}
+                />
+
+                <motion.path
+                    d={pathData}
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    filter="url(#glow)"
+                />
+
+                {points.map((p, i) => (
+                    <motion.g key={i}>
+                        <motion.circle
+                            cx={p.x}
+                            cy={p.y}
+                            r="4"
+                            fill="#3b82f6"
+                            stroke="white"
+                            dark-stroke="black"
+                            strokeWidth="2"
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 1 + i * 0.05 }}
+                            whileHover={{ r: 6, strokeWidth: 3 }}
+                            className="cursor-pointer"
+                        />
+                        <motion.text
+                            x={p.x}
+                            y={p.y - 12}
+                            textAnchor="middle"
+                            className="text-[6px] font-black fill-blue-600 dark:fill-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            {data[i]}%
+                        </motion.text>
+                    </motion.g>
+                ))}
+            </svg>
+
+            {/* Custom Tooltip indicator */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                whileHover={{ opacity: 1 }}
+                className="absolute inset-0 pointer-events-none"
+            >
+                <div className="absolute top-0 bottom-0 w-px bg-blue-500/20 left-1/2 -translate-x-1/2" />
+            </motion.div>
         </div>
     );
 }
 
+// --- Tab Content Components ---
+
 function DashboardTab() {
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card title="Achievement Progress" trailing="76 %">
-                    <div className="mt-4 flex flex-col gap-6">
-                        <div className="relative h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center">
-                            <div className="absolute inset-0 flex justify-between px-1">
-                                {[...Array(20)].map((_, i) => (
-                                    <div key={i} className="w-[1px] h-3 -mt-0.5 bg-zinc-200 dark:bg-zinc-700" />
-                                ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                    <Card title="Performance Overview" trailing={<div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live</div>}>
+                        <div className="flex flex-col h-full">
+                            <div className="flex items-end justify-between">
+                                <div>
+                                    <div className="text-[12px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Total Achievements</div>
+                                    <div className="text-4xl font-black text-zinc-900 dark:text-zinc-100 flex items-baseline gap-2">
+                                        24,580
+                                        <span className="text-emerald-500 text-sm font-bold">+12.5%</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1">
+                                    {['D', 'W', 'M', 'Y'].map((t) => (
+                                        <button key={t} className={cn(
+                                            "w-8 h-8 rounded-lg text-[10px] font-black flex items-center justify-center transition-all",
+                                            t === 'M' ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                        )}>{t}</button>
+                                    ))}
+                                </div>
                             </div>
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: "76%" }}
-                                className="absolute left-0 h-full bg-blue-500 rounded-full shadow-lg"
-                            />
-                            <motion.div
-                                initial={{ left: 0 }}
-                                animate={{ left: "76%" }}
-                                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-blue-500 border-4 border-white dark:border-zinc-900 shadow-md ring-2 ring-blue-500/20"
-                            />
-                        </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                            <span className="text-[12px] text-zinc-400">Last update : <span className="text-blue-500 font-medium">Today at 5:56pm</span></span>
-                            <span className="text-lg">:)</span>
-                        </div>
-                    </div>
-                </Card>
 
-                <Card title="Bonus Earned" trailing={<span className="text-zinc-400">Objectives <span className="text-zinc-900 dark:text-zinc-100 ml-2">12 <span className="text-zinc-300 font-light">/ 15</span></span></span>}>
-                    <div className="mt-2 flex flex-col gap-4">
-                        <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-                            € <span className="text-indigo-600 dark:text-indigo-400">2,450</span> <span className="text-zinc-300 dark:text-zinc-700 font-normal">/ 3200</span>
+                            <VisualChart />
+
+                            <div className="flex items-center gap-8 mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Target</span>
+                                    <span className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100">€ 32,000</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Achieved</span>
+                                    <span className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 italic">€ 24,450</span>
+                                </div>
+                                <div className="ml-auto flex items-center gap-2">
+                                    <div className="flex -space-x-2">
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-zinc-900 bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                                                <img src={`https://i.pravatar.cc/100?img=${i + 20}`} alt="" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <span className="text-[12px] font-bold text-zinc-400">+12 others</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center justify-between pt-6 border-t border-zinc-100 dark:border-zinc-800">
-                            <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-widest">Efficiency Rate</span>
-                            <div className="px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 text-[12px] font-bold text-emerald-600 dark:text-emerald-400">+12%</div>
+                    </Card>
+                </div>
+
+                <div className="flex flex-col gap-6">
+                    <Card title="Achievement Progress" trailing="76 %">
+                        <div className="mt-4 flex flex-col gap-6">
+                            <div className="relative h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-md flex items-center">
+                                <div className="absolute inset-0 flex justify-between px-1">
+                                    {[...Array(20)].map((_, i) => (
+                                        <div key={i} className="w-[1px] h-3 -mt-0.5 bg-zinc-200 dark:bg-zinc-700" />
+                                    ))}
+                                </div>
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: "76%" }}
+                                    className="absolute left-0 h-full bg-blue-500 rounded-md shadow-lg"
+                                />
+                                <motion.div
+                                    initial={{ left: 0 }}
+                                    animate={{ left: "76%" }}
+                                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-blue-700 border-4 border-white dark:border-zinc-900 shadow-md ring-2 ring-blue-500/20"
+                                />
+                            </div>
+                            <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <span className="text-[12px] text-zinc-400">Last update : <span className="text-blue-700 font-medium">Today at 5:56pm</span></span>
+                                <span className="text-lg">:)</span>
+                            </div>
                         </div>
-                    </div>
-                </Card>
+                    </Card>
+
+                    <Card title="Bonus Earned" trailing={<span className="text-zinc-400">Objectives <span className="text-zinc-900 dark:text-zinc-100 ml-2">12 <span className="text-zinc-300 font-light">/ 15</span></span></span>}>
+                        <div className="mt-2 flex flex-col gap-4">
+                            <div className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+                                € <span className="text-indigo-600 dark:text-indigo-400">2,450</span> <span className="text-zinc-300 dark:text-zinc-700 font-normal">/ 3200</span>
+                            </div>
+                            <div className="flex items-center justify-between pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                                <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-widest">Efficiency Rate</span>
+                                <div className="px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 text-[12px] font-bold text-emerald-600 dark:text-emerald-400">+12%</div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
             </div>
 
             <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-2">
                     <div className="flex rounded-xl bg-zinc-100/80 dark:bg-zinc-800/80 p-1 border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm">
-                        <FilterBtn label="H1" />
-                        <FilterBtn label="H2" />
+                        <FilterBtn label="Weekly" />
+                        <FilterBtn label="Monthly" />
                         <FilterBtn label="Annual review" active />
                     </div>
                     <button className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm text-[13px] font-bold text-zinc-700 dark:text-zinc-300">
@@ -288,16 +408,16 @@ function TeamTab() {
             rating: "4.98",
             reviews: "312",
             dist: "8.1km",
-            status: "Present"
+            status: "OP"
         },
         {
-            name: "Dr. Léonard Dubois",
+            name: "Dr. Léonard Junior",
             role: "Neurologist",
             img: "https://i.pinimg.com/736x/ff/07/64/ff07643efddfd768f66017b4e87ca785.jpg",
             rating: "4.98",
             reviews: "312",
-            dist: "8.1km",
-            status: "Present"
+            dist: "8.5km",
+            status: "Leave"
         },
         {
             name: "Dr. Léonard Dubois",
@@ -542,11 +662,17 @@ function SmallSpecialistCard({ doctor }: any) {
                         <span className="w-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700" />
                         <span className="text-[11px] text-zinc-400 font-bold">{doctor.dist}</span>
                     </div>
+                    <div className="flex gap-3">
+                        <button className="flex items-center justify-center sm:justify-start gap-1 mt-3 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-tight hover:underline">
+                            <PhoneCallIcon className="w-3.5 h-3.5" />
+                            Phone
+                        </button>
+                        <button className="flex items-center justify-center sm:justify-start gap-1 mt-3 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-tight hover:underline">
+                            <CalendarCheck2 className="w-3.5 h-3.5" />
+                            Calender
+                        </button>
+                    </div>
 
-                    <button className="flex items-center justify-center sm:justify-start gap-1 mt-3 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-tight hover:underline">
-                        <Video className="w-3.5 h-3.5" />
-                        Video
-                    </button>
                 </div>
             </div>
 

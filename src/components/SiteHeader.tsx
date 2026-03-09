@@ -26,20 +26,10 @@ export function SiteHeader() {
           <PanelLeft className="w-5 h-5" />
         </button>
         <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
-
-        {/* Search Bar Capsule */}
-        <div className="hidden md:flex items-center gap-2 px-3 h-9 rounded-full bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 w-64 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer group">
-          <Search className="w-4 h-4 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300" />
-          <span className="text-[13px] text-zinc-500">Search</span>
-          <div className="ml-auto flex items-center gap-1">
-
-          </div>
-        </div>
+        {/* BreadCrumbs */}
       </div>
 
       <div className="flex items-center gap-4">
-
-        <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1 hidden sm:block"></div>
 
         <ThemeToggle />
 
