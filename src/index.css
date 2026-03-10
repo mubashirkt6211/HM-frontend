@@ -81,6 +81,42 @@
     background-color: var(--muted-foreground);
   }
 
+  /* Custom Kokonut-style scrollbar for sidebar */
+  .custom-sidebar-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(161, 161, 170, 0.5) transparent;
+  }
+
+  .custom-sidebar-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(161, 161, 170, 0.4);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .custom-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(161, 161, 170, 0.6);
+    background-clip: content-box;
+  }
+
+  .dark .custom-sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(113, 113, 122, 0.4);
+    background-clip: content-box;
+  }
+
+  .dark .custom-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(113, 113, 122, 0.6);
+    background-clip: content-box;
+  }
+
   /* Hide scrollbar for cleaner look in some areas if needed */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
