@@ -3,7 +3,7 @@ import logo from "@/assets/logo.png";
 
 import { 
     LayoutGrid, FileText, Settings, HelpCircle, Bell, Package, TrendingUp, MessageSquare, Users, 
-    Zap, FolderOpen, Lock, Smile, ChevronDown, CreditCard, Link as IntegrationIcon
+    Zap, FolderOpen, Lock, Smile, ChevronDown, CreditCard, Link as IntegrationIcon, Calendar
 } from "lucide-react";
 
 import {
@@ -25,7 +25,8 @@ const navigationSections = [
     {
         label: "Main",
         items: [
-            { icon: LayoutGrid, title: "Dashboard" },
+            { icon: LayoutGrid, title: "Dashboard", pageId: "dashboard" },
+            { icon: Calendar, title: "Calendar", pageId: "calendar" },
             { icon: Package, title: "Products" },
             { icon: TrendingUp, title: "Transactions" },
             { icon: FileText, title: "Reports & Analytics" },
@@ -55,7 +56,7 @@ const navigationSections = [
     }
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ currentPage = "dashboard", onPageChange }: { currentPage?: string; onPageChange?: (page: string) => void }) {
     const { state } = useSidebar();
     const isCollapsed = state === "collapsed";
 
@@ -97,11 +98,6 @@ export function AppSidebar() {
                                     whileTap={{ scale: 0.95 }}
                                 >
                                     <Bell className="w-5 h-5" />
-                                    <motion.span 
-                                        className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 border-2 border-white dark:border-zinc-900"
-                                        animate={{ scale: [1, 1.2, 1] }}
-                                        transition={{ duration: 2, repeat: Infinity }}
-                                    />
                                 </motion.button>
                             </motion.div>
                         )}
@@ -148,7 +144,13 @@ export function AppSidebar() {
                                                 show: { opacity: 1, x: 0 }
                                             }}
                                         >
-                                            <NavItem icon={item.icon} title={item.title} isCollapsed={isCollapsed} />
+                                            <NavItem 
+                                                icon={item.icon} 
+                                                title={item.title} 
+                                                isCollapsed={isCollapsed}
+                                                isActive={item.pageId ? currentPage === item.pageId : false}
+                                                onClick={item.pageId ? () => onPageChange?.(item.pageId) : undefined}
+                                            />
                                         </motion.div>
                                     ))}
                                 </motion.div>
@@ -239,7 +241,8 @@ function NavItem({
     isCollapsed,
     iconClassName,
     textClassName,
-    className
+    className,
+    onClick
 }: {
     icon?: React.ElementType
     title: string
@@ -249,15 +252,17 @@ function NavItem({
     iconClassName?: string
     textClassName?: string
     className?: string
+    onClick?: () => void
 }) {
     return (
         <SidebarMenuItem className={className}>
             <SidebarMenuButton
-                asChild
+                asChild={!onClick}
                 tooltip={title}
                 isActive={isActive}
+                onClick={onClick}
                 className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] transition-all relative overflow-hidden group",
+                    "flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] transition-all relative overflow-hidden group cursor-pointer",
                     "focus:outline-none focus:ring-2 focus:ring-blue-500/20",
                     isActive
                         ? "bg-zinc-100/80 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold shadow-sm"
@@ -275,15 +280,6 @@ function NavItem({
                     whileTap={{ scale: 0.96 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                    {/* Left border indicator for active state */}
-                    {isActive && !isSubitem && (
-                        <motion.div
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-zinc-900 dark:bg-zinc-100"
-                            layoutId="activeIndicator"
-                            transition={{ type: "spring", bounce: 0.2 }}
-                        />
-                    )}
-
                     {Icon ? (
                         <motion.div
                             whileHover={{ scale: 1.1 }}

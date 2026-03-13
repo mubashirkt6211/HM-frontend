@@ -11,30 +11,17 @@ import {
   Download,
   Trash2,
   Info,
-  TrendingUp,
-  HardDrive,
-  Clock,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Card } from "./components.tsx";
 
-interface Document {
-  name: string;
-  size: string;
-  date: string;
-  type: string;
-  color: string;
-}
-
 export function DocumentsTab() {
-
-
-  const docStats = [
-    { label: "Total Documents", value: "1,420", icon: FileText, color: "blue", change: "+124" },
-    { label: "Storage Used", value: "68%", icon: HardDrive, color: "emerald", change: "45.2 GB" },
-    { label: "Recent Files", value: "24", icon: TrendingUp, color: "orange", change: "This week" },
-    { label: "Last Updated", value: "Today", icon: Clock, color: "purple", change: "5:30 PM" },
+  const docs = [
+    { name: "Patient_Report_2024.pdf", size: "2.4 MB", date: "Mar 10, 2026", type: "PDF", color: "bg-red-100 dark:bg-red-900/20" },
+    { name: "MRI_Scan_Results.pdf", size: "8.7 MB", date: "Mar 8, 2026", type: "PDF", color: "bg-red-100 dark:bg-red-900/20" },
+    { name: "Lab_Tests.xlsx", size: "1.2 MB", date: "Mar 5, 2026", type: "Excel", color: "bg-green-100 dark:bg-green-900/20" },
+    { name: "Treatment_Plan.docx", size: "450 KB", date: "Feb 28, 2026", type: "Word", color: "bg-blue-100 dark:bg-blue-900/20" },
   ];
 
   return (

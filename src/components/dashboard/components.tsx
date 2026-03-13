@@ -147,9 +147,10 @@ export function VisualChart() {
 /**
  * Filter Button Component
  */
-export function FilterBtn({ label, active }: { label: string; active?: boolean }) {
+export function FilterBtn({ label, active, onClick }: { label: string; active?: boolean; onClick?: () => void }) {
   return (
     <button
+      onClick={onClick}
       className={cn(
         "px-5 py-2 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all",
         active

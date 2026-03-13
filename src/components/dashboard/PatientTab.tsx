@@ -1,8 +1,7 @@
 /**
  * Patient Tab - Manage patient records
  */
-import { motion } from "motion/react";
-import { Stethoscope, ExternalLink, ArrowUpRight, Activity, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import { Stethoscope, ExternalLink, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PatientRecord {

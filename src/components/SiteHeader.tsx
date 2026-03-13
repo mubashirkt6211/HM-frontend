@@ -1,4 +1,4 @@
-import { Trophy, PanelLeft, Search, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap } from "lucide-react";
+import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle"
