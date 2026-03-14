@@ -35,7 +35,7 @@ export function DashboardTab() {
 
   return (
     <div className="space-y-6">
-  
+
 
       {/* Main Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -159,47 +159,116 @@ export function DashboardTab() {
           <Card
             title="Status Overview"
             trailing={
-              <span className="text-xs text-zinc-400">
-                <span className="text-zinc-900 dark:text-zinc-100 font-bold">
-                  8 <span className="text-zinc-300 font-light">/ 10</span>
-                </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black text-zinc-500 dark:text-zinc-400">
+                156 <span className="text-zinc-300 dark:text-zinc-600 font-light">total</span>
               </span>
             }
           >
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-500" />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">Completed Tasks</span>
+            {(() => {
+              const statuses = [
+                { label: "Completed", value: 124, total: 156, icon: CheckCircle, color: "bg-emerald-500", track: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-600 dark:text-emerald-400", stroke: "#10b981" },
+                { label: "In Progress", value: 24, total: 156, icon: Clock, color: "bg-orange-500", track: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-600 dark:text-orange-400", stroke: "#f97316" },
+                { label: "Pending", value: 8, total: 156, icon: AlertCircle, color: "bg-rose-500", track: "bg-rose-100 dark:bg-rose-900/30", text: "text-rose-600 dark:text-rose-400", stroke: "#f43f5e" },
+              ];
+              const r = 28;
+              const circ = 2 * Math.PI * r;
+              let offset = 0;
+              const slices = statuses.map(s => {
+                const pct = s.value / 156;
+                const dash = pct * circ;
+                const o = offset;
+                offset += dash;
+                return { ...s, dash, dashOffset: circ - o };
+              });
+
+              return (
+                <div className="mt-3 flex flex-col gap-4">
+                  {/* Mini donut + totals row */}
+                  <div className="flex items-center gap-4">
+                    {/* Donut */}
+                    <div className="relative shrink-0">
+                      <svg width="72" height="72" viewBox="0 0 72 72" className="-rotate-90">
+                        <circle cx="36" cy="36" r={r} fill="none" stroke="currentColor" strokeWidth="10" className="text-zinc-100 dark:text-zinc-800" />
+                        {slices.map((s, i) => (
+                          <motion.circle
+                            key={i}
+                            cx="36" cy="36" r={r}
+                            fill="none"
+                            stroke={s.stroke}
+                            strokeWidth="10"
+                            strokeDasharray={`${s.dash} ${circ - s.dash}`}
+                            strokeDashoffset={s.dashOffset}
+                            strokeLinecap="butt"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.6, delay: i * 0.15 }}
+                          />
+                        ))}
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none">Done</span>
+                        <span className="text-lg font-black text-zinc-900 dark:text-zinc-100 leading-none mt-0.5">
+                          {Math.round(124 / 156 * 100)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex flex-col gap-1.5 flex-1">
+                      {statuses.map(s => (
+                        <div key={s.label} className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <div className={cn("w-2 h-2 rounded-full", s.color)} />
+                            <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">{s.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={cn("text-[11px] font-black", s.text)}>{Math.round(s.value / 156 * 100)}%</span>
+                            <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">{s.value}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Progress bars */}
+                  <div className="flex flex-col gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                    {statuses.map((s, i) => {
+                      const Icon = s.icon;
+                      const pct = Math.round(s.value / 156 * 100);
+                      return (
+                        <div key={s.label} className="flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Icon className={cn("w-3.5 h-3.5", s.text)} />
+                              <span className="text-[12px] font-bold text-zinc-600 dark:text-zinc-400">{s.label}</span>
+                            </div>
+                            <span className="text-[12px] font-black text-zinc-900 dark:text-zinc-100">{s.value}</span>
+                          </div>
+                          <div className={cn("relative h-1.5 w-full rounded-full", s.track)}>
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.9, ease: "easeOut", delay: i * 0.1 }}
+                              className={cn("absolute left-0 top-0 h-full rounded-full shadow-sm", s.color)}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">124</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">In Progress</span>
-                </div>
-                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">24</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-500" />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">Pending</span>
-                </div>
-                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">8</span>
-              </div>
-            </div>
+              );
+            })()}
           </Card>
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end gap-2 mt-4">
           <div className="flex rounded-xl bg-zinc-100/80 dark:bg-zinc-800/80 p-1 border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm">
             {tabs.map((tab) => (
-              <FilterBtn 
+              <FilterBtn
                 key={tab}
-                label={tab} 
+                label={tab}
                 active={selectedTab === tab}
                 onClick={() => setSelectedTab(tab)}
               />
@@ -207,7 +276,7 @@ export function DashboardTab() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button 
+              <button
                 className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm text-[13px] font-bold text-zinc-700 dark:text-zinc-300"
               >
                 {selectedYear} <ChevronDown className="w-4 h-4 text-zinc-400" />
@@ -230,20 +299,15 @@ export function DashboardTab() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors text-[14px] font-medium">
-          <Plus className="w-4 h-4" />
-          Add objective
-        </button>
       </div>
 
 
       {/* Year-Specific Charts Section */}
-      <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="mt-8">
         <h2 className="text-2xl font-black text-zinc-900 dark:text-zinc-100 mb-6">
           Year {selectedYear} Performance Analytics
         </h2>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Revenue Chart */}
           <Card
@@ -276,10 +340,10 @@ export function DashboardTab() {
                   </linearGradient>
                 </defs>
                 <motion.polyline
-                  points={selectedYear === 2023 ? "0,80 50,70 100,75 150,60 200,50 250,55 300,40 350,45 400,35" : 
-                           selectedYear === 2024 ? "0,75 50,65 100,70 150,55 200,45 250,48 300,35 350,38 400,25" : 
-                           selectedYear === 2025 ? "0,70 50,60 100,65 150,50 200,40 250,42 300,30 350,32 400,20" : 
-                           "0,65 50,55 100,60 150,45 200,35 250,37 300,25 350,27 400,12"}
+                  points={selectedYear === 2023 ? "0,80 50,70 100,75 150,60 200,50 250,55 300,40 350,45 400,35" :
+                    selectedYear === 2024 ? "0,75 50,65 100,70 150,55 200,45 250,48 300,35 350,38 400,25" :
+                      selectedYear === 2025 ? "0,70 50,60 100,65 150,50 200,40 250,42 300,30 350,32 400,20" :
+                        "0,65 50,55 100,60 150,45 200,35 250,37 300,25 350,27 400,12"}
                   fill="url(#yearGradient)"
                   stroke="#3b82f6"
                   strokeWidth="2"
@@ -349,7 +413,7 @@ export function DashboardTab() {
                             animate={{ strokeDashoffset: 2 * Math.PI * 80 * (1 - acq / 100) }}
                             transition={{ duration: 1.5, ease: "easeOut" }}
                           />
-                          
+
                           {/* Market Share */}
                           <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="14" fill="none" className="text-zinc-100 dark:text-zinc-800" />
                           <motion.circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="14" fill="none" strokeDasharray={2 * Math.PI * 60} strokeLinecap="round" className="text-emerald-500"
@@ -366,7 +430,7 @@ export function DashboardTab() {
                             transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
                           />
                         </svg>
-                        
+
                         {/* Center Value */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">Avg</span>

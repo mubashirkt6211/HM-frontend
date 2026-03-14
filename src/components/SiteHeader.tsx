@@ -1,4 +1,4 @@
-import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap } from "lucide-react";
+import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap, Stethoscope } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -26,7 +26,7 @@ export function SiteHeader() {
           <PanelLeft className="w-5 h-5" />
         </button>
         <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
-        {/* BreadCrumbs */}
+
       </div>
 
       <div className="flex items-center gap-4">

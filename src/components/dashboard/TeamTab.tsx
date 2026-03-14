@@ -125,7 +125,7 @@ export function TeamTab() {
     {
       name: "Emma Johnson",
       role: "Nursing Assistant",
-      img: "https://i.pinimg.com/736x/9d/8e/7a/9d8e7aef07e8b5f2f7f3b5c5b8e7f8c9.jpg",
+      img: "https://i.pinimg.com/1200x/0b/36/f8/0b36f83f83bee29f5d9089c6caffa996.jpg",
       rating: "4.65",
       reviews: "142",
       dist: "6.5km",

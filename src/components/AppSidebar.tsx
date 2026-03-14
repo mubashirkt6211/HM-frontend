@@ -1,9 +1,10 @@
 import { motion } from "motion/react";
 import logo from "@/assets/logo.png";
 
-import { 
-    LayoutGrid, FileText, Settings, HelpCircle, Bell, Package, TrendingUp, MessageSquare, Users, 
-    Zap, FolderOpen, Lock, Smile, ChevronDown, CreditCard, Link as IntegrationIcon, Calendar
+import {
+    LayoutGrid, FileText, Settings, HelpCircle, Bell, Package, MessageSquare, Users,
+    ChevronDown, CreditCard, Calendar,
+    Stethoscope, FlaskConical, Pill
 } from "lucide-react";
 
 import {
@@ -23,35 +24,30 @@ import { cn } from "@/lib/utils"
 
 const navigationSections = [
     {
-        label: "Main",
+        label: "Medical Services",
         items: [
             { icon: LayoutGrid, title: "Dashboard", pageId: "dashboard" },
-            { icon: Calendar, title: "Calendar", pageId: "calendar" },
-            { icon: Package, title: "Products" },
-            { icon: TrendingUp, title: "Transactions" },
-            { icon: FileText, title: "Reports & Analytics" },
-            { icon: MessageSquare, title: "Message" },
-            { icon: Users, title: "Team Performance" },
-            { icon: Zap, title: "Campaigns" },
-            { icon: Smile, title: "Customers" },
-            { icon: FolderOpen, title: "Channels" },
-            { icon: CreditCard, title: "Order Management" },
+            { icon: Users, title: "Patients", pageId: "patients" },
+            { icon: Calendar, title: "Appointments", pageId: "appointments" },
+            { icon: Stethoscope, title: "Doctors & Staff", pageId: "doctors" },
+            { icon: FlaskConical, title: "Laboratory", pageId: "lab" },
+            { icon: Pill, title: "Pharmacy", pageId: "pharmacy" },
         ]
     },
     {
         label: "Administration",
         items: [
-            { icon: Lock, title: "Roles & Permissions" },
-            { icon: CreditCard, title: "Billing & Subscription" },
-            { icon: IntegrationIcon, title: "Integrations" },
+            { icon: CreditCard, title: "Billing & Invoices", pageId: "billing" },
+            { icon: FileText, title: "Reports & Analytics", pageId: "reports" },
+            { icon: Package, title: "Inventory", pageId: "inventory" },
         ]
     },
     {
         label: "Support",
         items: [
-            { icon: HelpCircle, title: "Help Center" },
-            { icon: MessageSquare, title: "Feedback" },
-            { icon: Settings, title: "Settings" },
+            { icon: HelpCircle, title: "Help Center", pageId: "help" },
+            { icon: MessageSquare, title: "Feedback", pageId: "feedback" },
+            { icon: Settings, title: "Settings", pageId: "settings" },
         ]
     }
 ];
@@ -75,30 +71,33 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                         "flex items-center w-full",
                         isCollapsed ? "justify-center" : "justify-between"
                     )}>
-                        <motion.div 
-                            className="flex items-center gap-2 group"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.2 }}
+                        <motion.div
+                            className="flex items-center gap-2.5 group cursor-pointer"
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            onClick={() => onPageChange?.("dashboard")}
                         >
-                            <img src={logo} alt="Coconut Logo" className={cn(
-                                "object-contain transition-all group-hover:drop-shadow-lg",
-                                isCollapsed ? "w-10 h-10" : "w-12 h-12"
-                            )} />
+                            <div className="relative flex items-center justify-center">
+                                <div className="absolute inset-0 bg-blue-500/20 blur-lg rounded-full" />
+                                <div className="relative w-9 h-9 rounded-xl bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center border border-white/20 shadow-lg shadow-blue-500/20 overflow-hidden ring-1 ring-blue-400/30 group-hover:ring-blue-400/50 transition-all">
+                                    <Stethoscope className="w-5 h-5 text-white" />
+                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-white/10 backdrop-blur-[2px]" />
+                                </div>
+                            </div>
+                            {!isCollapsed && (
+                                <div className="flex flex-col">
+                                    <span className="text-[15px] font-black text-zinc-900 dark:text-zinc-100 leading-none tracking-tight">Coconut</span>
+                                    <span className="text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-[0.2em] mt-0.5">HMS System</span>
+                                </div>
+                            )}
                         </motion.div>
                         {!isCollapsed && (
-                            <motion.div 
+                            <motion.div
                                 className="flex items-center gap-2"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.2 }}
                             >
-                                <motion.button 
-                                    className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors relative p-1.5 rounded-lg hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    <Bell className="w-5 h-5" />
-                                </motion.button>
                             </motion.div>
                         )}
                     </div>
@@ -115,7 +114,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 0.1 * idx }}
-                                    className="text-[11px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-widest px-3 mb-3 opacity-60"
+                                    className="text-[10px] font-bold text-zinc-500 dark:text-zinc-500 uppercase tracking-widest px-3 mb-3 opacity-60"
                                 >
                                     {section.label}
                                 </motion.div>
@@ -144,9 +143,9 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                                                 show: { opacity: 1, x: 0 }
                                             }}
                                         >
-                                            <NavItem 
-                                                icon={item.icon} 
-                                                title={item.title} 
+                                            <NavItem
+                                                icon={item.icon}
+                                                title={item.title}
                                                 isCollapsed={isCollapsed}
                                                 isActive={item.pageId ? currentPage === item.pageId : false}
                                                 onClick={item.pageId ? () => onPageChange?.(item.pageId) : undefined}
@@ -176,14 +175,16 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                                         "hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 relative group"
                                     )}
                                 >
-                                    <motion.div 
+                                    <motion.div
                                         className="w-8 h-8 rounded-md bg-linear-to-br from-zinc-100 to-zinc-50 dark:from-zinc-800 dark:to-zinc-900 flex items-center justify-center shrink-0"
                                         whileHover={{ scale: 1.05 }}
                                     >
-                                        <Smile className="w-5 h-5 text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors" />
+                                        <div className="w-5 h-5 rounded-full bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center text-[10px] text-white dark:text-zinc-900 font-bold">
+                                            CL
+                                        </div>
                                     </motion.div>
                                     {!isCollapsed && (
-                                        <motion.div 
+                                        <motion.div
                                             className="flex flex-col overflow-hidden flex-1"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
@@ -211,7 +212,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                         </SidebarMenu>
 
                         <SidebarMenu className="gap-0.5 pt-2">
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.65, staggerChildren: 0.05 }}
