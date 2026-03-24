@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 
-export function SiteHeader() {
+export function SiteHeader({ onTabChange }: { onTabChange?: (tab: string) => void }) {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -57,7 +57,10 @@ export function SiteHeader() {
             </DropdownMenuLabel>
 
             <div className="space-y-0.5">
-              <DropdownMenuItem className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group">
+              <DropdownMenuItem 
+                onClick={() => onTabChange?.("Profile")}
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
+              >
                 <div className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800 group-hover:bg-white dark:group-hover:bg-zinc-800 transition-colors">
                   <UserCheck className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
                 </div>

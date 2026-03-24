@@ -1,7 +1,6 @@
 /**
  * Main Dashboard Page - Orchestrates all dashboard tabs
  */
-import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   LayoutGrid,
@@ -19,6 +18,7 @@ import {
   PatientTab,
   DocumentsTab,
   ReviewsTab,
+  ProfileTab,
   TabItem,
 } from "@/components/dashboard";
 import claraAvatar from "@/assets/clara_avatar.png";
@@ -31,9 +31,7 @@ const TABS = [
   { icon: Star, label: "Reviews" },
 ];
 
-export function Dashboard() {
-  const [activeTab, setActiveTab] = useState("Dashboard");
-
+export function Dashboard({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
   const renderTabContent = () => {
     switch (activeTab) {
       case "Dashboard":
@@ -46,6 +44,8 @@ export function Dashboard() {
         return <DocumentsTab />;
       case "Reviews":
         return <ReviewsTab />;
+      case "Profile":
+        return <ProfileTab />;
       default:
         return <DashboardTab />;
     }
@@ -55,7 +55,10 @@ export function Dashboard() {
     <article className="flex min-w-0 w-full flex-col gap-8 py-8 px-6 max-w-7xl mx-auto min-h-screen">
       {/* 1. Profile Header */}
       <div className="flex items-center gap-6">
-        <div className="relative group">
+        <div 
+          className="relative group cursor-pointer"
+          onClick={() => onTabChange("Profile")}
+        >
           <div className="w-24 h-24 rounded-full border-4 border-white dark:border-zinc-900 shadow-xl overflow-hidden ring-1 ring-zinc-200 dark:ring-zinc-800 transition-transform group-hover:scale-105 duration-300">
             <img
               src={claraAvatar}
@@ -95,7 +98,7 @@ export function Dashboard() {
               icon={tab.icon}
               label={tab.label}
               active={activeTab === tab.label}
-              onClick={() => setActiveTab(tab.label)}
+              onClick={() => onTabChange(tab.label)}
             />
           ))}
         </div>

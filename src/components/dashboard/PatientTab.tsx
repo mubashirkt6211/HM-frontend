@@ -20,6 +20,7 @@ import {
   Download,
   Eye,
   Upload,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,37 +55,45 @@ const STATUS_CONFIG = {
 };
 
 const patients: PatientRecord[] = [
-  { id: "P-4392", name: "Jean-Pierre Durand", status: "Follow-up", appointment: "Today, 10:30", type: "Cardiology", age: 54, gender: "M", heartRate: 78, temp: 36.8, bp: "128/82", avatarColor: "from-blue-400 to-blue-600",    avatar: "https://i.pinimg.com/736x/3f/62/bc/3f62bc68065763b72220779aaa14232e.jpg",
+  {
+    id: "P-4392", name: "Jean-Pierre Durand", status: "Follow-up", appointment: "Today, 10:30", type: "Cardiology", age: 54, gender: "M", heartRate: 78, temp: 36.8, bp: "128/82", avatarColor: "from-blue-400 to-blue-600", avatar: "https://i.pinimg.com/736x/3f/62/bc/3f62bc68065763b72220779aaa14232e.jpg",
     documents: [
       { id: "DOC-001", name: "Blood Test Results", type: "Lab Result", date: "Mar 10, 2026", size: "1.2 MB" },
       { id: "DOC-002", name: "Cardiac MRI Scan", type: "Scan", date: "Feb 28, 2026", size: "15.4 MB" },
     ]
   },
-  { id: "P-8821", name: "Marie-Louise Petit", status: "Emergency", appointment: "Today, 11:45", type: "Pediatrics", age: 8, gender: "F", heartRate: 110, temp: 38.4, bp: "100/65", avatarColor: "from-rose-400 to-rose-600", avatar: "https://i.pinimg.com/1200x/66/94/c8/6694c81d4c094d2b65094287e094d54a.jpg",
+  {
+    id: "P-8821", name: "Marie-Louise Petit", status: "Emergency", appointment: "Today, 11:45", type: "Pediatrics", age: 8, gender: "F", heartRate: 110, temp: 38.4, bp: "100/65", avatarColor: "from-rose-400 to-rose-600", avatar: "https://i.pinimg.com/1200x/66/94/c8/6694c81d4c094d2b65094287e094d54a.jpg",
     documents: [
       { id: "DOC-003", name: "Vaccination Record", type: "Report", date: "Jan 15, 2026", size: "0.8 MB" },
     ]
   },
-  { id: "P-1294", name: "Luc Moreau", status: "Checkup", appointment: "Tomorrow, 09:00", type: "General", age: 34, gender: "M", heartRate: 65, temp: 36.5, bp: "118/76", avatarColor: "from-violet-400 to-violet-600", avatar: "https://i.pinimg.com/1200x/bf/30/fb/bf30fb033dbb732339ff3029556fd62e.jpg",
+  {
+    id: "P-1294", name: "Luc Moreau", status: "Checkup", appointment: "Tomorrow, 09:00", type: "General", age: 34, gender: "M", heartRate: 65, temp: 36.5, bp: "118/76", avatarColor: "from-violet-400 to-violet-600", avatar: "https://i.pinimg.com/1200x/bf/30/fb/bf30fb033dbb732339ff3029556fd62e.jpg",
     documents: [
       { id: "DOC-004", name: "General Checkup Summary", type: "Report", date: "Dec 12, 2025", size: "2.1 MB" },
     ]
   },
-  { id: "P-7730", name: "Emma Dubois", status: "Discharged", appointment: "Done", type: "Neurology", age: 41, gender: "F", heartRate: 72, temp: 36.7, bp: "122/80", avatarColor: "from-emerald-400 to-emerald-600", avatar: "https://i.pinimg.com/474x/7b/df/c8/7bdfc8165947551dadbcd9ac99513775.jpg",
+  {
+    id: "P-7730", name: "Emma Dubois", status: "Discharged", appointment: "Done", type: "Neurology", age: 41, gender: "F", heartRate: 72, temp: 36.7, bp: "122/80", avatarColor: "from-emerald-400 to-emerald-600", avatar: "https://i.pinimg.com/474x/7b/df/c8/7bdfc8165947551dadbcd9ac99513775.jpg",
     documents: [
       { id: "DOC-005", name: "Neurology Exam", type: "Scan", date: "Mar 05, 2026", size: "12.0 MB" },
     ]
   },
-  { id: "P-3318", name: "Antoine Bernard", status: "Scheduled", appointment: "Mar 16, 14:00", type: "Orthopedics", age: 62, gender: "M", heartRate: 68, temp: 36.6, bp: "135/88", avatarColor: "from-orange-400 to-orange-600", avatar: "https://i.pravatar.cc/100?img=57",
+  {
+    id: "P-3318", name: "Antoine Bernard", status: "Scheduled", appointment: "Mar 16, 14:00", type: "Orthopedics", age: 62, gender: "M", heartRate: 68, temp: 36.6, bp: "135/88", avatarColor: "from-orange-400 to-orange-600", avatar: "https://i.pravatar.cc/100?img=57",
     documents: []
   },
-  { id: "P-5577", name: "Sophia Leclerc", status: "Follow-up", appointment: "Mar 15, 09:30", type: "Dermatology", age: 29, gender: "F", heartRate: 70, temp: 36.4, bp: "112/72", avatarColor: "from-pink-400 to-pink-600", avatar: "https://i.pravatar.cc/100?img=41",
+  {
+    id: "P-5577", name: "Sophia Leclerc", status: "Follow-up", appointment: "Mar 15, 09:30", type: "Dermatology", age: 29, gender: "F", heartRate: 70, temp: 36.4, bp: "112/72", avatarColor: "from-pink-400 to-pink-600", avatar: "https://i.pravatar.cc/100?img=41",
     documents: []
   },
-  { id: "P-6612", name: "Hugo Fontaine", status: "Checkup", appointment: "Mar 17, 10:00", type: "Cardiology", age: 47, gender: "M", heartRate: 74, temp: 36.9, bp: "130/84", avatarColor: "from-cyan-400 to-cyan-600", avatar: "https://i.pravatar.cc/100?img=12",
+  {
+    id: "P-6612", name: "Hugo Fontaine", status: "Checkup", appointment: "Mar 17, 10:00", type: "Cardiology", age: 47, gender: "M", heartRate: 74, temp: 36.9, bp: "130/84", avatarColor: "from-cyan-400 to-cyan-600", avatar: "https://i.pravatar.cc/100?img=12",
     documents: []
   },
-  { id: "P-9901", name: "Camille Rousseau", status: "Scheduled", appointment: "Mar 18, 08:30", type: "Pediatrics", age: 6, gender: "F", heartRate: 95, temp: 37.0, bp: "95/60", avatarColor: "from-amber-400 to-amber-600", avatar: "https://i.pravatar.cc/100?img=36",
+  {
+    id: "P-9901", name: "Camille Rousseau", status: "Scheduled", appointment: "Mar 18, 08:30", type: "Pediatrics", age: 6, gender: "F", heartRate: 95, temp: 37.0, bp: "95/60", avatarColor: "from-amber-400 to-amber-600", avatar: "https://i.pravatar.cc/100?img=36",
     documents: []
   },
 ];
@@ -95,102 +104,109 @@ function initials(name: string) {
   return name.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
 }
 
-function PatientCard({ patient, index, onOpen }: { patient: PatientRecord; index: number; onOpen: (p: PatientRecord) => void }) {
-  const cfg = STATUS_CONFIG[patient.status];
-
+function PatientTable({ patients, onOpen }: { patients: PatientRecord[]; onOpen: (p: PatientRecord) => void }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06 }}
-      className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
-    >
-      {/* Card top: photo + status */}
-      <div className="relative p-3 pb-2 flex flex-col items-center text-center">
-        {/* Status badge top-right */}
-        <span className={cn(
-          "absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border",
-          cfg.color, cfg.border
-        )}>
-          <span className={cn("w-1.5 h-1.5 rounded-full", cfg.dot)} />
-          {patient.status}
-        </span>
-
-        {/* Avatar */}
-        <div className="relative w-12 h-12 mb-2">
-          <img
-            src={patient.avatar}
-            alt={patient.name}
-            className="w-12 h-12 rounded-xl object-cover ring-2 ring-zinc-100 dark:ring-zinc-800"
-            onError={e => {
-              const t = e.currentTarget;
-              t.style.display = "none";
-              const fb = t.nextElementSibling as HTMLElement;
-              if (fb) fb.style.display = "flex";
-            }}
-          />
-          <div
-            style={{ display: "none" }}
-            className={cn(
-              "absolute inset-0 w-12 h-12 rounded-xl bg-gradient-to-br items-center justify-center font-black text-white text-base",
-              patient.avatarColor
-            )}
-          >
-            {initials(patient.name)}
-          </div>
-        </div>
-
-        {/* Name + meta */}
-        <h4 className="font-black text-zinc-900 dark:text-zinc-100 text-[13px] leading-tight">{patient.name}</h4>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-[10px] text-zinc-400 font-medium">{patient.type}</span>
-          <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-          <span className="text-[10px] text-zinc-400">{patient.gender}, {patient.age}y</span>
-        </div>
-        <span className="text-[9px] font-bold text-zinc-400 mt-0.5 font-mono">{patient.id}</span>
+    <div className="w-full overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+      <div className="overflow-x-auto scrollbar-none">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
+          <thead>
+            <tr className="bg-zinc-50/80 dark:bg-zinc-800/80 border-b border-zinc-200 dark:border-zinc-800">
+              <th className="px-5 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Patient</th>
+              <th className="px-5 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap text-center">ID</th>
+              <th className="px-5 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Status</th>
+              <th className="px-5 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Specialty</th>
+              <th className="px-5 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap text-center">Demographics</th>
+              <th className="px-5 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Appointment</th>
+              <th className="px-5 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap text-right pr-8">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            {patients.map((p, i) => {
+              const cfg = STATUS_CONFIG[p.status];
+              return (
+                <motion.tr
+                  key={p.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="group hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors cursor-pointer even:bg-zinc-50/30 dark:even:bg-zinc-800/10"
+                  onClick={() => onOpen(p)}
+                >
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-9 h-9 shrink-0">
+                        <img
+                          src={p.avatar}
+                          alt={p.name}
+                          className="w-full h-full rounded-lg object-cover ring-2 ring-zinc-50 dark:ring-zinc-800 shadow-sm"
+                          onError={e => {
+                            const t = e.currentTarget;
+                            t.style.display = "none";
+                            const fb = t.nextElementSibling as HTMLElement;
+                            if (fb) fb.style.display = "flex";
+                          }}
+                        />
+                        <div
+                          style={{ display: "none" }}
+                          className={cn(
+                            "absolute inset-0 w-9 h-9 rounded-lg bg-gradient-to-br items-center justify-center font-black text-white text-[10px]",
+                            p.avatarColor
+                          )}
+                        >
+                          {initials(p.name)}
+                        </div>
+                      </div>
+                      <span className="text-[13px] font-black text-zinc-900 dark:text-zinc-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{p.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-center">
+                    <span className="text-[10px] font-black text-zinc-400 font-mono tracking-tighter bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">{p.id}</span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black border shadow-sm",
+                      cfg.color, cfg.border
+                    )}>
+                      <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", cfg.dot)} />
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className="text-[12px] font-bold text-zinc-700 dark:text-zinc-300">{p.type}</span>
+                  </td>
+                  <td className="px-5 py-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className={cn(
+                        "text-[10px] font-black px-2 py-0.5 rounded-md",
+                        p.gender === 'M' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600" : "bg-pink-50 dark:bg-pink-900/20 text-pink-600"
+                      )}>
+                        {p.gender}
+                      </span>
+                      <span className="text-[12px] font-bold text-zinc-500">{p.age}y</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                        <Clock className="w-3.5 h-3.5 text-zinc-500" />
+                      </div>
+                      <span className="text-[12px] font-black text-zinc-700 dark:text-zinc-300 whitespace-nowrap">{p.appointment}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-right pr-8">
+                    <button
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white dark:bg-zinc-800 text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-all border border-zinc-200 dark:border-zinc-700 group-hover:border-blue-100 dark:group-hover:border-blue-900/30 shadow-sm"
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </button>
+                  </td>
+                </motion.tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-
-      {/* Divider */}
-      <div className="mx-4 border-t border-zinc-100 dark:border-zinc-800" />
-
-      {/* Appointment */}
-      <div className="px-3 py-2 flex items-center gap-1.5">
-        <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
-        <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 truncate">{patient.appointment}</span>
-      </div>
-
-      {/* Divider */}
-      <div className="mx-4 border-t border-zinc-100 dark:border-zinc-800" />
-
-      {/* Vitals row */}
-      <div className="grid grid-cols-3 divide-x divide-zinc-100 dark:divide-zinc-800">
-        <div className="flex flex-col items-center py-2 gap-0.5">
-          <Heart className="w-3 h-3 text-rose-400" />
-          <span className="text-[12px] font-black text-zinc-900 dark:text-zinc-100">{patient.heartRate}</span>
-          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">BPM</span>
-        </div>
-        <div className="flex flex-col items-center py-2 gap-0.5">
-          <Thermometer className="w-3 h-3 text-orange-400" />
-          <span className="text-[12px] font-black text-zinc-900 dark:text-zinc-100">{patient.temp}°</span>
-          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">Temp</span>
-        </div>
-        <div className="flex flex-col items-center py-2 gap-0.5">
-          <Activity className="w-3 h-3 text-blue-400" />
-          <span className="text-[12px] font-black text-zinc-900 dark:text-zinc-100 leading-none">{patient.bp}</span>
-          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">BP</span>
-        </div>
-      </div>
-
-      {/* Open Profile Button */}
-      <div className="p-2">
-        <button
-          onClick={() => onOpen(patient)}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-900 text-zinc-500 dark:text-zinc-400 text-[11px] font-black transition-all group-hover:bg-zinc-900 group-hover:dark:bg-zinc-100 group-hover:text-white group-hover:dark:text-zinc-900"
-        >
-          Open Profile <ArrowUpRight className="w-3 h-3" />
-        </button>
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -262,7 +278,7 @@ export function PatientTab() {
                         : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                     )}
                   >
-                    <Filter className="w-3.5 h-3.5" />
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
                     Filter
                     {activeFilterCount > 0 && (
                       <span className="ml-0.5 w-4 h-4 rounded-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-[10px] font-black flex items-center justify-center">
@@ -360,18 +376,14 @@ export function PatientTab() {
               </div>
             </div>
 
-            {/* Patient Grid — 4 columns */}
+            {/* Patient Table */}
             {filtered.length === 0 ? (
               <div className="py-20 flex flex-col items-center gap-3 text-zinc-400">
                 <Stethoscope className="w-10 h-10 opacity-30" />
                 <span className="text-sm font-medium">No patients match your search</span>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filtered.map((patient, i) => (
-                  <PatientCard key={patient.id} patient={patient} index={i} onOpen={setSelectedPatient} />
-                ))}
-              </div>
+              <PatientTable patients={filtered} onOpen={setSelectedPatient} />
             )}
           </motion.div>
         ) : (
@@ -428,7 +440,7 @@ export function PatientTab() {
                       </div>
                       <h2 className="text-[24px] font-black text-zinc-900 dark:text-zinc-100 leading-tight">{p.name}</h2>
                       <p className="text-[13px] font-mono text-zinc-400 mt-1 uppercase tracking-tighter">{p.id}</p>
-                      
+
                       <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
                         <span className={cn("inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-black border", cfg.color, cfg.border)}>
                           <span className={cn("w-1.5 h-1.5 rounded-full", cfg.dot)} />
@@ -458,22 +470,22 @@ export function PatientTab() {
                       <div>
                         <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Current Vitals</h4>
                         <div className="grid grid-cols-3 gap-6">
-                        {[
-                          { label: "Heart Rate", value: `${p.heartRate}`, unit: "bpm", icon: Heart, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/10" },
-                          { label: "Temperature", value: `${p.temp}°`, unit: "Celsius", icon: Thermometer, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/10" },
-                          { label: "Blood Pressure", value: p.bp, unit: "mmHg", icon: Activity, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/10" },
-                        ].map(v => {
-                          const Icon = v.icon;
-                          return (
-                            <div key={v.label} className={cn("rounded-3xl p-5 flex flex-col items-center gap-2 border border-transparent transition-all hover:border-zinc-100 dark:hover:border-zinc-800", v.bg)}>
-                              <Icon className={cn("w-6 h-6", v.color)} />
-                              <div className="text-center">
-                                <p className="text-[20px] font-black text-zinc-900 dark:text-zinc-100 leading-none">{v.value}</p>
-                                <p className="text-[10px] font-bold text-zinc-400 mt-1">{v.unit}</p>
+                          {[
+                            { label: "Heart Rate", value: `${p.heartRate}`, unit: "bpm", icon: Heart, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-900/10" },
+                            { label: "Temperature", value: `${p.temp}°`, unit: "Celsius", icon: Thermometer, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/10" },
+                            { label: "Blood Pressure", value: p.bp, unit: "mmHg", icon: Activity, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/10" },
+                          ].map(v => {
+                            const Icon = v.icon;
+                            return (
+                              <div key={v.label} className={cn("rounded-3xl p-5 flex flex-col items-center gap-2 border border-transparent transition-all hover:border-zinc-100 dark:hover:border-zinc-800", v.bg)}>
+                                <Icon className={cn("w-6 h-6", v.color)} />
+                                <div className="text-center">
+                                  <p className="text-[20px] font-black text-zinc-900 dark:text-zinc-100 leading-none">{v.value}</p>
+                                  <p className="text-[10px] font-bold text-zinc-400 mt-1">{v.unit}</p>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -486,8 +498,8 @@ export function PatientTab() {
                               <CalendarDays className="w-6 h-6 text-blue-500" />
                             </div>
                             <div>
-                                <p className="text-[15px] font-black text-blue-900 dark:text-blue-100">{p.appointment}</p>
-                                <p className="text-[11px] font-bold text-blue-400">{p.type} Consultation</p>
+                              <p className="text-[15px] font-black text-blue-900 dark:text-blue-100">{p.appointment}</p>
+                              <p className="text-[11px] font-bold text-blue-400">{p.type} Consultation</p>
                             </div>
                           </div>
                         </div>
@@ -510,7 +522,7 @@ export function PatientTab() {
                             <Upload className="w-3.5 h-3.5" /> Upload New
                           </button>
                         </div>
-                        
+
                         {p.documents.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {p.documents.map(doc => (
@@ -551,12 +563,12 @@ export function PatientTab() {
 
                       {/* Action Bar */}
                       <div className="pt-4 flex items-center justify-end gap-3">
-                         <button className="px-6 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[13px] font-black hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
-                            Schedule Next Visit
-                         </button>
-                         <button className="px-8 py-3 rounded-2xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-black hover:bg-zinc-700 dark:hover:bg-zinc-300 transition shadow-lg shadow-zinc-200 dark:shadow-none">
-                            Generate Report
-                         </button>
+                        <button className="px-6 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[13px] font-black hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">
+                          Schedule Next Visit
+                        </button>
+                        <button className="px-8 py-3 rounded-2xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-black hover:bg-zinc-700 dark:hover:bg-zinc-300 transition shadow-lg shadow-zinc-200 dark:shadow-none">
+                          Generate Report
+                        </button>
                       </div>
                     </div>
                   </div>

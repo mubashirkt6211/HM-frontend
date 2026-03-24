@@ -6,11 +6,13 @@ export function AppLayout({
   children,
   currentPage = "dashboard",
   onPageChange,
+  onTabChange,
   isFullPage = false
 }: { 
   children: React.ReactNode;
   currentPage?: string;
   onPageChange?: (page: string) => void;
+  onTabChange?: (tab: string) => void;
   isFullPage?: boolean;
 }) {
     // Full page layout for calendar
@@ -33,7 +35,7 @@ export function AppLayout({
                 <AppSidebar currentPage={currentPage} onPageChange={onPageChange} />
                 <SidebarInset className="bg-transparent flex-1 flex flex-col p-2 pl-0 md:pl-0">
                     <main className="flex-1 mt-4 bg-white dark:bg-zinc-950 rounded-4xl shadow-sm ring-1 ring-zinc-200/50 dark:ring-zinc-800/50 flex flex-col relative">
-                        <SiteHeader />
+                        <SiteHeader onTabChange={onTabChange} />
                         <div className="flex-1 w-full px-6 md:px-10 pb-10">
                             {children}
                         </div>
