@@ -1,11 +1,10 @@
 import { motion } from "motion/react";
-import logo from "@/assets/logo.png";
 
 import {
-    LayoutGrid, FileText, Settings, HelpCircle, Bell, Package, MessageSquare, Users,
-    ChevronDown, CreditCard, Calendar,
-    Stethoscope, FlaskConical, Pill
-} from "lucide-react";
+    SquaresFour, FileText, Gear, Question, Bell, Package, ChatTeardropText, Users,
+    CaretDown, CreditCard, CalendarBlank,
+    Stethoscope, Flask, Pill, FirstAid, Hospital, Bed, Ambulance, Drop, Receipt, ShieldCheck, TrendDown, Warehouse, Truck, ClipboardText, FirstAidKit
+} from "@phosphor-icons/react";
 
 import {
     Sidebar,
@@ -26,69 +25,69 @@ const navigationSections = [
     {
         label: "Core",
         items: [
-            { icon: LayoutGrid, title: "Dashboard", pageId: "dashboard" },
+            { icon: SquaresFour, title: "Dashboard", pageId: "dashboard" },
             { icon: Users, title: "Patients", pageId: "patients" },
             { icon: Stethoscope, title: "Doctors & Staff", pageId: "doctors" },
-            { icon: Calendar, title: "Appointments", pageId: "appointments" },
+            { icon: CalendarBlank, title: "Appointments", pageId: "appointments" },
         ]
     },
     {
         label: "Clinical",
         items: [
-            { icon: FileText, title: "OPD (Outpatient)", pageId: "opd" },
-            { icon: FileText, title: "IPD (Inpatient)", pageId: "ipd" },
-            { icon: FlaskConical, title: "Laboratory", pageId: "lab" },
-            { icon: Stethoscope, title: "Radiology", pageId: "radiology" },
+            { icon: FirstAid, title: "OPD (Outpatient)", pageId: "opd" },
+            { icon: Hospital, title: "IPD (Inpatient)", pageId: "ipd" },
+            { icon: Flask, title: "Laboratory", pageId: "lab" },
+            { icon: ClipboardText, title: "Radiology", pageId: "radiology" },
             { icon: Pill, title: "Pharmacy", pageId: "pharmacy" },
-            { icon: FileText, title: "Prescriptions", pageId: "prescriptions" },
+            { icon: Receipt, title: "Prescriptions", pageId: "prescriptions" },
         ]
     },
     {
         label: "Hospital Services",
         items: [
-            { icon: Users, title: "Ward / Bed Management", pageId: "wards" },
-            { icon: Stethoscope, title: "Operation Theatre (OT)", pageId: "ot" },
-            { icon: MessageSquare, title: "Ambulance", pageId: "ambulance" },
-            { icon: Users, title: "Blood Bank", pageId: "bloodbank" },
+            { icon: Bed, title: "Ward / Bed Management", pageId: "wards" },
+            { icon: FirstAidKit, title: "Operation Theatre (OT)", pageId: "ot" },
+            { icon: Ambulance, title: "Ambulance", pageId: "ambulance" },
+            { icon: Drop, title: "Blood Bank", pageId: "bloodbank" },
         ]
     },
     {
         label: "Finance",
         items: [
-            { icon: CreditCard, title: "Billing & Invoices", pageId: "billing" },
+            { icon: Receipt, title: "Billing & Invoices", pageId: "billing" },
             { icon: CreditCard, title: "Payments", pageId: "payments" },
-            { icon: FileText, title: "Insurance / Claims", pageId: "insurance" },
-            { icon: FileText, title: "Expenses", pageId: "expenses" },
+            { icon: ShieldCheck, title: "Insurance / Claims", pageId: "insurance" },
+            { icon: TrendDown, title: "Expenses", pageId: "expenses" },
         ]
     },
     {
         label: "Inventory",
         items: [
-            { icon: Package, title: "Inventory / Stock", pageId: "inventory" },
-            { icon: Package, title: "Suppliers", pageId: "suppliers" },
-            { icon: Package, title: "Purchase Orders", pageId: "purchases" },
+            { icon: Warehouse, title: "Inventory / Stock", pageId: "inventory" },
+            { icon: Truck, title: "Suppliers", pageId: "suppliers" },
+            { icon: ClipboardText, title: "Purchase Orders", pageId: "purchases" },
         ]
     },
     {
         label: "Reports",
         items: [
             { icon: FileText, title: "Reports", pageId: "reports" },
-            { icon: LayoutGrid, title: "Analytics", pageId: "analytics" },
+            { icon: SquaresFour, title: "Analytics", pageId: "analytics" },
         ]
     },
     {
         label: "System",
         items: [
-            { icon: Calendar, title: "Calendar", pageId: "calendar" },
+            { icon: CalendarBlank, title: "Calendar", pageId: "calendar" },
             { icon: Bell, title: "Notifications", pageId: "notifications" },
         ]
     },
     {
         label: "Support",
         items: [
-            { icon: HelpCircle, title: "Help Center", pageId: "help" },
-            { icon: MessageSquare, title: "Feedback", pageId: "feedback" },
-            { icon: Settings, title: "Settings", pageId: "settings" },
+            { icon: Question, title: "Help Center", pageId: "help" },
+            { icon: ChatTeardropText, title: "Feedback", pageId: "feedback" },
+            { icon: Gear, title: "Settings", pageId: "settings" },
         ]
     }
 ];
@@ -134,7 +133,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
 
                     {/* NAVIGATION SECTIONS */}
                     {navigationSections.map((section, idx) => (
-                        <SidebarGroup key={section.label} className={cn("p-0", idx > 0 && "mt-6 pt-6 border-t border-zinc-100/50 dark:border-zinc-800/50")}>
+                        <SidebarGroup key={section.label} className={cn("p-0", idx > 0 && "mt-2 pt-2 border-t border-zinc-100/50 dark:border-zinc-800/50")}>
                             {!isCollapsed && (
                                 <div className="text-[12px] font-semibold text-zinc-400 dark:text-zinc-500 px-3 py-2 mb-1">
                                     {section.label}
@@ -167,35 +166,6 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                         transition={{ delay: 0.5, duration: 0.4 }}
                         className="space-y-4"
                     >
-                        <SidebarMenu className="gap-1">
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    className={cn(
-                                        "flex items-center gap-3 rounded-lg p-2 text-left h-auto transition-colors",
-                                        "hover:bg-zinc-100 dark:hover:bg-zinc-800/50 group"
-                                    )}
-                                >
-                                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                                        <div className="w-5 h-5 rounded-full bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center text-[10px] text-white dark:text-zinc-900 font-bold">
-                                            CL
-                                        </div>
-                                    </div>
-                                    {!isCollapsed && (
-                                        <div className="flex flex-col overflow-hidden flex-1">
-                                            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                                                Avdey Design Inc.
-                                            </span>
-                                            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
-                                                alex@avdey.design
-                                            </span>
-                                        </div>
-                                    )}
-                                    {!isCollapsed && (
-                                        <ChevronDown className="w-4 h-4 text-zinc-400 ml-auto shrink-0 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
-                                    )}
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
 
                         <SidebarMenu className="gap-0.5 pt-2">
                             <motion.div
@@ -205,10 +175,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                                 className="flex flex-col gap-0.5"
                             >
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                    <NavItem icon={HelpCircle} title="Get help" isCollapsed={isCollapsed} />
+                                    <NavItem icon={Question} title="Get help" isCollapsed={isCollapsed} />
                                 </motion.div>
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                    <NavItem icon={Settings} title="Settings" isCollapsed={isCollapsed} />
+                                    <NavItem icon={Gear} title="Settings" isCollapsed={isCollapsed} />
                                 </motion.div>
                             </motion.div>
                         </SidebarMenu>
@@ -266,8 +236,9 @@ function NavItem({
                 >
                     {Icon && (
                         <Icon
+                            weight="light"
                             className={cn(
-                                "w-4 h-4 shrink-0",
+                                "w-5 h-5 shrink-0 transition-all duration-300",
                                 isActive ? "text-blue-600 dark:text-blue-400" : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300",
                                 iconClassName
                             )}
