@@ -262,6 +262,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
     const [date, setDate] = React.useState<Date | undefined>(
         new Date(defaultYear, defaultMonth, defaultDay)
     );
+    const [dateOpen, setDateOpen] = React.useState(false);
     const [startTime, setStart] = React.useState("09:00");
     const [endTime, setEnd] = React.useState("10:00");
     const [color, setColor] = React.useState("blue");
@@ -347,7 +348,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                             <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block flex items-center gap-1">
                                 <CalendarIcon className="w-3 h-3" /> Date
                             </label>
-                            <Popover >
+                            <Popover open={dateOpen} onOpenChange={setDateOpen}>
                                 <PopoverTrigger asChild>
                                     <button
                                         type="button"
@@ -366,8 +367,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                                         onSelect={(newDate) => {
                                             if (newDate) {
                                                 setDate(newDate);
-                                                // Trigger focus out hack to close un-controlled popover
-                                                document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+                                                setDateOpen(false);
                                             }
                                         }}
                                         initialFocus
