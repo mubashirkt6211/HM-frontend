@@ -26,8 +26,22 @@ import {
   Funnel,
   DownloadSimple,
   CaretDown,
+  X,
+  FunnelSimple,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
+import { Check, SlidersHorizontal } from "lucide-react";
 
 interface PatientRecord {
   id: string;
@@ -407,9 +421,74 @@ export function PatientTab() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-2 px-4 py-2 rounded-md border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[13px] font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm">
-                  <Funnel size={18} /> Filter
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-md border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[13px] font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm",
+                      (activeFilter !== "All" || selectedGender !== "All" || selectedSpecialties.length > 0) && "bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700"
+                    )}>
+                      <SlidersHorizontal size={18} /> Filter
+                      {(activeFilter !== "All" || selectedGender !== "All" || selectedSpecialties.length > 0) && (
+                        <span className="flex h-2 w-2 rounded-full bg-blue-500" />
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64 p-2 bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center justify-between px-2 py-1.5 mb-1">
+                      <span className="text-[12px] font-bold text-zinc-400 uppercase tracking-wider">Filters</span>
+                      {(activeFilter !== "All" || selectedGender !== "All" || selectedSpecialties.length > 0) && (
+                        <button
+                          onClick={() => {
+                            setActiveFilter("All");
+                            setSelectedGender("All");
+                            setSelectedSpecialties([]);
+                          }}
+                          className="text-[11px] font-medium text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuLabel className="text-[11px] font-medium text-zinc-400">Status</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup value={activeFilter} onValueChange={setActiveFilter}>
+                      {FILTERS.map(f => (
+                        <DropdownMenuRadioItem key={f} value={f} className="text-[13px]">
+                          {f}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuLabel className="text-[11px] font-medium text-zinc-400">Gender</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup value={selectedGender} onValueChange={setSelectedGender}>
+                      <DropdownMenuRadioItem value="All" className="text-[13px]">All Genders</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="M" className="text-[13px]">Male</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="F" className="text-[13px]">Female</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuLabel className="text-[11px] font-medium text-zinc-400">Specialty</DropdownMenuLabel>
+                    <div className="max-h-[200px] overflow-y-auto scrollbar-none">
+                      {allSpecialties.map(s => (
+                        <DropdownMenuCheckboxItem
+                          key={s}
+                          checked={selectedSpecialties.includes(s)}
+                          onCheckedChange={(checked) => {
+                            if (checked) setSelectedSpecialties([...selectedSpecialties, s]);
+                            else setSelectedSpecialties(selectedSpecialties.filter(item => item !== s));
+                          }}
+                          className="text-[13px]"
+                        >
+                          {s}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <button className="flex items-center gap-2 px-4 py-2 rounded-md border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[13px] font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition shadow-sm">
                   <Export size={18} /> Export
                 </button>

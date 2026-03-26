@@ -1,4 +1,4 @@
-import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap, Stethoscope } from "lucide-react";
+import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap, Home, ChevronRight, LayoutDashboard, Calendar, UserSquare, Stethoscope } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -13,8 +13,25 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 
-export function SiteHeader({ onTabChange }: { onTabChange?: (tab: string) => void }) {
+const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
+  dashboard: { label: "Dashboard", icon: LayoutDashboard },
+  calender:  { label: "Calendar",  icon: Calendar },
+  calendar:  { label: "Calendar",  icon: Calendar },
+  patients:  { label: "Patients",  icon: Stethoscope },
+  doctors:   { label: "Team",      icon: UserSquare },
+};
+
+export function SiteHeader({ 
+  onTabChange, 
+  currentPage = "dashboard",
+  activeTab,
+}: { 
+  onTabChange?: (tab: string) => void;
+  currentPage?: string;
+  activeTab?: string;
+}) {
   const { toggleSidebar } = useSidebar();
+  const pageMeta = PAGE_META[currentPage] ?? { label: "Dashboard", icon: LayoutDashboard };
 
   return (
     <header className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md rounded-t-[20px] shrink-0 sticky top-0 z-10 w-full h-16 px-6 md:px-10 no-scrollbar">
@@ -26,6 +43,25 @@ export function SiteHeader({ onTabChange }: { onTabChange?: (tab: string) => voi
           <PanelLeft className="w-5 h-5" />
         </button>
         <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
+
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-1.5 text-sm">
+          <div className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer transition-colors">
+            <Home className="w-3.5 h-3.5" />
+            <span className="text-[13px] font-medium">Home</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
+          <div className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100">
+            <pageMeta.icon className="w-3.5 h-3.5" />
+            <span className="text-[13px] font-semibold">{pageMeta.label}</span>
+          </div>
+          {activeTab && activeTab !== pageMeta.label && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
+              <span className="text-[13px] font-semibold text-zinc-600 dark:text-zinc-400">{activeTab}</span>
+            </>
+          )}
+        </nav>
 
       </div>
 

@@ -1,10 +1,11 @@
 import { motion } from "motion/react";
-
+import * as React from "react";
 import {
-    SquaresFour, FileText, Gear, Question, Bell, Package, ChatTeardropText, Users,
-    CaretDown, CreditCard, CalendarBlank,
-    Stethoscope, Flask, Pill, FirstAid, Hospital, Bed, Ambulance, Drop, Receipt, ShieldCheck, TrendDown, Warehouse, Truck, ClipboardText, FirstAidKit
-} from "@phosphor-icons/react";
+    LayoutDashboard, Bell, CheckSquare, StickyNote, Mail, BarChart3,
+    Sparkles, Workflow, Star, Users, UserSquare, Search, Command,
+    icons,
+    Calendar
+} from "lucide-react";
 
 import {
     Sidebar,
@@ -15,87 +16,43 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarFooter,
     useSidebar
 } from "@/components/ui/sidebar"
 
 import { cn } from "@/lib/utils"
 
-const navigationSections = [
-    {
-        label: "Core",
-        items: [
-            { icon: SquaresFour, title: "Dashboard", pageId: "dashboard" },
-            { icon: Users, title: "Patients", pageId: "patients" },
-            { icon: Stethoscope, title: "Doctors & Staff", pageId: "doctors" },
-            { icon: CalendarBlank, title: "Appointments", pageId: "appointments" },
-        ]
-    },
-    {
-        label: "Clinical",
-        items: [
-            { icon: FirstAid, title: "OPD (Outpatient)", pageId: "opd" },
-            { icon: Hospital, title: "IPD (Inpatient)", pageId: "ipd" },
-            { icon: Flask, title: "Laboratory", pageId: "lab" },
-            { icon: ClipboardText, title: "Radiology", pageId: "radiology" },
-            { icon: Pill, title: "Pharmacy", pageId: "pharmacy" },
-            { icon: Receipt, title: "Prescriptions", pageId: "prescriptions" },
-        ]
-    },
-    {
-        label: "Hospital Services",
-        items: [
-            { icon: Bed, title: "Ward / Bed Management", pageId: "wards" },
-            { icon: FirstAidKit, title: "Operation Theatre (OT)", pageId: "ot" },
-            { icon: Ambulance, title: "Ambulance", pageId: "ambulance" },
-            { icon: Drop, title: "Blood Bank", pageId: "bloodbank" },
-        ]
-    },
-    {
-        label: "Finance",
-        items: [
-            { icon: Receipt, title: "Billing & Invoices", pageId: "billing" },
-            { icon: CreditCard, title: "Payments", pageId: "payments" },
-            { icon: ShieldCheck, title: "Insurance / Claims", pageId: "insurance" },
-            { icon: TrendDown, title: "Expenses", pageId: "expenses" },
-        ]
-    },
-    {
-        label: "Inventory",
-        items: [
-            { icon: Warehouse, title: "Inventory / Stock", pageId: "inventory" },
-            { icon: Truck, title: "Suppliers", pageId: "suppliers" },
-            { icon: ClipboardText, title: "Purchase Orders", pageId: "purchases" },
-        ]
-    },
-    {
-        label: "Reports",
-        items: [
-            { icon: FileText, title: "Reports", pageId: "reports" },
-            { icon: SquaresFour, title: "Analytics", pageId: "analytics" },
-        ]
-    },
-    {
-        label: "System",
-        items: [
-            { icon: CalendarBlank, title: "Calendar", pageId: "calendar" },
-            { icon: Bell, title: "Notifications", pageId: "notifications" },
-        ]
-    },
-    {
-        label: "Support",
-        items: [
-            { icon: Question, title: "Help Center", pageId: "help" },
-            { icon: ChatTeardropText, title: "Feedback", pageId: "feedback" },
-            { icon: Gear, title: "Settings", pageId: "settings" },
-        ]
-    }
+const mainNavigation = [
+    { icon: LayoutDashboard, title: "Dashboard", pageId: "dashboard" },
+    { icon: Bell, title: "Notifications", pageId: "notifications", badge: "12" },
+    { icon: Calendar, title: "Calender", pageId: "calender" },
+    { icon: CheckSquare, title: "Tasks", pageId: "tasks" },
+    { icon: StickyNote, title: "Notes", pageId: "notes" },
+    { icon: Mail, title: "Emails", pageId: "emails" },
+    { icon: BarChart3, title: "Reports", pageId: "reports" },
+    { icon: Sparkles, title: "Automations", pageId: "automations" },
+    { icon: Workflow, title: "Workflows", pageId: "workflows" },
+];
+
+const favoritesNavigation = [
+    { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400" },
+    { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400" },
+    { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400" },
+    { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400" },
+];
+
+const recordsNavigation = [
+    { icon: Users, title: "Clients", pageId: "clients" },
+    { icon: UserSquare, title: "Contacts", pageId: "contacts" },
+];
+
+const listNavigation = [
+    { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true },
+    { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true },
 ];
 
 export function AppSidebar({ currentPage = "dashboard", onPageChange }: { currentPage?: string; onPageChange?: (page: string) => void }) {
     const { state } = useSidebar();
     const isCollapsed = state === "collapsed";
-
 
     return (
         <Sidebar
@@ -106,84 +63,141 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
             <div className="h-full flex flex-col">
 
                 {/* HEADER (Logo) */}
-                <SidebarHeader className="p-6 pb-4 border-none bg-transparent flex flex-col items-start sticky top-0 z-10">
+                <SidebarHeader className="p-6 pb-2 border-none flex flex-col items-start gap-4 sticky top-0 z-10 bg-[#f6f6f6]/80 dark:bg-zinc-900/80 backdrop-blur-md">
                     <div className={cn(
                         "flex items-center w-full",
                         isCollapsed ? "justify-center" : "justify-between"
                     )}>
                         <motion.div
-                            className="flex items-center gap-3 group cursor-pointer"
+                            className="flex items-center gap-2.5 group cursor-pointer"
                             onClick={() => onPageChange?.("dashboard")}
                         >
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0 shadow-sm">
-                                <Stethoscope className="w-5 h-5 text-white" />
+                            <div className="w-7 h-7 rounded-md bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center shrink-0">
+                                <Sparkles className="w-4 h-4 text-white dark:text-zinc-900" />
                             </div>
                             {!isCollapsed && (
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-none">Coconut</span>
-                                    <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-1 uppercase tracking-wider">HMS Dashboard</span>
-                                </div>
+                                <span className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Leadwave</span>
                             )}
                         </motion.div>
                     </div>
+
+                    {!isCollapsed && (
+                        <div className="w-full relative group">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                            <input
+                                type="text"
+                                placeholder="Search anything"
+                                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg py-1.5 pl-9 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-300 dark:focus:ring-zinc-700 transition-all"
+                            />
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded text-[10px] font-medium text-zinc-400 shadow-sm">
+                                <Command className="w-2.5 h-2.5" />
+                                <span>K</span>
+                            </div>
+                        </div>
+                    )}
                 </SidebarHeader>
 
                 {/* CONTENT */}
-                <SidebarContent className="px-4 py-2 bg-transparent flex-1 overflow-y-auto no-scrollbar">
+                <SidebarContent className="px-4 py-2 flex-1 overflow-y-auto no-scrollbar">
 
-                    {/* NAVIGATION SECTIONS */}
-                    {navigationSections.map((section, idx) => (
-                        <SidebarGroup key={section.label} className={cn("p-0", idx > 0 && "mt-2 pt-2 border-t border-zinc-100/50 dark:border-zinc-800/50")}>
-                            {!isCollapsed && (
-                                <div className="text-[12px] font-semibold text-zinc-400 dark:text-zinc-500 px-3 py-2 mb-1">
-                                    {section.label}
+                    {/* MAIN NAVIGATION */}
+                    <SidebarGroup className="p-0">
+                        <SidebarGroupContent>
+                            <SidebarMenu className="gap-0.5">
+                                {mainNavigation.map((item) => (
+                                    <NavItem
+                                        key={item.title}
+                                        icon={item.icon}
+                                        title={item.title}
+                                        isCollapsed={isCollapsed}
+                                        isActive={item.pageId ? currentPage === item.pageId : false}
+                                        onClick={item.pageId ? () => onPageChange?.(item.pageId) : undefined}
+                                        badge={item.badge}
+                                    />
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+
+                    {/* FAVORITES */}
+                    {!isCollapsed && (
+                        <SidebarGroup className="p-0 mt-6">
+                            <div className="flex items-center justify-between px-3 mb-2">
+                                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+                                    <motion.span>Favorites</motion.span>
                                 </div>
-                            )}
+                            </div>
                             <SidebarGroupContent>
-                                <SidebarMenu>
-                                    {section.items.map((item) => (
+                                <SidebarMenu className="gap-0.5">
+                                    {favoritesNavigation.map((item) => (
                                         <NavItem
                                             key={item.title}
                                             icon={item.icon}
+                                            iconColor={item.iconColor}
                                             title={item.title}
                                             isCollapsed={isCollapsed}
-                                            isActive={item.pageId ? currentPage === item.pageId : false}
-                                            onClick={item.pageId ? () => onPageChange?.(item.pageId) : undefined}
+                                            isActive={currentPage === item.pageId}
+                                            onClick={() => onPageChange?.(item.pageId)}
                                         />
                                     ))}
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
-                    ))}
+                    )}
+
+                    {/* RECORDS */}
+                    {!isCollapsed && (
+                        <SidebarGroup className="p-0 mt-6">
+                            <div className="flex items-center justify-between px-3 mb-2">
+                                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+                                    <motion.span>Records</motion.span>
+                                </div>
+                            </div>
+                            <SidebarGroupContent>
+                                <SidebarMenu className="gap-0.5">
+                                    {recordsNavigation.map((item) => (
+                                        <NavItem
+                                            key={item.title}
+                                            icon={item.icon}
+                                            title={item.title}
+                                            isCollapsed={isCollapsed}
+                                            isActive={currentPage === item.pageId}
+                                            onClick={() => onPageChange?.(item.pageId)}
+                                        />
+                                    ))}
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    )}
+
+                    {/* LIST */}
+                    {!isCollapsed && (
+                        <SidebarGroup className="p-0 mt-6">
+                            <div className="flex items-center justify-between px-3 mb-2">
+                                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+                                    <motion.span>List</motion.span>
+                                </div>
+                            </div>
+                            <SidebarGroupContent>
+                                <SidebarMenu className="gap-0.5">
+                                    {listNavigation.map((item) => (
+                                        <NavItem
+                                            key={item.title}
+                                            icon={item.icon}
+                                            iconColor={item.iconColor}
+                                            iconFill={item.iconFill}
+                                            title={item.title}
+                                            isCollapsed={isCollapsed}
+                                            isActive={currentPage === item.pageId}
+                                            onClick={() => onPageChange?.(item.pageId)}
+                                        />
+                                    ))}
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    )}
 
                 </SidebarContent>
-
-                {/* FOOTER */}
-                <SidebarFooter className="p-3 border-none bg-transparent border-t border-zinc-100/50 dark:border-zinc-800/50 mt-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5, duration: 0.4 }}
-                        className="space-y-4"
-                    >
-
-                        <SidebarMenu className="gap-0.5 pt-2">
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.65, staggerChildren: 0.05 }}
-                                className="flex flex-col gap-0.5"
-                            >
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                    <NavItem icon={Question} title="Get help" isCollapsed={isCollapsed} />
-                                </motion.div>
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                    <NavItem icon={Gear} title="Settings" isCollapsed={isCollapsed} />
-                                </motion.div>
-                            </motion.div>
-                        </SidebarMenu>
-                    </motion.div>
-                </SidebarFooter>
 
             </div>
         </Sidebar>
@@ -194,62 +208,59 @@ function NavItem({
     icon: Icon,
     title,
     isActive,
-    isSubitem,
     isCollapsed,
-    iconClassName,
-    textClassName,
-    className,
+    iconColor,
+    iconFill,
+    badge,
     onClick
 }: {
     icon?: React.ElementType
     title: string
     isActive?: boolean
-    isSubitem?: boolean
     isCollapsed?: boolean
-    iconClassName?: string
-    textClassName?: string
-    className?: string
+    iconColor?: string
+    iconFill?: boolean
+    badge?: string
     onClick?: () => void
 }) {
     return (
-        <SidebarMenuItem className={className}>
+        <SidebarMenuItem>
             <SidebarMenuButton
                 asChild={!onClick}
                 tooltip={title}
                 isActive={isActive}
                 onClick={onClick}
                 className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] transition-colors relative group cursor-pointer h-10",
-                    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                    "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-all relative group cursor-pointer h-9 mb-0.5",
                     isActive
-                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
-                        : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100",
-                    isSubitem ? "pl-10 text-[14px]" : "",
+                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
+                        : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-200",
                     isCollapsed && "justify-center px-0"
                 )}
             >
                 <div
                     className={cn(
-                        "flex items-center gap-3 w-full",
+                        "flex items-center gap-2.5 w-full",
                         isCollapsed ? "justify-center" : ""
                     )}
                 >
                     {Icon && (
                         <Icon
-                            weight="light"
                             className={cn(
-                                "w-5 h-5 shrink-0 transition-all duration-300",
-                                isActive ? "text-blue-600 dark:text-blue-400" : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300",
-                                iconClassName
+                                "w-[18px] h-[18px] shrink-0 transition-all",
+                                isActive ? "text-zinc-900 dark:text-zinc-100" : (iconColor || "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"),
+                                iconFill && "fill-current"
                             )}
                         />
                     )}
                     {!isCollapsed && (
-                        <span className={cn(
-                            "truncate transition-colors",
-                            textClassName
-                        )}>
+                        <span className="truncate flex-1 tracking-tight">
                             {title}
+                        </span>
+                    )}
+                    {!isCollapsed && badge && (
+                        <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full shadow-xs">
+                            {badge}
                         </span>
                     )}
                 </div>
