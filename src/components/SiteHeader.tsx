@@ -1,4 +1,4 @@
-import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap, Home, ChevronRight, LayoutDashboard, Calendar, UserSquare, Stethoscope } from "lucide-react";
+import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap, Home, ChevronRight, LayoutDashboard, Calendar, UserSquare, Stethoscope, Bell } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -15,17 +15,18 @@ import { Badge } from "@/components/ui/badge"
 
 const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
   dashboard: { label: "Dashboard", icon: LayoutDashboard },
-  calender:  { label: "Calendar",  icon: Calendar },
-  calendar:  { label: "Calendar",  icon: Calendar },
-  patients:  { label: "Patients",  icon: Stethoscope },
-  doctors:   { label: "Team",      icon: UserSquare },
+  calender: { label: "Calendar", icon: Calendar },
+  calendar: { label: "Calendar", icon: Calendar },
+  patients: { label: "Patients", icon: Stethoscope },
+  doctors: { label: "Team", icon: UserSquare },
+  notifications: { label: "Notifications", icon: Bell },
 };
 
-export function SiteHeader({ 
-  onTabChange, 
+export function SiteHeader({
+  onTabChange,
   currentPage = "dashboard",
   activeTab,
-}: { 
+}: {
   onTabChange?: (tab: string) => void;
   currentPage?: string;
   activeTab?: string;
@@ -55,12 +56,12 @@ export function SiteHeader({
             <pageMeta.icon className="w-3.5 h-3.5" />
             <span className="text-[13px] font-semibold">{pageMeta.label}</span>
           </div>
-          {activeTab && activeTab !== pageMeta.label && (
+          {/* {activeTab && activeTab !== pageMeta.label && (
             <>
               <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
               <span className="text-[13px] font-semibold text-zinc-600 dark:text-zinc-400">{activeTab}</span>
             </>
-          )}
+          )} */}
         </nav>
 
       </div>
@@ -93,7 +94,7 @@ export function SiteHeader({
             </DropdownMenuLabel>
 
             <div className="space-y-0.5">
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => onTabChange?.("Profile")}
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
               >
