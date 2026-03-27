@@ -3,8 +3,9 @@ import { AppLayout } from "@/layouts/AppLayout"
 import { Dashboard } from "@/pages/Dashboard"
 import { CalendarPage } from "@/pages/CalendarPage"
 import { MessagesPage } from "@/pages/MessagesPage"
+import { PatientsPage } from "@/pages/PatientsPage"
 
-type PageType = "dashboard" | "calender" | "calendar" | "notifications" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | string;
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
@@ -21,7 +22,8 @@ function App() {
       activeTab={activeDashboardTab}
     >
       {isCalendar && <CalendarPage />}
-      {currentPage === "notifications" && <MessagesPage />}
+      {currentPage === "messages" && <MessagesPage />}
+      {currentPage === "patients" && <PatientsPage />}
       {currentPage === "dashboard" && (
         <Dashboard activeTab={activeDashboardTab} onTabChange={setActiveDashboardTab} />
       )}

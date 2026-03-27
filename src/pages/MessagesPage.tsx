@@ -2,7 +2,8 @@ import * as React from "react";
 
 import {
   Search, Settings, Phone, Video, MoreHorizontal,
-  Smile, Send, Mic, Plus
+  Smile, Send, Mic, Plus,
+  EllipsisVertical, MessageSquare, Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +65,7 @@ export function MessagesPage() {
   const [activeTab, setActiveTab] = React.useState<"messages" | "groups">("messages");
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [inputText, setInputText] = React.useState("");
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = React.useState(false);
 
   return (
     <div className="absolute inset-x-0 bottom-0 top-16 flex bg-white dark:bg-zinc-950 overflow-hidden divide-x divide-zinc-200 dark:divide-zinc-800 border-t border-zinc-200 dark:border-zinc-800">
@@ -74,20 +76,20 @@ export function MessagesPage() {
         <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 shrink-0 flex items-center gap-2 h-[72px]">
           {!isSearchOpen ? (
             <>
-              <div className="flex-1 flex p-1 bg-zinc-100 dark:bg-zinc-900 rounded-full">
+              <div className="flex-1 flex items-center p-1 bg-zinc-100 dark:bg-zinc-900 rounded-full">
                 <button
                   onClick={() => setActiveTab("messages")}
-                  className={cn("flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-sm font-semibold transition-all", activeTab === "messages" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700")}
+                  className={cn("flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full text-sm font-semibold transition-all", activeTab === "messages" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700")}
                 >
-                  Messages
-                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full leading-none", activeTab === "messages" ? "bg-blue-600 text-white" : "bg-zinc-200 dark:bg-zinc-800 text-zinc-500")}>24</span>
+                  <span>Chats</span>
+                  <span className={cn("flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full text-[10px] font-bold", activeTab === "messages" ? "bg-[#25D366] text-white" : "bg-zinc-200 dark:bg-zinc-800 text-zinc-500")}>24</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("groups")}
                   className={cn("flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-sm font-semibold transition-all", activeTab === "groups" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700")}
                 >
-                  Groups
-                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full leading-none", activeTab === "groups" ? "bg-blue-600 text-white" : "bg-zinc-200 dark:bg-zinc-800 text-zinc-500")}>3</span>
+                  <span>Groups</span>
+                  <span className={cn("flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full text-[10px] font-bold", activeTab === "groups" ? "bg-[#25D366] text-white" : "bg-zinc-200 dark:bg-zinc-800 text-zinc-500")}>3</span>
                 </button>
               </div>
               <div className="flex items-center gap-1 shrink-0">
@@ -98,12 +100,29 @@ export function MessagesPage() {
                 >
                   <Search className="w-4 h-4" />
                 </button>
-                <button
-                  className="w-9 h-9 shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                  title="Create New"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
+                    onBlur={() => setTimeout(() => setIsCreateMenuOpen(false), 200)}
+                    className="w-9 h-9 shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                    title="Create New"
+                  >
+                    <EllipsisVertical className="w-4 h-4" />
+                  </button>
+
+                  {isCreateMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-zinc-900 rounded-2xl shadow-lg border border-zinc-200 dark:border-zinc-800 py-1.5 z-50 overflow-hidden transform origin-top-right transition-all animate-in fade-in zoom-in-95">
+                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <MessageSquare className="w-4 h-4 text-zinc-400" />
+                        New Chat
+                      </button>
+                      <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <Users className="w-4 h-4 text-zinc-400" />
+                        New Group
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           ) : (
@@ -113,7 +132,7 @@ export function MessagesPage() {
                 <input
                   autoFocus
                   placeholder="Search..."
-                  className="w-full bg-zinc-100 dark:bg-zinc-900 border border-transparent rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white dark:focus:bg-zinc-950 transition-all"
+                  className="w-full bg-zinc-100 dark:bg-zinc-900 border border-transparent rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#00a884] focus:bg-white dark:focus:bg-zinc-950 transition-all"
                 />
               </div>
               <button
@@ -146,7 +165,7 @@ export function MessagesPage() {
                     </p>
                   </div>
                   {chat.unread > 0 && (
-                    <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-2 shadow-sm">
+                    <div className="w-5 h-5 rounded-full bg-[#25D366] text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-2 shadow-sm">
                       {chat.unread}
                     </div>
                   )}
@@ -205,14 +224,14 @@ export function MessagesPage() {
         </div>
 
         {/* Messages Flow */}
-        <div className="flex-[1_1_0] min-h-0 overflow-y-auto no-scrollbar p-6 space-y-6 bg-zinc-50/30 dark:bg-zinc-900/10">
+        <div className="flex-[1_1_0] min-h-0 overflow-y-auto no-scrollbar p-6 space-y-6 bg-[#efeae2]/80 dark:bg-[#0b141a]/90">
           {MESSAGES.map((msg) => {
             if (msg.type === "divider") {
               return (
                 <div key={msg.id} className="flex items-center gap-4 py-2">
-                  <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800"></div>
-                  <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">{msg.text}</span>
-                  <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800"></div>
+                  <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-800"></div>
+                  <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{msg.text}</span>
+                  <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-800"></div>
                 </div>
               );
             }
@@ -225,12 +244,12 @@ export function MessagesPage() {
                 {!isOwn && msg.sender && (
                   <div className="flex items-center gap-2 mb-1.5 ml-1">
                     <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{msg.sender}</span>
-                    <span className="text-[10px] text-zinc-400">{msg.time}</span>
+                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{msg.time}</span>
                   </div>
                 )}
                 {isOwn && (
                   <div className="flex items-center justify-end gap-2 mb-1.5 mr-1">
-                    <span className="text-[10px] text-zinc-400">{msg.time}</span>
+                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400">{msg.time}</span>
                   </div>
                 )}
 
@@ -238,14 +257,14 @@ export function MessagesPage() {
                   {!isOwn && msg.avatar && <Avatar src={msg.avatar} alt={msg.sender || ""} size="sm" />}
 
                   <div className={cn(
-                    "relative px-4 py-2.5 text-[14px] leading-relaxed",
+                    "relative px-4 py-2.5 text-[14px] leading-relaxed shadow-[0_1px_0.5px_rgba(0,0,0,0.13)]",
                     isOwn
-                      ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm"
-                      : "bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl rounded-tl-sm shadow-sm"
+                      ? "bg-[#d9fdd3] dark:bg-[#005c4b] text-zinc-900 dark:text-zinc-100 rounded-2xl rounded-tr-sm"
+                      : "bg-white dark:bg-[#202c33] text-zinc-800 dark:text-zinc-200 rounded-2xl rounded-tl-sm"
                   )}>
                     {msg.type === "audio" ? (
                       <div className="flex items-center gap-3 w-48">
-                        <button className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center shrink-0 hover:bg-blue-200 transition-colors">
+                        <button className="w-8 h-8 rounded-full bg-[#00a884]/10 dark:bg-[#00a884]/20 text-[#00a884] flex items-center justify-center shrink-0 hover:bg-[#00a884]/20 transition-colors">
                           <div className="w-0 h-0 border-t-4 border-t-transparent border-l-6 border-l-current border-b-4 border-b-transparent ml-0.5"></div>
                         </button>
                         <div className="flex-1 flex items-center gap-0.5 h-6">
@@ -263,7 +282,7 @@ export function MessagesPage() {
                     {/* Reactions */}
                     {msg.reactions && (
                       <div className={cn("absolute -bottom-3 flex items-center gap-1", isOwn ? "right-2" : "left-2")}>
-                        <div className="flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full py-0.5 px-1.5 text-[10px] shadow-sm transform hover:scale-105 transition-transform cursor-pointer">
+                        <div className="flex items-center bg-white dark:bg-[#202c33] border border-zinc-200 dark:border-zinc-700/50 rounded-full py-0.5 px-1.5 text-[10px] shadow-sm transform hover:scale-105 transition-transform cursor-pointer">
                           {msg.reactions.join("  ")}
                         </div>
                       </div>
@@ -277,18 +296,18 @@ export function MessagesPage() {
           {/* Typing indicator */}
           <div className="flex items-center gap-2 pt-2">
             <Avatar src="https://i.pravatar.cc/150?u=robert" alt="Robert" size="sm" />
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 px-3 py-2 rounded-2xl rounded-tl-sm text-xs text-zinc-500 shadow-sm flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600 animate-bounce" style={{ animationDelay: "0ms" }}></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600 animate-bounce" style={{ animationDelay: "150ms" }}></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600 animate-bounce" style={{ animationDelay: "300ms" }}></span>
+            <div className="bg-white dark:bg-[#202c33] shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] px-3 py-2 rounded-2xl rounded-tl-sm text-xs text-zinc-500 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-500 animate-bounce" style={{ animationDelay: "0ms" }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-500 animate-bounce" style={{ animationDelay: "150ms" }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-500 animate-bounce" style={{ animationDelay: "300ms" }}></span>
             </div>
           </div>
         </div>
 
         {/* Chat Input */}
-        <div className="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
-          <div className="flex items-end gap-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-2 focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all shadow-sm">
-            <button className="w-9 h-9 rounded-full flex flex-shrink-0 items-center justify-center text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+        <div className="p-4 bg-[#f0f2f5] dark:bg-[#202c33] border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+          <div className="flex items-end gap-2 bg-white dark:bg-[#2a3942] rounded-2xl p-2 focus-within:ring-1 focus-within:ring-[#00a884] transition-all shadow-sm">
+            <button className="w-9 h-9 rounded-full flex flex-shrink-0 items-center justify-center text-zinc-500 dark:text-[#8696a0] hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               <Plus className="w-5 h-5" />
             </button>
             <textarea
@@ -305,7 +324,7 @@ export function MessagesPage() {
               <button className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors mr-1">
                 <Mic className="w-5 h-5" />
               </button>
-              <button className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors shadow-sm">
+              <button className="w-9 h-9 rounded-full bg-[#00a884] hover:bg-[#008f6f] text-white flex items-center justify-center transition-colors shadow-sm">
                 <Send className="w-4 h-4 ml-0.5" />
               </button>
             </div>

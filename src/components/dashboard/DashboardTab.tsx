@@ -264,41 +264,41 @@ export function DashboardTab() {
       </div>
 
       <div className="flex items-center justify-end gap-2 mt-4">
-          <div className="flex rounded-xl bg-zinc-100/80 dark:bg-zinc-800/80 p-1 border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm">
-            {tabs.map((tab) => (
-              <FilterBtn
-                key={tab}
-                label={tab}
-                active={selectedTab === tab}
-                onClick={() => setSelectedTab(tab)}
-              />
-            ))}
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm text-[13px] font-bold text-zinc-700 dark:text-zinc-300"
+        <div className="flex rounded-xl bg-zinc-100/80 dark:bg-zinc-800/80 p-1 border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm">
+          {tabs.map((tab) => (
+            <FilterBtn
+              key={tab}
+              label={tab}
+              active={selectedTab === tab}
+              onClick={() => setSelectedTab(tab)}
+            />
+          ))}
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm text-[13px] font-bold text-zinc-700 dark:text-zinc-300"
+            >
+              {selectedYear} <ChevronDown className="w-4 h-4 text-zinc-400" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg">
+            {years.map((year) => (
+              <DropdownMenuItem
+                key={year}
+                onClick={() => setSelectedYear(year)}
+                className={cn(
+                  "cursor-pointer w-full text-left px-4 py-2 text-sm transition-colors",
+                  selectedYear === year
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold"
+                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                )}
               >
-                {selectedYear} <ChevronDown className="w-4 h-4 text-zinc-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg">
-              {years.map((year) => (
-                <DropdownMenuItem
-                  key={year}
-                  onClick={() => setSelectedYear(year)}
-                  className={cn(
-                    "cursor-pointer w-full text-left px-4 py-2 text-sm transition-colors",
-                    selectedYear === year
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold"
-                      : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                  )}
-                >
-                  {year}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {year}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
 
@@ -470,3 +470,17 @@ export function DashboardTab() {
     </div>
   );
 }
+
+// 1link here the dahbaord need an update like Dashbaord,Doctor,Nurse,Staff
+// 2 patient
+// 3 appointments
+// 4 Laboratory
+// 5 pharmacy
+// 6 Ambulace
+// 7 insuarance
+// 8 inventory
+// 9 billing& invoices
+// report & analytics
+// Calendar
+//
+// Last 2 get help & settings

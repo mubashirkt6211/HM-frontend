@@ -121,19 +121,17 @@ function EventPill({ event, isPast }: { event: CalendarEvent; isPast?: boolean }
     const c = COLOR_MAP[event.color] ?? COLOR_MAP.blue;
     return (
         <motion.div
-            whileHover={{ scale: isPast ? 1 : 1.02 }}
+            whileHover={{ scale: 1.02 }}
             className={cn(
                 "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium cursor-pointer truncate",
-                isPast
-                    ? "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-400 dark:text-zinc-600"
-                    : cn(c.bg, c.text)
+                c.bg, c.text
             )}
         >
             <span className={cn(
                 "w-1.5 h-1.5 rounded-full shrink-0",
-                isPast ? "bg-zinc-300 dark:bg-zinc-600" : c.dot
+                c.dot
             )} />
-            <span className={cn("truncate", isPast && "line-through decoration-zinc-400")}>{event.title}</span>
+            <span className={cn("truncate", isPast && "line-through decoration-current")}>{event.title}</span>
             <span className="shrink-0 opacity-50">{event.time}</span>
         </motion.div>
     );
@@ -147,7 +145,7 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
     icon?: React.ElementType;
 }) {
     const [open, setOpen] = React.useState(false);
-    
+
     // Parse HH:MM
     const [hStr, mStr] = value.split(":");
     let h = parseInt(hStr, 10);
@@ -158,7 +156,7 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
 
     const hours = Array.from({ length: 12 }, (_, i) => i + 1);
     const minutes = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
-    
+
     function updateTime(newH: number, newM: number, newIsPm: boolean) {
         let hr = newH;
         if (newIsPm && hr < 12) hr += 12;
@@ -569,9 +567,9 @@ export function CalendarPage() {
                         onClick={() => setShowModal(true)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm shadow-blue-200 dark:shadow-none transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold shadow-md shadow-blue-200 dark:shadow-none transition-colors"
                     >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                         Add event
                     </motion.button>
                 </div>
@@ -619,8 +617,7 @@ export function CalendarPage() {
                                     className={cn(
                                         "min-h-[90px] border-b border-r border-zinc-100 dark:border-zinc-800/60 last:border-r-0 p-2 group cursor-pointer transition-colors",
                                         !isCurrentMonth && "bg-zinc-50/60 dark:bg-zinc-900/30",
-                                        isPast && "bg-zinc-50/80 dark:bg-zinc-900/20",
-                                        isCurrentMonth && !isPast && "hover:bg-zinc-50 dark:hover:bg-zinc-900/30",
+                                        isCurrentMonth && "hover:bg-zinc-50 dark:hover:bg-zinc-900/30",
                                         isSelected && !isToday && "bg-blue-50/40 dark:bg-blue-900/10",
                                     )}
                                 >
@@ -629,8 +626,7 @@ export function CalendarPage() {
                                         <span className={cn(
                                             "w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold transition-colors",
                                             !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
-                                            isPast && "text-zinc-300 dark:text-zinc-600 line-through",
-                                            isCurrentMonth && !isToday && !isPast && "text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100",
+                                            isCurrentMonth && !isToday && "text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100",
                                             isToday && "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900",
                                         )}>
                                             {dayNum > 0 && dayNum <= daysInMonth ? dayNum : (dayNum <= 0 ? getDaysInMonth(year, month - 1) + dayNum : dayNum - daysInMonth)}

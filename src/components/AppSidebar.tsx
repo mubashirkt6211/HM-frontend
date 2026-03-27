@@ -3,8 +3,10 @@ import * as React from "react";
 import {
     LayoutDashboard, Bell, CheckSquare, StickyNote, Mail, BarChart3,
     Sparkles, Workflow, Star, Users, UserSquare, Search, Command,
-    icons,
-    Calendar
+    ChevronDown, Activity, User, Banknote,
+    MessageSquare,
+    MessageCircle,
+    CalendarCheck2
 } from "lucide-react";
 
 import {
@@ -20,12 +22,23 @@ import {
 } from "@/components/ui/sidebar"
 
 import { cn } from "@/lib/utils"
+import { CalendarBlankIcon, CalendarCheckIcon, Chats, MoneyWavyIcon, Scales, UsersThreeIcon } from "@phosphor-icons/react";
 
 const mainNavigation = [
-    { icon: LayoutDashboard, title: "Dashboard", pageId: "dashboard" },
-    { icon: Bell, title: "Notifications", pageId: "notifications", badge: "12" },
-    { icon: Calendar, title: "Calender", pageId: "calender" },
+    {
+        icon: LayoutDashboard,
+        title: "Dashboard",
+        pageId: "dashboard",
+        subItems: [
+            { title: "Overview", pageId: "dashboard", icon: Scales },
+            { title: "Patient", pageId: "patients", icon: User },
+            { title: "Revenue", pageId: "revenue", icon: MoneyWavyIcon },
+        ]
+    },
+    { icon: Chats, title: "Messages", pageId: "messages", badge: "12" },
+    { icon: CalendarCheckIcon, title: "Calender", pageId: "calender" },
     { icon: CheckSquare, title: "Tasks", pageId: "tasks" },
+    { icon: UsersThreeIcon, title: "Team", pageId: "team" },
     { icon: StickyNote, title: "Notes", pageId: "notes" },
     { icon: Mail, title: "Emails", pageId: "emails" },
     { icon: BarChart3, title: "Reports", pageId: "reports" },
@@ -110,9 +123,12 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                                         icon={item.icon}
                                         title={item.title}
                                         isCollapsed={isCollapsed}
-                                        isActive={item.pageId ? currentPage === item.pageId : false}
-                                        onClick={item.pageId ? () => onPageChange?.(item.pageId) : undefined}
+                                        isActive={item.pageId ? (currentPage === item.pageId || (item.subItems?.some(s => s.pageId === currentPage))) : false}
+                                        onClick={item.pageId && !item.subItems ? () => onPageChange?.(item.pageId) : undefined}
                                         badge={item.badge}
+                                        subItems={item.subItems}
+                                        currentPage={currentPage}
+                                        onPageChange={onPageChange}
                                     />
                                 ))}
                             </SidebarMenu>
@@ -212,7 +228,10 @@ function NavItem({
     iconColor,
     iconFill,
     badge,
-    onClick
+    onClick,
+    subItems,
+    currentPage,
+    onPageChange
 }: {
     icon?: React.ElementType
     title: string
@@ -222,17 +241,25 @@ function NavItem({
     iconFill?: boolean
     badge?: string
     onClick?: () => void
+    subItems?: { title: string; pageId: string; icon?: React.ElementType }[]
+    currentPage?: string
+    onPageChange?: (page: string) => void
 }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+
+
+    const hasSubItems = subItems && subItems.length > 0;
+
     return (
         <SidebarMenuItem>
             <SidebarMenuButton
-                asChild={!onClick}
+                asChild={!onClick && !hasSubItems}
                 tooltip={title}
-                isActive={isActive}
-                onClick={onClick}
+                isActive={isActive && !hasSubItems}
+                onClick={hasSubItems ? () => setIsOpen(!isOpen) : onClick}
                 className={cn(
                     "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-all relative group cursor-pointer h-9 mb-0.5",
-                    isActive
+                    isActive && !hasSubItems
                         ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
                         : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-200",
                     isCollapsed && "justify-center px-0"
@@ -263,8 +290,41 @@ function NavItem({
                             {badge}
                         </span>
                     )}
+                    {!isCollapsed && hasSubItems && (
+                        <ChevronDown className={cn(
+                            "w-3.5 h-3.5 text-zinc-400 transition-transform duration-200",
+                            isOpen && "rotate-180"
+                        )} />
+                    )}
                 </div>
             </SidebarMenuButton>
+
+            {!isCollapsed && hasSubItems && isOpen && (
+                <div className="ml-7 mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-zinc-200 dark:border-zinc-800">
+                    {subItems.map((sub) => (
+                        <button
+                            key={sub.pageId}
+                            onClick={() => onPageChange?.(sub.pageId)}
+                            className={cn(
+                                "flex items-center gap-2.5 px-3.5 py-1.5 text-[13px] rounded-r-lg transition-all text-left",
+                                currentPage === sub.pageId
+                                    ? "text-zinc-900 dark:text-zinc-100 font-medium bg-zinc-100/50 dark:bg-zinc-800/50"
+                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                            )}
+                        >
+                            {sub.icon && (
+                                <sub.icon className={cn(
+                                    "w-3.5 h-3.5 shrink-0 transition-colors",
+                                    currentPage === sub.pageId ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"
+                                )} />
+                            )}
+                            <span className="truncate flex-1 tracking-tight">
+                                {sub.title}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
         </SidebarMenuItem>
     )
 }
