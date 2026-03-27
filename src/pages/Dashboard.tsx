@@ -3,14 +3,14 @@
  */
 import { motion, AnimatePresence } from "motion/react";
 import {
-  LayoutGrid,
+  SquaresFour,
   Users,
   Stethoscope,
   Star,
   FileText,
-  DownloadCloudIcon,
+  DownloadSimple,
   Camera,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   DashboardTab,
@@ -24,7 +24,7 @@ import {
 import claraAvatar from "@/assets/clara_avatar.png";
 
 const TABS = [
-  { icon: LayoutGrid, label: "Dashboard" },
+  { icon: SquaresFour, label: "Dashboard" },
   { icon: Users, label: "Team" },
   { icon: Stethoscope, label: "Patient" },
   { icon: FileText, label: "Documents" },
@@ -103,7 +103,7 @@ export function Dashboard({ activeTab, onTabChange }: { activeTab: string; onTab
           ))}
         </div>
         <Button className="hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-bold shadow-xl shadow-zinc-200 dark:shadow-none hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-95">
-          Download PDF <DownloadCloudIcon />
+          Download PDF <DownloadSimple />
         </Button>
       </div>
 

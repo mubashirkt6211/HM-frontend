@@ -2,9 +2,9 @@ import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { format } from "date-fns";
 import {
-    ChevronLeft, ChevronRight, Plus, Search, Clock, Users,
-    X, Calendar as CalendarIcon, MapPin, AlignLeft
-} from "lucide-react";
+    CaretLeft, CaretRight, Plus, Clock, Users,
+    X, Calendar as CalendarIcon, MapPin, TextAlignLeft
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -402,7 +402,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                     {/* Notes */}
                     <div>
                         <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block flex items-center gap-1">
-                            <AlignLeft className="w-3 h-3" /> Notes
+                            <TextAlignLeft className="w-3 h-3" /> Notes
                         </label>
                         <textarea
                             value={notes}
@@ -528,11 +528,11 @@ export function CalendarPage() {
                     {/* Month navigation */}
                     <div className="flex items-center gap-0.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5">
                         <button onClick={prevMonth} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
-                            <ChevronLeft className="w-4 h-4" />
+                            <CaretLeft className="w-4 h-4" />
                         </button>
                         <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 px-2">{MONTHS[month]} {year}</span>
                         <button onClick={nextMonth} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
-                            <ChevronRight className="w-4 h-4" />
+                            <CaretRight className="w-4 h-4" />
                         </button>
                     </div>
 

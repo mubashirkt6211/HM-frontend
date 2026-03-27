@@ -1,13 +1,10 @@
 import { motion } from "motion/react";
 import * as React from "react";
 import {
-    LayoutDashboard, Bell, CheckSquare, StickyNote, Mail, BarChart3,
-    Sparkles, Workflow, Star, Users, UserSquare, Search, Command,
-    ChevronDown, Activity, User, Banknote,
-    MessageSquare,
-    MessageCircle,
-    CalendarCheck2
-} from "lucide-react";
+    House, CheckSquare, FileText, Envelope, ChartBar,
+    Sparkle, TreeStructure, Star, Users, UserFocus, MagnifyingGlass, Command,
+    CaretDown, User, CalendarCheck, Chats, ListChecks, CurrencyEur, Scales, UsersThree
+} from "@phosphor-icons/react";
 
 import {
     Sidebar,
@@ -22,28 +19,27 @@ import {
 } from "@/components/ui/sidebar"
 
 import { cn } from "@/lib/utils"
-import { CalendarBlankIcon, CalendarCheckIcon, Chats, MoneyWavyIcon, Scales, UsersThreeIcon } from "@phosphor-icons/react";
 
 const mainNavigation = [
     {
-        icon: LayoutDashboard,
+        icon: House,
         title: "Dashboard",
         pageId: "dashboard",
         subItems: [
             { title: "Overview", pageId: "dashboard", icon: Scales },
             { title: "Patient", pageId: "patients", icon: User },
-            { title: "Revenue", pageId: "revenue", icon: MoneyWavyIcon },
+            { title: "Revenue", pageId: "revenue", icon: CurrencyEur },
         ]
     },
     { icon: Chats, title: "Messages", pageId: "messages", badge: "12" },
-    { icon: CalendarCheckIcon, title: "Calender", pageId: "calender" },
-    { icon: CheckSquare, title: "Tasks", pageId: "tasks" },
-    { icon: UsersThreeIcon, title: "Team", pageId: "team" },
-    { icon: StickyNote, title: "Notes", pageId: "notes" },
-    { icon: Mail, title: "Emails", pageId: "emails" },
-    { icon: BarChart3, title: "Reports", pageId: "reports" },
-    { icon: Sparkles, title: "Automations", pageId: "automations" },
-    { icon: Workflow, title: "Workflows", pageId: "workflows" },
+    { icon: CalendarCheck, title: "Calender", pageId: "calender" },
+    { icon: ListChecks, title: "Tasks", pageId: "tasks" },
+    { icon: UsersThree, title: "Team", pageId: "team" },
+    { icon: FileText, title: "Notes", pageId: "notes" },
+    { icon: Envelope, title: "Emails", pageId: "emails" },
+    { icon: ChartBar, title: "Reports", pageId: "reports" },
+    { icon: Sparkle, title: "Automations", pageId: "automations" },
+    { icon: TreeStructure, title: "Workflows", pageId: "workflows" },
 ];
 
 const favoritesNavigation = [
@@ -55,7 +51,7 @@ const favoritesNavigation = [
 
 const recordsNavigation = [
     { icon: Users, title: "Clients", pageId: "clients" },
-    { icon: UserSquare, title: "Contacts", pageId: "contacts" },
+    { icon: UserFocus, title: "Contacts", pageId: "contacts" },
 ];
 
 const listNavigation = [
@@ -86,7 +82,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                             onClick={() => onPageChange?.("dashboard")}
                         >
                             <div className="w-7 h-7 rounded-md bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center shrink-0">
-                                <Sparkles className="w-4 h-4 text-white dark:text-zinc-900" />
+                                <Sparkle className="w-4 h-4 text-white dark:text-zinc-900" />
                             </div>
                             {!isCollapsed && (
                                 <span className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Leadwave</span>
@@ -96,7 +92,7 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
 
                     {!isCollapsed && (
                         <div className="w-full relative group">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                            <MagnifyingGlass className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                             <input
                                 type="text"
                                 placeholder="Search anything"
@@ -291,7 +287,7 @@ function NavItem({
                         </span>
                     )}
                     {!isCollapsed && hasSubItems && (
-                        <ChevronDown className={cn(
+                        <CaretDown className={cn(
                             "w-3.5 h-3.5 text-zinc-400 transition-transform duration-200",
                             isOpen && "rotate-180"
                         )} />

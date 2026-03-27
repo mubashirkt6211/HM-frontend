@@ -54,7 +54,7 @@ export function VisualChart() {
   const areaData = `${pathData} L ${points[points.length - 1].x},${height} L 0,${height} Z`;
 
   return (
-    <div className="relative w-full h-45 mt-8 group">
+    <div className="relative w-full h-48 mt-8 group">
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-full overflow-visible"

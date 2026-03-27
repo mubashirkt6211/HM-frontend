@@ -6,10 +6,9 @@ import { motion } from "motion/react";
 import {
   Clock,
   CheckCircle,
-  AlertCircle,
-  ChevronDown,
-  Plus,
-} from "lucide-react";
+  WarningCircle,
+  CaretDown,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -151,7 +150,7 @@ export function DashboardTab() {
                   Last update:{" "}
                   <span className="text-blue-700 font-medium">Today at 5:56pm</span>
                 </span>
-                <CheckCircle className="w-4 h-4 text-emerald-500" />
+                <CheckCircle className="w-4 h-4 text-emerald-500" weight="bold" />
               </div>
             </div>
           </Card>
@@ -168,7 +167,7 @@ export function DashboardTab() {
               const statuses = [
                 { label: "Completed", value: 124, total: 156, icon: CheckCircle, color: "bg-emerald-500", track: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-600 dark:text-emerald-400", stroke: "#10b981" },
                 { label: "In Progress", value: 24, total: 156, icon: Clock, color: "bg-orange-500", track: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-600 dark:text-orange-400", stroke: "#f97316" },
-                { label: "Pending", value: 8, total: 156, icon: AlertCircle, color: "bg-rose-500", track: "bg-rose-100 dark:bg-rose-900/30", text: "text-rose-600 dark:text-rose-400", stroke: "#f43f5e" },
+                { label: "Pending", value: 8, total: 156, icon: WarningCircle, color: "bg-rose-500", track: "bg-rose-100 dark:bg-rose-900/30", text: "text-rose-600 dark:text-rose-400", stroke: "#f43f5e" },
               ];
               const r = 28;
               const circ = 2 * Math.PI * r;
@@ -279,7 +278,7 @@ export function DashboardTab() {
             <button
               className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm text-[13px] font-bold text-zinc-700 dark:text-zinc-300"
             >
-              {selectedYear} <ChevronDown className="w-4 h-4 text-zinc-400" />
+              {selectedYear} <CaretDown className="w-4 h-4 text-zinc-400" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-24 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg">
