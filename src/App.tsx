@@ -5,6 +5,7 @@ import { CalendarPage } from "@/pages/CalendarPage"
 import { MessagesPage } from "@/pages/MessagesPage"
 import { PatientsPage } from "@/pages/PatientsPage"
 import { TasksPage } from "@/pages/TasksPage"
+import { DoctorsPage } from "@/pages/DoctorsPage"
 
 type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | string;
 
@@ -26,6 +27,7 @@ function App() {
       {currentPage === "messages" && <MessagesPage />}
       {currentPage === "patients" && <PatientsPage />}
       {currentPage === "tasks" && <TasksPage />}
+      {currentPage === "doctors" && <DoctorsPage />}
       {currentPage === "dashboard" && (
         <Dashboard activeTab={activeDashboardTab} onTabChange={setActiveDashboardTab} />
       )}

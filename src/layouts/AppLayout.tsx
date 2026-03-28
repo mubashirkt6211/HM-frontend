@@ -38,7 +38,7 @@ export function AppLayout({
                 <SidebarInset className="bg-transparent flex-1 flex flex-col p-2 pl-0 md:pl-0">
                     <main className="flex-1 mt-4 bg-white dark:bg-zinc-950 rounded-4xl shadow-sm ring-1 ring-zinc-200/50 dark:ring-zinc-800/50 flex flex-col relative overflow-hidden">
                         <SiteHeader onTabChange={onTabChange} currentPage={currentPage} activeTab={activeTab} />
-                        <div className="flex-1 w-full px-6 md:px-10 pb-10">
+                        <div className={`flex-1 w-full pb-10 ${currentPage === "doctors" ? "px-0" : "px-6 md:px-10"}`}>
                             {children}
                         </div>
                     </main>

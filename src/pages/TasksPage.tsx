@@ -17,7 +17,7 @@ import {
   type Filter,
   type FilterFieldConfig,
 } from "@/components/reui/filters"
-import { MagnifyingGlass, User, Tag } from "@phosphor-icons/react"
+import { User, Tag } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 
 import {
@@ -40,23 +40,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { DotsSixVertical, Plus } from "@phosphor-icons/react"
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxTrigger,
-  ComboboxValue,
-} from "@/components/ui/combobox"
-import { Field } from "@/components/ui/field"
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@/components/ui/item"
 
 const USERS = [
   {
@@ -269,17 +252,18 @@ export function TasksPage() {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")
   const [newTaskPriority, setNewTaskPriority] = useState<Task["priority"]>("medium")
-  const [selectedMember, setSelectedMember] = useState<typeof MEMBERS[number] | null>(MEMBERS[0])
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(MEMBERS[0].id)
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return
 
+    const member = MEMBERS.find(m => m.id === selectedMemberId) || MEMBERS[0]
     const task: Task = {
       id: Math.random().toString(36).substr(2, 9),
       title: newTaskTitle,
       priority: newTaskPriority,
-      assignee: selectedMember?.name || "Unassigned",
-      assigneeAvatar: selectedMember?.avatar,
+      assignee: member.name,
+      assigneeAvatar: member.avatar,
       dueDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     }
 
@@ -290,7 +274,7 @@ export function TasksPage() {
 
     setNewTaskTitle("")
     setNewTaskPriority("medium")
-    setSelectedMember(MEMBERS[0])
+    setSelectedMemberId(MEMBERS[0].id)
     setIsAddTaskModalOpen(false)
   }
 
@@ -380,200 +364,161 @@ export function TasksPage() {
     ],
   })
 
+  const filteredColumns = useMemo(() => {
+    const result: Record<string, Task[]> = {}
+    Object.entries(columns).forEach(([key, tasks]) => {
+      result[key] = tasks.filter(task => {
+        const matchesSearch = !searchQuery || task.title.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesFilters = activeFilters.every(f => {
+          if (f.field === 'priority') return f.values.length === 0 || f.values.includes(task.priority)
+          if (f.field === 'assignee') return !f.values[0] || task.assignee?.toLowerCase().includes(f.values[0].toLowerCase())
+          return true
+        })
+        return matchesSearch && matchesFilters
+      })
+    })
+    return result
+  }, [columns, searchQuery, activeFilters])
+
   return (
     <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="relative w-full mt-5 md:w-80">
-          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            className="w-full pl-10 pr-4 py-2 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800  outline-none transition-all text-[13px] font-medium"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <Filters
-            filters={activeFilters}
-            fields={FILTER_FIELDS}
-            onChange={setActiveFilters}
-            trigger={
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-md border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900 shadow-sm transition-all"
-              >
-                <ListFilterPlusIcon className="w-4 h-4 mr-2" />
-              </Button>
-            }
-          />
 
-          <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="sm"
-                className="rounded-md bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 shadow-md font-bold px-4 transition-all"
-              >
-                <Plus className="w-4 h-4 mr-1.5" weight="bold" />
-                Add Kanban
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-sm border border-zinc-200 dark:border-zinc-800 p-0 overflow-hidden">
-              <DialogHeader className="p-8 pb-4">
-                <DialogTitle>Create New Task</DialogTitle>
-                <DialogDescription>
-                  Fill in the details to add a new task to the system backlog.
-                </DialogDescription>
-              </DialogHeader>
 
-              <div className="flex-1 px-8 py-6 space-y-8 overflow-y-auto no-scrollbar">
-                <div className="space-y-2.5">
-                  <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest pl-1">Task Title</label>
-                  <input
-                    placeholder="E.g. Schedule recurring maintenance..."
-                    className="w-full h-12 px-4 rounded-md bg-zinc-50 dark:bg-zinc-900  transition-all text-[14px] font-bold"
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                  />
-                </div>
+      <div className="mb-6 flex items-center justify-end gap-3 mt-5">
+        <Filters
+          filters={activeFilters}
+          fields={FILTER_FIELDS}
+          onChange={setActiveFilters}
+          trigger={
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-md border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-900 shadow-sm transition-all"
+            >
+              <ListFilterPlusIcon className="w-4 h-4 mr-2" />
+              Filter
+            </Button>
+          }
+        />
 
-                <div className="space-y-2.5">
-                  <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest pl-1">Priority Level</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {["low", "medium", "high"].map((p) => {
-                      const priorityColors: Record<string, string> = {
-                        low: "bg-emerald-600 border-emerald-600",
-                        medium: "bg-amber-500 border-amber-500",
-                        high: "bg-rose-600 border-rose-600",
-                      }
-                      const shadowColors: Record<string, string> = {
-                        low: "shadow-emerald-500/20",
-                        medium: "shadow-amber-500/20",
-                        high: "shadow-rose-500/20",
-                      }
+        <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
+          <DialogTrigger asChild>
+            <Button
+              size="sm"
+              className="rounded-md bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 shadow-md font-bold px-4 transition-all"
+            >
+              <Plus className="w-4 h-4 mr-1.5" weight="bold" />
+              Add Kanban
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-sm border border-zinc-200 dark:border-zinc-800 p-0 overflow-hidden">
+            <DialogHeader className="p-8 pb-4">
+              <DialogTitle>Create New Task</DialogTitle>
+              <DialogDescription>
+                Fill in the details to add a new task to the system backlog.
+              </DialogDescription>
+            </DialogHeader>
 
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setNewTaskPriority(p as Task["priority"])}
-                          className={cn(
-                            "h-11 rounded-md border text-[12px] font-black uppercase tracking-wider transition-all",
-                            newTaskPriority === p
-                              ? `${priorityColors[p]} text-white shadow-lg ${shadowColors[p]}`
-                              : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-black/5 dark:hover:border-white/10"
-                          )}
-                        >
-                          {p}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
+            <div className="flex-1 px-8 py-6 space-y-8 overflow-y-auto no-scrollbar">
+              <div className="space-y-2.5">
+                <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest pl-1">Task Title</label>
+                <input
+                  placeholder="E.g. Schedule recurring maintenance..."
+                  className="w-full h-12 px-4 rounded-md bg-zinc-50 dark:bg-zinc-900  transition-all text-[14px] font-bold"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                />
+              </div>
 
-                <div className="space-y-4">
-                  <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest pl-1">Assignee</label>
-                  <Field>
-                    <Combobox
-                      items={MEMBERS}
-                      value={selectedMember}
-                      onValueChange={setSelectedMember}
-                      itemToStringValue={(member) => member.name}
-                    >
-                      <ComboboxTrigger
-                        render={
-                          <Button
-                            variant="outline"
-                            className="w-full h-12 justify-between font-bold rounded-md bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
-                          />
-                        }
+              <div className="space-y-2.5">
+                <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest pl-1">Priority Level</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {["low", "medium", "high"].map((p) => {
+                    const priorityColors: Record<string, string> = {
+                      low: "bg-emerald-600 border-emerald-600",
+                      medium: "bg-amber-500 border-amber-500",
+                      high: "bg-rose-600 border-rose-600",
+                    }
+                    const shadowColors: Record<string, string> = {
+                      low: "shadow-emerald-500/20",
+                      medium: "shadow-amber-500/20",
+                      high: "shadow-rose-500/20",
+                    }
+
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setNewTaskPriority(p as Task["priority"])}
+                        className={cn(
+                          "h-11 rounded-md border text-[12px] font-black uppercase tracking-wider transition-all",
+                          newTaskPriority === p
+                            ? `${priorityColors[p]} text-white shadow-lg ${shadowColors[p]}`
+                            : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-black/5 dark:hover:border-white/10"
+                        )}
                       >
-                        <ComboboxValue>
-                          {(member: typeof MEMBERS[number]) =>
-                            member ? (
-                              <span className="flex items-center gap-2">
-                                <Avatar className="size-5">
-                                  <AvatarImage src={member?.avatar} alt={member?.name} />
-                                  <AvatarFallback>{member?.initials}</AvatarFallback>
-                                </Avatar>
-                                <span>{member?.name}</span>
-                              </span>
-                            ) : (
-                              <span className="text-zinc-500">Select a member</span>
-                            )
-                          }
-                        </ComboboxValue>
-                      </ComboboxTrigger>
-                      <ComboboxContent className="w-full p-2">
-                        <ComboboxInput showTrigger={false} placeholder="Search members..." />
-                        <ComboboxEmpty>No members found.</ComboboxEmpty>
-                        <ComboboxList className="max-h-60 overflow-y-auto no-scrollbar">
-                          {(member) => (
-                            <ComboboxItem
-                              key={member.id}
-                              value={member}
-                              className="rounded-lg p-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 data-[highlighted]:bg-zinc-100 dark:data-[highlighted]:bg-zinc-800 outline-none transition-colors"
-                            >
-                              <Item size="xs" className="p-0">
-                                <Avatar className="size-8">
-                                  <AvatarImage src={member.avatar} alt={member.name} />
-                                  <AvatarFallback>{member.initials}</AvatarFallback>
-                                </Avatar>
-                                <ItemContent>
-                                  <ItemTitle className="whitespace-nowrap">
-                                    {member.name}
-                                  </ItemTitle>
-                                  <ItemDescription>{member.position}</ItemDescription>
-                                </ItemContent>
-                              </Item>
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                  </Field>
+                        {p}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
-              <DialogFooter className="p-8 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-                <DialogClose asChild>
-                  <Button variant="ghost" className="rounded-xl font-bold">Cancel</Button>
-                </DialogClose>
-                <Button
-                  onClick={handleAddTask}
-                  className="rounded-xl bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 shadow-xl font-bold px-8 transition-all"
-                >
-                  Create Task
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <div className="space-y-2.5">
+                <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest pl-1">Assignee</label>
+                <div className="relative">
+                  <select
+                    value={selectedMemberId}
+                    onChange={(e) => setSelectedMemberId(e.target.value)}
+                    className="w-full h-12 px-4 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10 transition-all text-[13px] font-bold text-zinc-900 dark:text-zinc-100 appearance-none cursor-pointer"
+                  >
+                    {MEMBERS.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} — {m.position}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                    <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="p-8 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+              <DialogClose asChild>
+                <Button variant="ghost" className="rounded-xl font-bold">Cancel</Button>
+              </DialogClose>
+              <Button
+                onClick={handleAddTask}
+                className="rounded-xl bg-zinc-900 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 shadow-xl font-bold px-8 transition-all"
+              >
+                Create Task
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Info banner */}
+      <div className="flex items-center gap-3 mt-2 px-4 py-2.5 mb-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/40 text-amber-800 dark:text-amber-300">
+        <svg className="w-4 h-4 shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" strokeWidth="2" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" />
+        </svg>
+        <p className="text-[12px] font-semibold flex-1">
+          Completed tasks are automatically removed after <span className="font-black">7 days</span> to keep the board clean.
+        </p>
       </div>
 
       <div className="flex-1 min-h-0">
         <Kanban
-          value={useMemo(() => {
-            const result: Record<string, Task[]> = {}
-            Object.entries(columns).forEach(([key, tasks]) => {
-              result[key] = tasks.filter(task => {
-                const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase())
-                const matchesFilters = activeFilters.every(f => {
-                  if (f.field === 'priority') return f.values.length === 0 || f.values.includes(task.priority)
-                  if (f.field === 'assignee') return !f.values[0] || task.assignee?.toLowerCase().includes(f.values[0].toLowerCase())
-                  return true
-                })
-                return matchesSearch && matchesFilters
-              })
-            })
-            return result
-          }, [columns, searchQuery, activeFilters])}
+          value={filteredColumns}
           onValueChange={setColumns}
           getItemValue={(item) => item.id}
           className="h-full"
         >
           <KanbanBoard className="grid h-full auto-rows-fr grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-hidden pb-4">
-            {Object.entries(columns).map(([columnValue, tasks]) => (
+            {Object.entries(filteredColumns).map(([columnValue, tasks]) => (
               <TaskColumn key={columnValue} value={columnValue} tasks={tasks} />
             ))}
           </KanbanBoard>
@@ -589,6 +534,6 @@ export function TasksPage() {
           </KanbanOverlay>
         </Kanban>
       </div>
-    </div>
+    </div >
   )
 }
