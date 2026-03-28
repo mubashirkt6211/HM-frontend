@@ -3,7 +3,9 @@ import * as React from "react";
 import {
     House, CheckSquare, FileText, Envelope, ChartBar,
     Sparkle, TreeStructure, Star, Users, UserFocus, MagnifyingGlass, Command,
-    CaretDown, User, CalendarCheck, Chats, ListChecks, CurrencyEur, Scales, UsersThree
+    CaretDown, User, CalendarCheck, Chats, ListChecks, CurrencyEur, Scales, UsersThree,
+    StethoscopeIcon,
+    CashRegisterIcon
 } from "@phosphor-icons/react";
 
 import {
@@ -19,6 +21,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import { cn } from "@/lib/utils"
+import { Syringe, User2Icon } from "lucide-react";
 
 const mainNavigation = [
     {
@@ -34,7 +37,14 @@ const mainNavigation = [
     { icon: Chats, title: "Messages", pageId: "messages", badge: "12" },
     { icon: CalendarCheck, title: "Calender", pageId: "calender" },
     { icon: ListChecks, title: "Tasks", pageId: "tasks" },
-    { icon: UsersThree, title: "Team", pageId: "team" },
+    {
+        icon: UsersThree, title: "Team", pageId: "team",
+        subItems: [
+            { title: "Doctors", pageId: "doctors", icon: StethoscopeIcon },
+            { title: "Nurse", pageId: "nurse", icon: Syringe },
+            { title: "Receptionist", pageId: "receptionist", icon: CashRegisterIcon },
+        ]
+    },
     { icon: FileText, title: "Notes", pageId: "notes" },
     { icon: Envelope, title: "Emails", pageId: "emails" },
     { icon: ChartBar, title: "Reports", pageId: "reports" },

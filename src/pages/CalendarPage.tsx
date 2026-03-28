@@ -567,7 +567,7 @@ export function CalendarPage() {
                         onClick={() => setShowModal(true)}
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold shadow-md shadow-blue-200 dark:shadow-none transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-gray-700 text-white dark:text-black dark:bg-white dark:hover:bg-gray-200 rounded-md text-xs font-semibold shadow-md shadow-gray-200 dark:shadow-none transition-colors"
                     >
                         <Plus className="w-4 h-4" />
                         Add event

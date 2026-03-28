@@ -19,7 +19,7 @@ function AreaChart({ data, color }: { data: number[]; color: string }) {
   const areaContent = `${pathContent} L ${width} ${height} L 0 ${height} Z`;
 
   return (
-    <div className="relative w-full h-64 mt-4">
+    <div className="relative w-full h-48 mt-4">
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
         <defs>
           <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
@@ -45,7 +45,6 @@ function AreaChart({ data, color }: { data: number[]; color: string }) {
           d={areaContent}
           fill="url(#gradient)"
         />
-        {/* Glow point at the end */}
         <motion.circle
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -74,12 +73,10 @@ function StatusDistribution() {
   let currentOffset = 0;
 
   return (
-    <div className="flex flex-col items-center gap-4 py-2">
-      <div className="relative w-40 h-40 group">
+    <div className="flex flex-col xl:flex-row items-center gap-6 py-2">
+      <div className="relative w-32 h-32 xl:w-40 xl:h-40 shrink-0 group">
         <svg viewBox="0 0 120 120" className="w-full h-full transform -rotate-90 filter drop-shadow-xl overflow-visible">
-          {/* Background Ring */}
           <circle cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="8" className="text-zinc-100 dark:text-zinc-800/50" />
-          
           {statuses.map((s, i) => {
             const pct = s.value / total;
             const strokeDasharray = `${pct * circ} ${circ * (1 - pct)}`;
@@ -107,25 +104,12 @@ function StatusDistribution() {
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <motion.span 
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-[10px] font-black text-zinc-400 uppercase tracking-widest"
-          >
-            Total
-          </motion.span>
-          <motion.span 
-             initial={{ scale: 0.5, opacity: 0 }}
-             animate={{ scale: 1, opacity: 1 }}
-             transition={{ delay: 0.2 }}
-             className="text-3xl font-black text-zinc-900 dark:text-white"
-          >
-            {total}
-          </motion.span>
+          <motion.span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Total</motion.span>
+          <motion.span className="text-xl xl:text-2xl font-black text-zinc-900 dark:text-white">{total}</motion.span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 w-full gap-2 mt-1">
+      <div className="grid grid-cols-1 w-full gap-2">
         {statuses.map((s, i) => (
           <motion.div 
             key={s.label}
@@ -156,7 +140,7 @@ export function PatientInsights() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-2 mb-8">
       {/* Total Patients & Growth */}
       <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-[32px] border border-zinc-100 dark:border-zinc-800 p-8 shadow-sm overflow-hidden relative group">
-        <div className="relative z-10">
+        <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between mb-2">
             <div>
               <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">Patient Traffic</h4>
@@ -166,7 +150,11 @@ export function PatientInsights() {
               <Users weight="duotone" className="w-6 h-6 text-indigo-500" />
             </div>
           </div>
-          <AreaChart data={trafficData} color="#6366f1" />
+          
+          <div className="flex-1 mt-4">
+             <AreaChart data={trafficData} color="#6366f1" />
+          </div>
+
           <div className="flex items-center justify-between mt-6 pt-6 border-t border-zinc-50 dark:border-zinc-800">
             <div className="flex gap-8">
               <div>
@@ -187,18 +175,18 @@ export function PatientInsights() {
       {/* Distribution & Capacity */}
       <div className="bg-zinc-950 dark:bg-zinc-900 rounded-[32px] p-8 text-white shadow-2xl shadow-zinc-200 dark:shadow-none relative overflow-hidden group">
         <div className="relative z-10 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">Status Distribution</h4>
             <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center border border-zinc-700">
               <ChartPieSlice weight="duotone" className="w-5 h-5 text-emerald-400" />
             </div>
           </div>
 
-          <div className="flex-1 px-4 overflow-visible">
+          <div className="flex-1 px-1 overflow-visible">
             <StatusDistribution />
           </div>
 
-          <div className="mt-auto space-y-4">
+          <div className="mt-8 space-y-4">
             <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[13px] font-bold text-zinc-400">Bed Capacity</span>
