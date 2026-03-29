@@ -12,7 +12,6 @@ import {
   XCircle,
   Calendar as CalendarIcon,
   CaretDown,
-  User,
   Receipt,
   Printer,
   DownloadSimple,
@@ -31,7 +30,17 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Import Assets
+import doctor1 from "@/assets/avatars/doctor_1.png";
+import doctor2 from "@/assets/avatars/doctor_2.png";
+import doctor3 from "@/assets/avatars/doctor_3.png";
 
 const REVENUE_STATS = [
   { label: "Total Revenue", value: "€ 248,500.00", trend: "+12.4%", trendUp: true, icon: Wallet, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
@@ -40,27 +49,20 @@ const REVENUE_STATS = [
   { label: "Net Profit", value: "€ 62,100.00", trend: "+14.8%", trendUp: true, icon: CreditCard, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20" },
 ];
 
-const TRANSACTIONS = [
-  { id: "T-8921", patient: "Emma Watson", type: "Insurance", amount: 450.00, date: "Today, 2:30 PM", status: "Completed" },
-  { id: "T-8922", patient: "John Doe", type: "Cash", amount: 120.00, date: "Today, 1:15 PM", status: "Completed" },
-  { id: "T-8923", patient: "Sarah Miller", type: "Insurance", amount: 890.00, date: "Yesterday, 4:45 PM", status: "Pending" },
-  { id: "T-8924", patient: "Michael Scott", type: "Credit Card", amount: 250.00, date: "Yesterday, 11:30 AM", status: "Completed" },
-  { id: "T-8925", patient: "Robert Brown", type: "Insurance", amount: 1200.00, date: "Oct 24, 2025", status: "Failed" },
-];
 
 const BILLS_DATA = [
-  { id: "BIL-1029", patient: "Alice Cooper", date: "Oct 28, 2025", type: "Sent", category: "Equipment", generatedBy: "Dr. Sarah Johnson", description: "Payment for surgical grade equipment", amount: 150.00, subAmount: "162.30 USD", status: "Success", method: "Credit Card", methodDetails: "**** 6969" },
-  { id: "BIL-1030", patient: "Bob Marley", date: "Oct 27, 2025", type: "Received", category: "Consultation", generatedBy: "Dr. Robert Smith", description: "General health checkup fees", amount: 245.50, subAmount: "265.40 USD", status: "Success", method: "Bank Transfer", methodDetails: "TRX-9830" },
-  { id: "BIL-1031", patient: "Charlie Chaplin", date: "Oct 26, 2025", type: "Received", category: "Pharmacy", generatedBy: "Dr. Emily Taylor", description: "Prescription medication - Batch B2", amount: 45.00, subAmount: "48.60 USD", status: "Incomplete", method: "PayPal", methodDetails: "@claristaj" },
-  { id: "BIL-1032", patient: "David Bowie", date: "Oct 25, 2025", type: "Sent", category: "Refund", generatedBy: "Dr. David Tennant", description: "Refund for cancelled MRI scan", amount: 890.00, subAmount: "962.30 USD", status: "Failed", method: "Credit Card", methodDetails: "**** 2833" },
-  { id: "BIL-1033", patient: "Elton John", date: "Oct 24, 2025", type: "Received", category: "Inpatient", generatedBy: "Dr. Elton John", description: "Hospitalization and room charges", amount: 4500.00, subAmount: "4,865.00 USD", status: "Success", method: "Insurance", methodDetails: "POL-0034" },
-  { id: "BIL-1034", patient: "Freddie Mercury", date: "Oct 23, 2025", type: "Converted", category: "Currency", generatedBy: "Dr. Brian May", description: "EUR to USD conversion for lab funds", amount: 120.00, subAmount: "130.00 USD", status: "Success", method: "Internal", methodDetails: "Wallet-A" },
-  { id: "BIL-1035", patient: "George Michael", date: "Oct 22, 2025", type: "Received", category: "Therapy", generatedBy: "Dr. Lisa Cuddy", description: "Mental health therapy session pack", amount: 350.00, subAmount: "378.50 USD", status: "Success", method: "Credit Card", methodDetails: "**** 3298" },
+  { id: "BIL-1029", patient: "Alice Cooper", date: "Oct 28, 2025", type: "Sent", category: "Equipment", generatedBy: "Dr. Sarah Johnson", avatar: doctor1, description: "Payment for surgical grade equipment", amount: 150.00, subAmount: "162.30 USD", status: "Success", method: "Credit Card", methodDetails: "**** 6969" },
+  { id: "BIL-1030", patient: "Bob Marley", date: "Oct 27, 2025", type: "Received", category: "Consultation", generatedBy: "Dr. Robert Smith", avatar: doctor2, description: "General health checkup fees", amount: 245.50, subAmount: "265.40 USD", status: "Success", method: "Bank Transfer", methodDetails: "TRX-9830" },
+  { id: "BIL-1031", patient: "Charlie Chaplin", date: "Oct 26, 2025", type: "Received", category: "Pharmacy", generatedBy: "Dr. Emily Taylor", avatar: doctor3, description: "Prescription medication - Batch B2", amount: 45.00, subAmount: "48.60 USD", status: "Incomplete", method: "PayPal", methodDetails: "@claristaj" },
+  { id: "BIL-1032", patient: "David Bowie", date: "Oct 25, 2025", type: "Sent", category: "Refund", generatedBy: "Dr. David Tennant", avatar: doctor2, description: "Refund for cancelled MRI scan", amount: 890.00, subAmount: "962.30 USD", status: "Failed", method: "Credit Card", methodDetails: "**** 2833" },
+  { id: "BIL-1033", patient: "Elton John", date: "Oct 24, 2025", type: "Received", category: "Inpatient", generatedBy: "Dr. Elton John", avatar: doctor1, description: "Hospitalization and room charges", amount: 4500.00, subAmount: "4,865.00 USD", status: "Success", method: "Insurance", methodDetails: "POL-0034" },
+  { id: "BIL-1034", patient: "Freddie Mercury", date: "Oct 23, 2025", type: "Converted", category: "Currency", generatedBy: "Dr. Brian May", avatar: doctor2, description: "EUR to USD conversion for lab funds", amount: 120.00, subAmount: "130.00 USD", status: "Success", method: "Internal", methodDetails: "Wallet-A" },
+  { id: "BIL-1035", patient: "George Michael", date: "Oct 22, 2025", type: "Received", category: "Therapy", generatedBy: "Dr. Lisa Cuddy", avatar: doctor3, description: "Mental health therapy session pack", amount: 350.00, subAmount: "378.50 USD", status: "Success", method: "Credit Card", methodDetails: "**** 3298" },
 ];
 
 function PaymentVisual({ method }: { method: string }) {
   const containerClasses = "w-full aspect-[1.6/1] rounded-[24px] p-6 relative shadow-2xl overflow-hidden group border mb-8 flex flex-col justify-between";
-  
+
   switch (method) {
     case "Credit Card":
       return (
@@ -371,68 +373,6 @@ function RevenueAnalyticsView() {
           </Card>
         </div>
       </div>
-
-      {/* Transactions Table */}
-      <Card
-        title="Recent Transactions"
-        trailing={
-          <button className="text-[12px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 transition-colors">
-            View All
-          </button>
-        }
-      >
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-zinc-100 dark:border-zinc-800">
-                <th className="pb-3 text-[11px] font-black text-zinc-400 uppercase tracking-widest">Transaction ID</th>
-                <th className="pb-3 text-[11px] font-black text-zinc-400 uppercase tracking-widest">Patient</th>
-                <th className="pb-3 text-[11px] font-black text-zinc-400 uppercase tracking-widest">Type</th>
-                <th className="pb-3 text-[11px] font-black text-zinc-400 uppercase tracking-widest text-right">Amount</th>
-                <th className="pb-3 text-[11px] font-black text-zinc-400 uppercase tracking-widest">Date</th>
-                <th className="pb-3 text-[11px] font-black text-zinc-400 uppercase tracking-widest text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
-              {TRANSACTIONS.map((tx, i) => (
-                <motion.tr
-                  key={tx.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * i }}
-                  className="group hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors"
-                >
-                  <td className="py-4 text-[13px] font-bold text-zinc-900 dark:text-zinc-100">{tx.id}</td>
-                  <td className="py-4 text-[13px] font-medium text-zinc-600 dark:text-zinc-300">{tx.patient}</td>
-                  <td className="py-4">
-                    <span className="text-[11px] font-bold px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700/50">
-                      {tx.type}
-                    </span>
-                  </td>
-                  <td className="py-4 text-[13px] font-black text-zinc-900 dark:text-zinc-100 text-right">
-                    €{tx.amount.toFixed(2)}
-                  </td>
-                  <td className="py-4 text-[12px] font-bold text-zinc-400">{tx.date}</td>
-                  <td className="py-4 text-center">
-                    <span className={cn(
-                      "inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full",
-                      tx.status === "Completed" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400" :
-                        tx.status === "Pending" ? "bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400" :
-                          "bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400"
-                    )}>
-                      <div className={cn("w-1.5 h-1.5 rounded-full",
-                        tx.status === "Completed" ? "bg-emerald-500" :
-                          tx.status === "Pending" ? "bg-orange-500" : "bg-rose-500"
-                      )} />
-                      {tx.status}
-                    </span>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </div>
   );
 }
@@ -531,9 +471,12 @@ function BillsView() {
                   >
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-500 transition-transform group-hover:scale-110">
-                          <User weight="bold" className="w-4.5 h-4.5" />
-                        </div>
+                        <Avatar className="w-9 h-9 border border-zinc-100 dark:border-zinc-800 transition-transform group-hover:scale-110">
+                          <AvatarImage src={bill.avatar} alt={bill.generatedBy} />
+                          <AvatarFallback className="text-[10px] font-bold">
+                            {bill.generatedBy.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
                         <span className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100">{bill.generatedBy}</span>
                       </div>
                     </td>
@@ -594,13 +537,13 @@ function BillsView() {
 
                   <div className="space-y-6 flex-1">
                     <PaymentVisual method={selectedBill.method} />
-                    
+
                     <div>
                       <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Total Amount</div>
                       <div className="text-3xl font-black tracking-tighter">€{selectedBill.amount.toFixed(2)}</div>
                       <div className="text-[12px] font-bold text-zinc-400 mt-1 opacity-80">{selectedBill.subAmount}</div>
                     </div>
-                    
+
                     <div className={cn(
                       "inline-flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border",
                       selectedBill.status === "Success" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
@@ -618,7 +561,7 @@ function BillsView() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* ZigZag Divider effect (visual only, rotated for horizontal layout) */}
                 <div className="hidden md:block absolute top-0 right-0 bottom-0 w-4 bg-white dark:bg-zinc-900 z-20" style={{ clipPath: "polygon(100% 0, 0 5%, 100% 10%, 0 15%, 100% 20%, 0 25%, 100% 30%, 0 35%, 100% 40%, 0 45%, 100% 50%, 0 55%, 100% 60%, 0 65%, 100% 70%, 0 75%, 100% 80%, 0 85%, 100% 90%, 0 95%, 100% 100%)" }} />
               </div>
@@ -632,7 +575,7 @@ function BillsView() {
                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Patient Details</span>
                         <p className="text-lg font-black text-zinc-900 dark:text-zinc-100">{selectedBill.patient}</p>
                       </div>
-                      
+
                       <div className="space-y-1">
                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Activity / Description</span>
                         <p className="text-[14px] font-bold text-zinc-600 dark:text-zinc-400 leading-relaxed">
@@ -643,9 +586,12 @@ function BillsView() {
 
                     <div className="space-y-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-zinc-100 border border-zinc-100 dark:border-zinc-700">
-                          <User weight="bold" size={18} />
-                        </div>
+                        <Avatar className="w-10 h-10 border border-zinc-100 dark:border-zinc-700">
+                          <AvatarImage src={selectedBill.avatar} alt={selectedBill.generatedBy} />
+                          <AvatarFallback className="text-xs font-bold">
+                            {selectedBill.generatedBy.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <div className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Generated By</div>
                           <div className="text-[14px] font-bold">{selectedBill.generatedBy}</div>

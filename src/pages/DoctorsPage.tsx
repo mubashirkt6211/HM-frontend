@@ -397,8 +397,6 @@ export function DoctorsPage() {
     if (!sortKey) return 0
     let aVal: string | number = (a as never)[sortKey]
     let bVal: string | number = (b as never)[sortKey]
-    if (typeof aVal === "string") aVal = aVal.toLowerCase()
-    if (typeof bVal === "string") bVal = bVal.toLowerCase()
     if (aVal < bVal) return sortDir === "asc" ? -1 : 1
     if (aVal > bVal) return sortDir === "asc" ? 1 : -1
     return 0
