@@ -1,14 +1,17 @@
 "use client"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   MagnifyingGlass, Stethoscope, Plus, DotsThree,
   CalendarBlank, Heartbeat, Brain, Bandaids, Virus, Pill,
-  Users, CaretLeft, CaretRight, Funnel, Star,
+  Users, CaretLeft, CaretRight, Funnel,
   ArrowUp, ArrowDown, User, Envelope, Phone as PhoneIcon,
   Briefcase, Clock, UserCircle, Trash, X,
   MapPin, Medal, ChartBar,
+  DotsThreeCircle,
+  DotsThreeVerticalIcon,
 } from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -25,9 +28,10 @@ import {
 import {
   Sheet, SheetContent,
 } from "@/components/ui/sheet"
+import { DoctorProfileView } from "@/components/doctors/DoctorProfileView"
 
 // ─── Types ────────────────────────────────────────────────────
-interface Doctor {
+export interface Doctor {
   id: number
   name: string
   specialty: string
@@ -63,7 +67,7 @@ const DOCTORS: Doctor[] = [
   { id: 8, name: "Dr. Liam Foster", specialty: "Psychiatry", department: "Mental Health", email: "l.foster@hospital.com", phone: "+1 (555) 334-9902", avatar: "https://i.pravatar.cc/200?img=60", rating: 4.8, reviews: 162, patients: 130, experience: 11, status: "in-surgery", schedule: "Tue – Sat", shiftStart: "10:00 AM", shiftEnd: "06:00 PM", breakTime: "2:00 PM", overtime: "–", nextAvailable: "Tomorrow, 10:00 AM", specialtyIcon: Brain, accentFrom: "from-fuchsia-500", accentTo: "to-pink-600" },
 ]
 
-const STATUS_CONFIG = {
+export const STATUS_CONFIG = {
   "available": { label: "On time", dot: "bg-emerald-500", ring: "ring-emerald-500/30", bg: "bg-emerald-50 dark:bg-emerald-950/50", text: "text-emerald-700 dark:text-emerald-400" },
   "in-surgery": { label: "In Surgery", dot: "bg-rose-500 animate-pulse", ring: "ring-rose-500/30", bg: "bg-rose-50 dark:bg-rose-950/50", text: "text-rose-700 dark:text-rose-400" },
   "on-leave": { label: "On Leave", dot: "bg-amber-400", ring: "ring-amber-400/30", bg: "bg-amber-50 dark:bg-amber-950/50", text: "text-amber-700 dark:text-amber-400" },
@@ -433,8 +437,16 @@ export function DoctorsPage() {
   return (
     <div className="flex flex-col gap-6 pt-6 pb-10 px-6 md:px-8 animate-in fade-in slide-in-from-bottom-3 duration-500">
 
-
-
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
+        <div>
+          <h1 className="text-[32px] font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+            Doctors Registry
+          </h1>
+          <p className="text-[14px] text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
+            Advanced management with real-time analytics and smart filtering.
+          </p>
+        </div>
+      </div>
 
       {/* ── TABLE CARD ── */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
@@ -633,7 +645,7 @@ export function DoctorsPage() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                              <DotsThree className="w-4 h-4" weight="bold" />
+                              <DotsThreeVerticalIcon className="w-4 h-4" weight="bold" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-44">
@@ -742,199 +754,4 @@ export function DoctorsPage() {
 }
 
 // ─── Doctor Profile View ──────────────────────────────────────
-function DoctorProfileView({
-  doctor,
-  onBack
-}: {
-  doctor: Doctor,
-  onBack: () => void
-}) {
-  const status = STATUS_CONFIG[doctor.status]
-  const Icon = doctor.specialtyIcon
 
-  return (
-    <div className="flex flex-col gap-8 pt-6 pb-16 px-6 md:px-10 animate-in fade-in slide-in-from-right-4 duration-500">
-
-      {/* Navigation Header */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="group flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
-        >
-          <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-            <CaretLeft className="w-4 h-4 text-zinc-900 dark:text-zinc-100" weight="bold" />
-          </div>
-          <span className="text-[13px] font-black text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 uppercase tracking-wider">Back to Directory</span>
-        </button>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="rounded-xl h-9 border-zinc-200 dark:border-zinc-800 text-[13px] font-bold">Edit Profile</Button>
-          <Button className={cn("rounded-xl h-9 text-[13px] font-bold text-white", doctor.accentFrom, doctor.accentTo, "bg-gradient-to-r")}>Print Records</Button>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-        {/* Left: Identity & Key Stats */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-
-          {/* Identity Card */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm flex flex-col items-center text-center">
-            <div className="relative mb-6">
-              <Avatar className={cn("size-32 border-4 border-white dark:border-zinc-950 shadow-2xl ring-4", status.ring)}>
-                <AvatarImage src={doctor.avatar} alt={doctor.name} />
-                <AvatarFallback className="text-3xl font-black bg-zinc-100 dark:bg-zinc-800">
-                  {doctor.name.split(" ").map(n => n[0]).slice(1).join("")}
-                </AvatarFallback>
-              </Avatar>
-              <span className={cn("absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-white dark:border-zinc-950 shadow-lg", status.dot)} />
-            </div>
-
-            <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-100 leading-tight mb-2">{doctor.name}</h1>
-            <div className="flex items-center gap-2 py-1 px-3 rounded-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 mb-6">
-              <div className={cn("w-5 h-5 rounded-md flex items-center justify-center bg-gradient-to-br", doctor.accentFrom, doctor.accentTo)}>
-                <Icon className="w-3 h-3 text-white" weight="bold" />
-              </div>
-              <span className="text-[13px] font-bold text-zinc-600 dark:text-zinc-300">{doctor.specialty}</span>
-            </div>
-
-            <span className={cn("text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest transition-all", status.bg, status.text)}>
-              {status.label}
-            </span>
-
-            <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800/60 my-8" />
-
-            <div className="grid grid-cols-2 gap-4 w-full">
-              <div className="text-center">
-                <p className="text-xl font-black text-zinc-900 dark:text-zinc-100">{doctor.experience}</p>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Exp. Years</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xl font-black text-zinc-900 dark:text-zinc-100">{doctor.rating}</p>
-                <div className="flex items-center justify-center gap-0.5 mt-1">
-                  <Star className="w-2.5 h-2.5 text-yellow-500" weight="fill" />
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Rating</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Contact */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm">
-            <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest mb-4">Direct Contact</h3>
-            <div className="flex flex-col gap-3">
-              <a href={`mailto:${doctor.email}`} className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Envelope className="w-4 h-4 text-blue-500" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase">Email Address</p>
-                  <p className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100 truncate">{doctor.email}</p>
-                </div>
-              </a>
-              <a href={`tel:${doctor.phone}`} className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 transition-colors">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <PhoneIcon className="w-4 h-4 text-emerald-500" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase">Phone Number</p>
-                  <p className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100 truncate">{doctor.phone}</p>
-                </div>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Detailed Info */}
-        <div className="lg:col-span-8 flex flex-col gap-8">
-
-          {/* Working Schedule */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-[17px] font-black text-zinc-900 dark:text-zinc-100">Professional Schedule</h3>
-                <p className="text-[12px] text-zinc-400 font-medium">Standard working hours and availability.</p>
-              </div>
-              <div className="w-10 h-10 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-zinc-400" weight="duotone" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/20">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Shift Schedule</p>
-                <p className="text-[15px] font-black text-zinc-900 dark:text-zinc-100">{doctor.schedule}</p>
-                <p className="text-[11px] text-zinc-400 font-medium mt-1">Mon - Fri preferred</p>
-              </div>
-              <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/20">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Daily Hours</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[15px] font-black text-zinc-900 dark:text-zinc-100">{doctor.shiftStart}</span>
-                  <span className="text-zinc-300">→</span>
-                  <span className="text-[15px] font-black text-zinc-900 dark:text-zinc-100">{doctor.shiftEnd}</span>
-                </div>
-                <p className="text-[11px] text-zinc-400 font-medium mt-1">Excl. {doctor.breakTime} Break</p>
-              </div>
-              <div className="p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/20">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">Next Availability</p>
-                <p className="text-[15px] font-black text-emerald-600 dark:text-emerald-500">{doctor.nextAvailable}</p>
-                <p className="text-[11px] text-zinc-400 font-medium mt-1">Subject to changes</p>
-              </div>
-            </div>
-          </div>
-
-          {/* About / Bio Placeholder */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
-            <h3 className="text-[17px] font-black text-zinc-900 dark:text-zinc-100 mb-6">Professional Biography</h3>
-            <div className="space-y-4">
-              <p className="text-[13px] leading-relaxed text-zinc-500 font-medium italic">
-                "A specialized {doctor.specialty} with over {doctor.experience} years of clinical experience in {doctor.department}.
-                Dedicated to providing high-quality patient care and implementing innovative surgical techniques."
-              </p>
-              <p className="text-[13px] leading-relaxed text-zinc-500 font-medium">
-                Current focus includes clinical trials and managing complex {doctor.specialty.toLowerCase()} cases.
-                Highly regarded for excellence in patient communication and multidisciplinary collaboration.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-              <div>
-                <h4 className="text-[11px] font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  Key Stats
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-[13px]">
-                    <span className="font-bold text-zinc-400">Total Patients Treated</span>
-                    <span className="font-black text-zinc-900 dark:text-zinc-100">{doctor.patients}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[13px]">
-                    <span className="font-bold text-zinc-400">Patient Satisfaction</span>
-                    <span className="font-black text-emerald-500">{(doctor.rating * 20).toFixed(0)}%</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[13px]">
-                    <span className="font-bold text-zinc-400">Staff Collaboration</span>
-                    <span className="font-black text-violet-500">9.4/10</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-[11px] font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  Specializations
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {["Clinical Care", "Surgery", "Diagnostics", "Research"].map(s => (
-                    <span key={s} className="px-3 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-[12px] font-bold text-zinc-500 ">{s}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  )
-}

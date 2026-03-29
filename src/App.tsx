@@ -6,8 +6,9 @@ import { MessagesPage } from "@/pages/MessagesPage"
 import { PatientsPage } from "@/pages/PatientsPage"
 import { TasksPage } from "@/pages/TasksPage"
 import { DoctorsPage } from "@/pages/DoctorsPage"
+import { RevenuePage } from "@/pages/RevenuePage"
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "revenue" | string;
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
@@ -28,6 +29,7 @@ function App() {
       {currentPage === "patients" && <PatientsPage />}
       {currentPage === "tasks" && <TasksPage />}
       {currentPage === "doctors" && <DoctorsPage />}
+      {currentPage === "revenue" && <RevenuePage />}
       {currentPage === "dashboard" && (
         <Dashboard activeTab={activeDashboardTab} onTabChange={setActiveDashboardTab} />
       )}
