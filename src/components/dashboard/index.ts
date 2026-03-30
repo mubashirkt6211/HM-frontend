@@ -6,7 +6,6 @@ export { TeamTab } from "./TeamTab";
 export { PatientTab } from "./PatientTab";
 export { DocumentsTab } from "./DocumentsTab";
 export { ReviewsTab } from "./ReviewsTab";
-export { ProfileTab } from "./ProfileTab";
 export {
   Card,
   VisualChart,

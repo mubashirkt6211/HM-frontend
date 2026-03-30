@@ -26,8 +26,10 @@ export function SiteHeader({
   onTabChange,
   currentPage = "dashboard",
   activeTab,
+  onPageChange,
 }: {
   onTabChange?: (tab: string) => void;
+  onPageChange?: (page: string) => void;
   currentPage?: string;
   activeTab?: string;
 }) {
@@ -95,7 +97,7 @@ export function SiteHeader({
 
             <div className="space-y-0.5">
               <DropdownMenuItem
-                onClick={() => onTabChange?.("Profile")}
+                onClick={() => onPageChange?.("profile")}
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
               >
                 <div className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800 group-hover:bg-white dark:group-hover:bg-zinc-800 transition-colors">

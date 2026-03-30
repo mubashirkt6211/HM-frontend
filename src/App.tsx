@@ -7,8 +7,9 @@ import { PatientsPage } from "@/pages/PatientsPage"
 import { TasksPage } from "@/pages/TasksPage"
 import { DoctorsPage } from "@/pages/DoctorsPage"
 import { RevenuePage } from "@/pages/RevenuePage"
+import { ProfilePage } from "@/pages/ProfilePage"
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "revenue" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "revenue" | "profile" | string;
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
@@ -30,8 +31,13 @@ function App() {
       {currentPage === "tasks" && <TasksPage />}
       {currentPage === "doctors" && <DoctorsPage />}
       {currentPage === "revenue" && <RevenuePage />}
+      {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "dashboard" && (
-        <Dashboard activeTab={activeDashboardTab} onTabChange={setActiveDashboardTab} />
+        <Dashboard 
+          activeTab={activeDashboardTab} 
+          onTabChange={setActiveDashboardTab} 
+          onProfileClick={() => setCurrentPage("profile")}
+        />
       )}
     </AppLayout>
   );

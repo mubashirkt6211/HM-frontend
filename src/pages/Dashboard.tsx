@@ -18,7 +18,6 @@ import {
   PatientTab,
   DocumentsTab,
   ReviewsTab,
-  ProfileTab,
   TabItem,
 } from "@/components/dashboard";
 import claraAvatar from "@/assets/clara_avatar.png";
@@ -31,7 +30,15 @@ const TABS = [
   { icon: Star, label: "Reviews" },
 ];
 
-export function Dashboard({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
+export function Dashboard({ 
+  activeTab, 
+  onTabChange, 
+  onProfileClick 
+}: { 
+  activeTab: string; 
+  onTabChange: (tab: string) => void;
+  onProfileClick: () => void;
+}) {
   const renderTabContent = () => {
     switch (activeTab) {
       case "Dashboard":
@@ -44,8 +51,6 @@ export function Dashboard({ activeTab, onTabChange }: { activeTab: string; onTab
         return <DocumentsTab />;
       case "Reviews":
         return <ReviewsTab />;
-      case "Profile":
-        return <ProfileTab />;
       default:
         return <DashboardTab />;
     }
@@ -57,7 +62,7 @@ export function Dashboard({ activeTab, onTabChange }: { activeTab: string; onTab
       <div className="flex items-center gap-6">
         <div 
           className="relative group cursor-pointer"
-          onClick={() => onTabChange("Profile")}
+          onClick={onProfileClick}
         >
           <div className="w-24 h-24 rounded-full border-4 border-white dark:border-zinc-900 shadow-xl overflow-hidden ring-1 ring-zinc-200 dark:ring-zinc-800 transition-transform group-hover:scale-105 duration-300">
             <img

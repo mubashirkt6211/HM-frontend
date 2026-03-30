@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   TrendUp,
   TrendDown,
@@ -20,6 +20,8 @@ import {
   PaypalLogo,
   FileText,
   ShieldCheck,
+  CaretLeft,
+  CaretRight,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import {
@@ -35,6 +37,14 @@ import {
   AvatarImage,
   AvatarFallback,
 } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Import Assets
@@ -51,13 +61,18 @@ const REVENUE_STATS = [
 
 
 const BILLS_DATA = [
-  { id: "BIL-1029", patient: "Alice Cooper", date: "Oct 28, 2025", type: "Sent", category: "Equipment", generatedBy: "Dr. Sarah Johnson", avatar: doctor1, description: "Payment for surgical grade equipment", amount: 150.00, subAmount: "162.30 USD", status: "Success", method: "Credit Card", methodDetails: "**** 6969" },
-  { id: "BIL-1030", patient: "Bob Marley", date: "Oct 27, 2025", type: "Received", category: "Consultation", generatedBy: "Dr. Robert Smith", avatar: doctor2, description: "General health checkup fees", amount: 245.50, subAmount: "265.40 USD", status: "Success", method: "Bank Transfer", methodDetails: "TRX-9830" },
-  { id: "BIL-1031", patient: "Charlie Chaplin", date: "Oct 26, 2025", type: "Received", category: "Pharmacy", generatedBy: "Dr. Emily Taylor", avatar: doctor3, description: "Prescription medication - Batch B2", amount: 45.00, subAmount: "48.60 USD", status: "Incomplete", method: "PayPal", methodDetails: "@claristaj" },
-  { id: "BIL-1032", patient: "David Bowie", date: "Oct 25, 2025", type: "Sent", category: "Refund", generatedBy: "Dr. David Tennant", avatar: doctor2, description: "Refund for cancelled MRI scan", amount: 890.00, subAmount: "962.30 USD", status: "Failed", method: "Credit Card", methodDetails: "**** 2833" },
-  { id: "BIL-1033", patient: "Elton John", date: "Oct 24, 2025", type: "Received", category: "Inpatient", generatedBy: "Dr. Elton John", avatar: doctor1, description: "Hospitalization and room charges", amount: 4500.00, subAmount: "4,865.00 USD", status: "Success", method: "Insurance", methodDetails: "POL-0034" },
+  { id: "BIL-1029", patient: "Alice Cooper", date: "Mar 28, 2026", type: "Sent", category: "Equipment", generatedBy: "Dr. Sarah Johnson", avatar: doctor1, description: "Payment for surgical grade equipment", amount: 150.00, subAmount: "162.30 USD", status: "Success", method: "Credit Card", methodDetails: "**** 6969" },
+  { id: "BIL-1030", patient: "Bob Marley", date: "Mar 27, 2026", type: "Received", category: "Consultation", generatedBy: "Dr. Robert Smith", avatar: doctor2, description: "General health checkup fees", amount: 245.50, subAmount: "265.40 USD", status: "Success", method: "Bank Transfer", methodDetails: "TRX-9830" },
+  { id: "BIL-1031", patient: "Charlie Chaplin", date: "Mar 20, 2026", type: "Received", category: "Pharmacy", generatedBy: "Dr. Emily Taylor", avatar: doctor3, description: "Prescription medication - Batch B2", amount: 45.00, subAmount: "48.60 USD", status: "Incomplete", method: "PayPal", methodDetails: "@claristaj" },
+  { id: "BIL-1032", patient: "David Bowie", date: "Feb 25, 2026", type: "Sent", category: "Refund", generatedBy: "Dr. David Tennant", avatar: doctor2, description: "Refund for cancelled MRI scan", amount: 890.00, subAmount: "962.30 USD", status: "Failed", method: "Credit Card", methodDetails: "**** 2833" },
+  { id: "BIL-1033", patient: "Elton John", date: "Jan 15, 2026", type: "Received", category: "Inpatient", generatedBy: "Dr. Elton John", avatar: doctor1, description: "Hospitalization and room charges", amount: 4500.00, subAmount: "3,800.00 GBP", status: "Success", method: "Insurance", methodDetails: "POL-0034" },
   { id: "BIL-1034", patient: "Freddie Mercury", date: "Oct 23, 2025", type: "Converted", category: "Currency", generatedBy: "Dr. Brian May", avatar: doctor2, description: "EUR to USD conversion for lab funds", amount: 120.00, subAmount: "130.00 USD", status: "Success", method: "Internal", methodDetails: "Wallet-A" },
   { id: "BIL-1035", patient: "George Michael", date: "Oct 22, 2025", type: "Received", category: "Therapy", generatedBy: "Dr. Lisa Cuddy", avatar: doctor3, description: "Mental health therapy session pack", amount: 350.00, subAmount: "378.50 USD", status: "Success", method: "Credit Card", methodDetails: "**** 3298" },
+  { id: "BIL-1036", patient: "Prince", date: "Mar 29, 2026", type: "Received", category: "Cardiology", generatedBy: "Dr. Sarah Johnson", avatar: doctor1, description: "Cardiac stress test", amount: 550.00, subAmount: "595.00 USD", status: "Success", method: "Bank Transfer", methodDetails: "TRX-0012" },
+  { id: "BIL-1037", patient: "Whitney Houston", date: "Mar 25, 2026", type: "Sent", category: "Refund", generatedBy: "Dr. Robert Smith", avatar: doctor2, description: "Duplicate payment refund", amount: 125.00, subAmount: "135.00 USD", status: "Success", method: "PayPal", methodDetails: "@whitney" },
+  { id: "BIL-1038", patient: "Michael Jackson", date: "Mar 20, 2026", type: "Received", category: "Radiology", generatedBy: "Dr. Emily Taylor", avatar: doctor3, description: "Full body MRI scan", amount: 1200.00, subAmount: "1,295.00 USD", status: "Success", method: "Insurance", methodDetails: "POL-7722" },
+  { id: "BIL-1039", patient: "Madonna", date: "Mar 15, 2026", type: "Received", category: "Dermatology", generatedBy: "Dr. Lisa Cuddy", avatar: doctor3, description: "Laser treatment series", amount: 850.00, subAmount: "918.00 USD", status: "Success", method: "Credit Card", methodDetails: "**** 8822" },
+  { id: "BIL-1040", patient: "Kurt Cobain", date: "Feb 10, 2026", type: "Sent", category: "Equipment", generatedBy: "Dr. David Tennant", avatar: doctor2, description: "Specialized hearing equipment", amount: 2100.00, subAmount: "2,268.00 USD", status: "Success", method: "Bank Transfer", methodDetails: "TRX-4491" },
 ];
 
 function PaymentVisual({ method }: { method: string }) {
@@ -379,41 +394,66 @@ function RevenueAnalyticsView() {
 
 function BillsView() {
   const [activeFilter, setActiveFilter] = useState("All");
-  const [filteredBills, setFilteredBills] = useState(BILLS_DATA);
   const [selectedBill, setSelectedBill] = useState<typeof BILLS_DATA[0] | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState("All Methods");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
-  const filterOptions = [
-    { label: "All", count: 35 },
-    { label: "Received", count: 15 },
-    { label: "Sent", count: 5 },
-    { label: "Convert", count: 10 },
-  ];
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, selectedMethod]);
+
+  const filteredBills = useMemo(() => {
+    return BILLS_DATA.filter((bill) => {
+      // 1. Type/Category Filter
+      if (activeFilter !== "All") {
+        const typeMatch =
+          bill.type === activeFilter ||
+          (activeFilter === "Convert" && bill.type === "Converted");
+        if (!typeMatch) return false;
+      }
+
+      // 2. Method Filter
+      if (selectedMethod !== "All Methods") {
+        if (bill.method !== selectedMethod) return false;
+      }
+
+      return true;
+    });
+  }, [activeFilter, selectedMethod]);
+
+  const totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+  const paginatedBills = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredBills.slice(start, start + itemsPerPage);
+  }, [filteredBills, currentPage]);
+
+  const filterOptions = useMemo(() => [
+    { label: "All", count: BILLS_DATA.length },
+    {
+      label: "Received",
+      count: BILLS_DATA.filter((b) => b.type === "Received").length,
+    },
+    {
+      label: "Sent",
+      count: BILLS_DATA.filter((b) => b.type === "Sent").length,
+    },
+    {
+      label: "Convert",
+      count: BILLS_DATA.filter((b) => b.type === "Converted").length,
+    },
+  ], []);
 
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
-    if (filter === "All") {
-      setFilteredBills(BILLS_DATA);
-    } else {
-      setFilteredBills(BILLS_DATA.filter(b => b.type === filter || (filter === "Convert" && b.type === "Converted")));
-    }
   };
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Dialog open={!!selectedBill} onOpenChange={(open) => !open && setSelectedBill(null)}>
         {/* Filter Bar */}
-        <div className="flex flex-wrap items-center gap-2 px-1">
-          {/* Period Dropdowns */}
-          <button className="flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-sm">
-            Last 7 days <CaretDown className="w-3 h-3 text-zinc-400" />
-          </button>
-          <button className="flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-sm">
-            <CalendarIcon className="w-3.5 h-3.5 text-zinc-400" /> 15 Mar – 22 Mar <CaretDown className="w-3 h-3 text-zinc-400" />
-          </button>
-
-          {/* Divider */}
-          <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700 mx-1" />
-
+        <div className="flex flex-wrap items-center justify-end gap-3 px-1">
           {/* Segmented Control */}
           <div className="flex items-center bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-xl border border-zinc-200/60 dark:border-zinc-700/50 shadow-inner">
             {filterOptions.map((opt) => (
@@ -423,7 +463,7 @@ function BillsView() {
                 className={cn(
                   "flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
                   activeFilter === opt.label
-                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                    ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm"
                     : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                 )}
               >
@@ -438,17 +478,45 @@ function BillsView() {
             ))}
           </div>
 
-          {/* Divider */}
           <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700 mx-1" />
 
-          <button className="flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-sm">
-            Currency <CaretDown className="w-3 h-3 text-zinc-400" />
+          <button className="flex items-center gap-2 px-3.5 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-sm whitespace-nowrap">
+            <CalendarIcon className="w-3.5 h-3.5 text-zinc-400" /> Custom Range <CaretDown className="w-3 h-3 text-zinc-400" />
           </button>
+
+          <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700 mx-1" />
+
+          {/* Method Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center gap-2 px-3.5 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 transition-colors shadow-sm outline-none focus:ring-2 focus:ring-zinc-500/10"
+              >
+                {selectedMethod === "All Methods" ? "Payment Method" : selectedMethod} <CaretDown className="w-3 h-3 text-zinc-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[180px] rounded-xl p-1.5 shadow-xl border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl">
+              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-2.5 py-2">Filter by Method</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
+              {["All Methods", "Credit Card", "Bank Transfer", "PayPal", "Insurance", "Internal"].map((m) => (
+                <DropdownMenuItem
+                  key={m}
+                  onClick={() => setSelectedMethod(m)}
+                  className={cn(
+                    "rounded-lg px-2.5 py-2 text-xs font-bold cursor-pointer transition-colors",
+                    selectedMethod === m ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                  )}
+                >
+                  {m}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/50 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+        <div className="bg-white dark:bg-zinc-900/40 rounded-2xl border border-zinc-100 dark:border-zinc-800/50 shadow-sm overflow-hidden w-full">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left border-collapse min-w-[1000px] lg:min-w-full">
               <thead>
                 <tr className="border-b border-zinc-100 dark:border-zinc-800/50">
                   <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Generated By</th>
@@ -460,67 +528,113 @@ function BillsView() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50/50 dark:divide-zinc-800/20">
-                {filteredBills.map((bill, i) => (
-                  <motion.tr
-                    key={bill.id}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => setSelectedBill(bill)}
-                    className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all cursor-pointer"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-9 h-9 border border-zinc-100 dark:border-zinc-800 transition-transform group-hover:scale-110">
-                          <AvatarImage src={bill.avatar} alt={bill.generatedBy} />
-                          <AvatarFallback className="text-[10px] font-bold">
-                            {bill.generatedBy.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100">{bill.generatedBy}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100">{bill.date}</span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex flex-col">
-                        <span className="text-[14px] font-black text-zinc-900 dark:text-zinc-100">
-                          {bill.type === "Sent" ? "-" : "+"} {bill.amount.toFixed(2)} EUR
+                <AnimatePresence mode="popLayout">
+                  {paginatedBills.map((bill, i) => (
+                    <motion.tr
+                      key={bill.id}
+                      layout
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2, delay: i * 0.05 }}
+                      onClick={() => setSelectedBill(bill)}
+                      className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all cursor-pointer"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-9 h-9 border border-zinc-100 dark:border-zinc-800 transition-transform group-hover:scale-110">
+                            <AvatarImage src={bill.avatar} alt={bill.generatedBy} />
+                            <AvatarFallback className="text-[10px] font-bold">
+                              {bill.generatedBy.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100">{bill.generatedBy}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100">{bill.date}</span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-[14px] font-black text-zinc-900 dark:text-zinc-100">
+                            {bill.type === "Sent" ? "-" : "+"} {bill.amount.toFixed(2)} EUR
+                          </span>
+                          <span className="text-[11px] font-bold text-zinc-400">{bill.subAmount}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200">{bill.method}</span>
+                          <span className="text-[11px] font-black text-zinc-400 uppercase tracking-tighter opacity-70">
+                            {bill.methodDetails}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span className={cn(
+                          "inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-full ring-1 ring-inset transition-colors",
+                          bill.status === "Success" ? "bg-emerald-50 text-emerald-600 ring-emerald-100 dark:bg-emerald-950/20 dark:ring-emerald-800/40" :
+                            bill.status === "Incomplete" ? "bg-zinc-100 text-zinc-600 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700" :
+                              "bg-rose-50 text-rose-600 ring-rose-100 dark:bg-rose-950/20 dark:ring-rose-800/40"
+                        )}>
+                          {bill.status === "Success" ? <CheckCircle className="w-3.5 h-3.5" /> :
+                            bill.status === "Incomplete" ? <WarningCircle className="w-3.5 h-3.5" /> :
+                              <XCircle className="w-3.5 h-3.5" />}
+                          {bill.status}
                         </span>
-                        <span className="text-[11px] font-bold text-zinc-400">{bill.subAmount}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex flex-col">
-                        <span className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200">{bill.method}</span>
-                        <span className="text-[11px] font-black text-zinc-400 uppercase tracking-tighter opacity-70">
-                          {bill.methodDetails}
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="text-[13px] font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+                          {bill.description}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className={cn(
-                        "inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-full ring-1 ring-inset transition-colors",
-                        bill.status === "Success" ? "bg-emerald-50 text-emerald-600 ring-emerald-100 dark:bg-emerald-950/20 dark:ring-emerald-800/40" :
-                          bill.status === "Incomplete" ? "bg-zinc-100 text-zinc-600 ring-zinc-200 dark:bg-zinc-800 dark:ring-zinc-700" :
-                            "bg-rose-50 text-rose-600 ring-rose-100 dark:bg-rose-950/20 dark:ring-rose-800/40"
-                      )}>
-                        {bill.status === "Success" ? <CheckCircle className="w-3.5 h-3.5" /> :
-                          bill.status === "Incomplete" ? <WarningCircle className="w-3.5 h-3.5" /> :
-                            <XCircle className="w-3.5 h-3.5" />}
-                        {bill.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="text-[13px] font-medium text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
-                        {bill.description}
-                      </span>
-                    </td>
-                  </motion.tr>
-                ))}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination Footer */}
+          <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/30 dark:bg-zinc-900/20 flex items-center justify-between">
+            <div className="text-[12px] font-bold text-zinc-500">
+              Showing <span className="text-zinc-900 dark:text-zinc-100">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-zinc-900 dark:text-zinc-100">{Math.min(currentPage * itemsPerPage, filteredBills.length)}</span> of <span className="text-zinc-900 dark:text-zinc-100">{filteredBills.length}</span> results
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+              >
+                <CaretLeft size={16} weight="bold" />
+              </button>
+
+              <div className="flex items-center gap-1 mx-2">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={cn(
+                      "w-8 h-8 rounded-lg text-xs font-black transition-all",
+                      currentPage === i + 1
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-md"
+                        : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    )}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                className="w-8 h-8 rounded-lg flex items-center justify-center border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+              >
+                <CaretRight size={16} weight="bold" />
+              </button>
+            </div>
           </div>
         </div>
 
