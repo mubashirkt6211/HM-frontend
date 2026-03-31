@@ -10,8 +10,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { UserRole } from "@/models/user"
+
 
 const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
   dashboard: { label: "Dashboard", icon: LayoutDashboard },
@@ -27,12 +31,17 @@ export function SiteHeader({
   currentPage = "dashboard",
   activeTab,
   onPageChange,
+  userRole,
+  setUserRole
 }: {
   onTabChange?: (tab: string) => void;
   onPageChange?: (page: string) => void;
   currentPage?: string;
   activeTab?: string;
+  userRole?: UserRole;
+  setUserRole?: (role: UserRole) => void;
 }) {
+
   const { toggleSidebar } = useSidebar();
   const pageMeta = PAGE_META[currentPage] ?? { label: "Dashboard", icon: LayoutDashboard };
 
@@ -69,8 +78,35 @@ export function SiteHeader({
       </div>
 
       <div className="flex items-center gap-4">
+        
+        {/* Role Switcher */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[12px] font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all">
+              <UserCheck className="w-3.5 h-3.5" />
+              <span className="uppercase tracking-wider">{userRole}</span>
+              <ChevronRight className="w-3 h-3 rotate-90 opacity-50" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-48 p-1.5 rounded-xl bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-zinc-200/50 dark:border-zinc-800/50 shadow-xl" align="end">
+            <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Switch Role</DropdownMenuLabel>
+            <DropdownMenuSeparator className="my-1 bg-zinc-100 dark:bg-zinc-800" />
+            <DropdownMenuRadioGroup value={userRole} onValueChange={(v) => setUserRole?.(v as UserRole)}>
+              {Object.values(UserRole).map((role) => (
+                <DropdownMenuRadioItem 
+                  key={role} 
+                  value={role}
+                  className="px-2 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
+                >
+                  {role.replace("_", " ")}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <ThemeToggle />
+
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

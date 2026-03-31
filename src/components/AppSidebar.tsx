@@ -23,15 +23,28 @@ import {
 import { cn } from "@/lib/utils"
 import { Syringe, User2Icon } from "lucide-react";
 
-const mainNavigation = [
+import { UserRole } from "@/models/user";
+
+interface NavItemConfig {
+    icon?: React.ElementType;
+    title: string;
+    pageId?: string;
+    badge?: string;
+    iconColor?: string;
+    iconFill?: boolean;
+    roles?: UserRole[];
+    subItems?: { title: string; pageId: string; icon?: React.ElementType; roles?: UserRole[] }[];
+}
+
+const mainNavigation: NavItemConfig[] = [
     {
         icon: House,
         title: "Dashboard",
         pageId: "dashboard",
         subItems: [
             { title: "Overview", pageId: "dashboard", icon: Scales },
-            { title: "Patient", pageId: "patients", icon: User },
-            { title: "Revenue", pageId: "revenue", icon: CurrencyEur },
+            { title: "Patient", pageId: "patients", icon: User, roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
+            { title: "Revenue", pageId: "revenue", icon: CurrencyEur, roles: [UserRole.ADMIN, UserRole.MANAGER] },
         ]
     },
     { icon: Chats, title: "Messages", pageId: "messages", badge: "12" },
@@ -39,39 +52,63 @@ const mainNavigation = [
     { icon: ListChecks, title: "Tasks", pageId: "tasks" },
     {
         icon: UsersThree, title: "Team", pageId: "team",
+        roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR, UserRole.RECEPTIONIST],
         subItems: [
             { title: "Doctors", pageId: "doctors", icon: StethoscopeIcon },
-            { title: "Nurse", pageId: "nurse", icon: Syringe },
-            { title: "Receptionist", pageId: "receptionist", icon: CashRegisterIcon },
+            { title: "Nurse", pageId: "nurse", icon: Syringe, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
+            { title: "Receptionist", pageId: "receptionist", icon: CashRegisterIcon, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
         ]
     },
     { icon: FileText, title: "Notes", pageId: "notes" },
-    { icon: Envelope, title: "Emails", pageId: "emails" },
-    { icon: ChartBar, title: "Reports", pageId: "reports" },
-    { icon: Sparkle, title: "Automations", pageId: "automations" },
-    { icon: TreeStructure, title: "Workflows", pageId: "workflows" },
+    { icon: Envelope, title: "Emails", pageId: "emails", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
+    { icon: ChartBar, title: "Reports", pageId: "reports", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
+    { icon: Sparkle, title: "Automations", pageId: "automations", roles: [UserRole.ADMIN] },
+    { icon: TreeStructure, title: "Workflows", pageId: "workflows", roles: [UserRole.ADMIN] },
 ];
 
-const favoritesNavigation = [
-    { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400" },
-    { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400" },
-    { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400" },
-    { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400" },
+const favoritesNavigation: NavItemConfig[] = [
+    { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
 ];
 
-const recordsNavigation = [
-    { icon: Users, title: "Clients", pageId: "clients" },
-    { icon: UserFocus, title: "Contacts", pageId: "contacts" },
+const recordsNavigation: NavItemConfig[] = [
+    { icon: Users, title: "Clients", pageId: "clients", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { icon: UserFocus, title: "Contacts", pageId: "contacts", roles: [UserRole.ADMIN, UserRole.MANAGER] },
 ];
 
-const listNavigation = [
-    { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true },
-    { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true },
+const listNavigation: NavItemConfig[] = [
+    { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
+    { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
 ];
 
-export function AppSidebar({ currentPage = "dashboard", onPageChange }: { currentPage?: string; onPageChange?: (page: string) => void }) {
+export function AppSidebar({ 
+    currentPage = "dashboard", 
+    onPageChange,
+    userRole = UserRole.ADMIN 
+}: { 
+    currentPage?: string; 
+    onPageChange?: (page: string) => void;
+    userRole?: UserRole;
+}) {
     const { state } = useSidebar();
     const isCollapsed = state === "collapsed";
+
+    const filterByRole = (items: NavItemConfig[]) => {
+        return items.filter(item => {
+            if (item.roles && !item.roles.includes(userRole)) return false;
+            return true;
+        }).map(item => ({
+            ...item,
+            subItems: item.subItems?.filter(sub => !sub.roles || sub.roles.includes(userRole))
+        }));
+    };
+
+    const filteredMainNavigation = filterByRole(mainNavigation);
+    const filteredFavoritesNavigation = filterByRole(favoritesNavigation);
+    const filteredRecordsNavigation = filterByRole(recordsNavigation);
+    const filteredListNavigation = filterByRole(listNavigation);
 
     return (
         <Sidebar
@@ -123,9 +160,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                     <SidebarGroup className="p-0">
                         <SidebarGroupContent>
                             <SidebarMenu className="gap-0.5">
-                                {mainNavigation.map((item) => (
+                                {filteredMainNavigation.map((item) => (
                                     <NavItem
                                         key={item.title}
+
                                         icon={item.icon}
                                         title={item.title}
                                         isCollapsed={isCollapsed}
@@ -151,9 +189,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                             </div>
                             <SidebarGroupContent>
                                 <SidebarMenu className="gap-0.5">
-                                    {favoritesNavigation.map((item) => (
+                                    {filteredFavoritesNavigation.map((item) => (
                                         <NavItem
                                             key={item.title}
+
                                             icon={item.icon}
                                             iconColor={item.iconColor}
                                             title={item.title}
@@ -177,9 +216,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                             </div>
                             <SidebarGroupContent>
                                 <SidebarMenu className="gap-0.5">
-                                    {recordsNavigation.map((item) => (
+                                    {filteredRecordsNavigation.map((item) => (
                                         <NavItem
                                             key={item.title}
+
                                             icon={item.icon}
                                             title={item.title}
                                             isCollapsed={isCollapsed}
@@ -202,9 +242,10 @@ export function AppSidebar({ currentPage = "dashboard", onPageChange }: { curren
                             </div>
                             <SidebarGroupContent>
                                 <SidebarMenu className="gap-0.5">
-                                    {listNavigation.map((item) => (
+                                    {filteredListNavigation.map((item) => (
                                         <NavItem
                                             key={item.title}
+
                                             icon={item.icon}
                                             iconColor={item.iconColor}
                                             iconFill={item.iconFill}

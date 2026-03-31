@@ -8,12 +8,19 @@ import { TasksPage } from "@/pages/TasksPage"
 import { DoctorsPage } from "@/pages/DoctorsPage"
 import { RevenuePage } from "@/pages/RevenuePage"
 import { ProfilePage } from "@/pages/ProfilePage"
+import { NursePage } from "@/pages/NursePage"
+import { UserRole } from "@/models/user";
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "revenue" | "profile" | string;
+
+
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | string;
+
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
   const [activeDashboardTab, setActiveDashboardTab] = useState("Dashboard");
+  const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
+
 
   const isCalendar = currentPage === "calendar" || currentPage === "calender";
 
@@ -24,13 +31,18 @@ function App() {
       isFullPage={false}
       onTabChange={setActiveDashboardTab}
       activeTab={activeDashboardTab}
+      userRole={userRole}
+      setUserRole={setUserRole}
     >
+
       {isCalendar && <CalendarPage />}
       {currentPage === "messages" && <MessagesPage />}
       {currentPage === "patients" && <PatientsPage />}
       {currentPage === "tasks" && <TasksPage />}
       {currentPage === "doctors" && <DoctorsPage />}
+      {currentPage === "nurse" && <NursePage />}
       {currentPage === "revenue" && <RevenuePage />}
+
       {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "dashboard" && (
         <Dashboard 
