@@ -62,13 +62,6 @@ export const NURSE_STATUS_CONFIG = {
   "off-duty": { label: "Off Duty", dot: "bg-zinc-400", ring: "ring-zinc-400/30", bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-500 dark:text-zinc-400" },
 }
 
-const STATS = [
-  { label: "Total Nurses", value: "48", sub: "+5.1% Last month", icon: Users, trend: "up" },
-  { label: "On Duty", value: "32", sub: "+12.0% Last month", icon: Clock, trend: "up" },
-  { label: "Available", value: "14", sub: "+8.2% Last month", icon: Syringe, trend: "up" },
-  { label: "On Leave", value: "02", sub: "–2.1% Last month", icon: CalendarBlank, trend: "down" },
-]
-
 const COLS = [
   { key: "name", label: "Nurse Name", sortable: true },
   { key: "shiftStart", label: "Shift Timing", sortable: false },
@@ -295,23 +288,6 @@ export function NursePage() {
             Manage your nursing staff, assignments, and schedules.
           </p>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-2">
-        {STATS.map(stat => (
-          <div key={stat.label} className="bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 p-5 rounded-2xl shadow-sm transition-all hover:shadow-md group">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <stat.icon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" weight="duotone" />
-              </div>
-              <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", stat.trend === "up" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10")}>
-                {stat.sub}
-              </span>
-            </div>
-            <p className="text-[11px] font-black text-zinc-400 uppercase tracking-wider">{stat.label}</p>
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-zinc-100 mt-0.5 truncate">{stat.value}</h3>
-          </div>
-        ))}
       </div>
 
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
