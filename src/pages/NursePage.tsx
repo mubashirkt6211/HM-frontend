@@ -293,6 +293,21 @@ export function NursePage() {
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-zinc-100 dark:border-zinc-800/60">
           <div className="flex items-center gap-2">
+            <h2 className="text-[15px] font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">Nurses</h2>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search nurses"
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1) }}
+                className="w-44 pl-8 pr-3 py-1.5 text-[13px] font-medium rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
+              />
+            </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[13px] font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
@@ -313,25 +328,14 @@ export function NursePage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <div className="relative">
-              <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search nurses"
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1) }}
-                className="w-44 pl-8 pr-3 py-1.5 text-[13px] font-medium rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors"
-              />
-            </div>
+            <Button
+              onClick={() => setShowAdd(true)}
+              className="flex items-center gap-1.5 px-4 py-1.5 h-auto rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-sm transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" weight="bold" />
+              Add New Nurse
+            </Button>
           </div>
-
-          <Button
-            onClick={() => setShowAdd(true)}
-            className="flex items-center gap-1.5 px-4 py-1.5 h-auto rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-sm transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" weight="bold" />
-            Add New Nurse
-          </Button>
         </div>
 
         <div className="overflow-x-auto">

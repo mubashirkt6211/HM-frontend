@@ -66,29 +66,29 @@ const mainNavigation: NavItemConfig[] = [
     { icon: TreeStructure, title: "Workflows", pageId: "workflows", roles: [UserRole.ADMIN] },
 ];
 
-const favoritesNavigation: NavItemConfig[] = [
-    { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-];
+// const favoritesNavigation: NavItemConfig[] = [
+//     { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+//     { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+//     { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+//     { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+// ];
 
 const recordsNavigation: NavItemConfig[] = [
     { icon: Users, title: "Clients", pageId: "clients", roles: [UserRole.ADMIN, UserRole.MANAGER] },
     { icon: UserFocus, title: "Contacts", pageId: "contacts", roles: [UserRole.ADMIN, UserRole.MANAGER] },
 ];
 
-const listNavigation: NavItemConfig[] = [
-    { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
-    { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
-];
+// const listNavigation: NavItemConfig[] = [
+//     { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
+//     { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
+// ];
 
-export function AppSidebar({ 
-    currentPage = "dashboard", 
+export function AppSidebar({
+    currentPage = "dashboard",
     onPageChange,
-    userRole = UserRole.ADMIN 
-}: { 
-    currentPage?: string; 
+    userRole = UserRole.ADMIN
+}: {
+    currentPage?: string;
     onPageChange?: (page: string) => void;
     userRole?: UserRole;
 }) {
@@ -106,9 +106,9 @@ export function AppSidebar({
     };
 
     const filteredMainNavigation = filterByRole(mainNavigation);
-    const filteredFavoritesNavigation = filterByRole(favoritesNavigation);
+    // const filteredFavoritesNavigation = filterByRole(favoritesNavigation);
     const filteredRecordsNavigation = filterByRole(recordsNavigation);
-    const filteredListNavigation = filterByRole(listNavigation);
+    // const filteredListNavigation = filterByRole(listNavigation);
 
     return (
         <Sidebar
@@ -180,7 +180,7 @@ export function AppSidebar({
                     </SidebarGroup>
 
                     {/* FAVORITES */}
-                    {!isCollapsed && (
+                    {/* {!isCollapsed && (
                         <SidebarGroup className="p-0 mt-6">
                             <div className="flex items-center justify-between px-3 mb-2">
                                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -204,7 +204,7 @@ export function AppSidebar({
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
-                    )}
+                    )} */}
 
                     {/* RECORDS */}
                     {!isCollapsed && (
@@ -233,7 +233,7 @@ export function AppSidebar({
                     )}
 
                     {/* LIST */}
-                    {!isCollapsed && (
+                    {/* {!isCollapsed && (
                         <SidebarGroup className="p-0 mt-6">
                             <div className="flex items-center justify-between px-3 mb-2">
                                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -258,7 +258,7 @@ export function AppSidebar({
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
-                    )}
+                    )} */}
 
                 </SidebarContent>
 
