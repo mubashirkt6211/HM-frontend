@@ -49,6 +49,7 @@ const mainNavigation: NavItemConfig[] = [
     },
     { icon: Chats, title: "Messages", pageId: "messages", badge: "12" },
     { icon: CalendarCheck, title: "Calender", pageId: "calender" },
+    { icon: UserFocus, title: "Privileges", pageId: "privillage", badge: "4" },
     { icon: ListChecks, title: "Tasks", pageId: "tasks" },
     {
         icon: UsersThree, title: "Team", pageId: "team",

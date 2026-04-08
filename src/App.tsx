@@ -9,11 +9,12 @@ import { DoctorsPage } from "@/pages/DoctorsPage"
 import { RevenuePage } from "@/pages/RevenuePage"
 import { ProfilePage } from "@/pages/ProfilePage"
 import { NursePage } from "@/pages/NursePage"
+import { PrivilegesPage } from "@/pages/PrivilegesPage"
 import { UserRole } from "@/models/user";
 
 
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | string;
 
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
       {currentPage === "doctors" && <DoctorsPage />}
       {currentPage === "nurse" && <NursePage />}
       {currentPage === "revenue" && <RevenuePage />}
+      {currentPage === "privillage" && <PrivilegesPage />}
 
       {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "dashboard" && (

@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { format } from "date-fns";
 import {
     CaretLeft, CaretRight, Plus, Clock, Users,
-    X, Calendar as CalendarIcon, MapPin, TextAlignLeft
+    X, Calendar as CalendarIcon, MapPin, TextAlignLeft,
+    ShieldCheck, Warning, Info, CheckCircle
 } from "@phosphor-icons/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type CalendarEvent = {
@@ -18,19 +21,33 @@ type CalendarEvent = {
     color: string;
     attendees?: number;
     location?: string;
+    priority?: "Low" | "Medium" | "High";
+    assignees?: { name: string; avatar?: string; role: string }[];
 };
 
 type DayEvents = { [key: number]: CalendarEvent[] };
 
 // ─── Mock Data ────────────────────────────────────────────────────────
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const MOCK_STAFF = [
+    { name: "Dr. Sarah Mitchell", avatar: "https://i.pravatar.cc/200?img=45", role: "Oncology" },
+    { name: "Dr. Marcus Thompson", avatar: "https://i.pravatar.cc/200?img=52", role: "Neurology" },
+    { name: "Nurse Elena", avatar: "https://i.pravatar.cc/200?img=49", role: "ER" },
+    { name: "Jonathan Harker", avatar: "https://i.pravatar.cc/200?img=12", role: "Admin" },
+];
+
+const PRIORITY_CONFIG = {
+    High: { label: "High", icon: ShieldCheck, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-950/50", border: "border-rose-200 dark:border-rose-800/50" },
+    Medium: { label: "Medium", icon: Warning, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/50", border: "border-amber-200 dark:border-amber-800/50" },
+    Low: { label: "Low", icon: Info, color: "text-sky-500", bg: "bg-sky-50 dark:bg-sky-950/50", border: "border-sky-200 dark:border-sky-800/50" },
+};
 
 const EVENTS_BY_DAY: DayEvents = {
     1: [{ id: "e1", title: "Monday standup", time: "9:00 AM", color: "blue" }],
     2: [
-        { id: "e2", title: "One-on-one w/...", time: "10:00 AM", color: "green", attendees: 2 },
-        { id: "e3", title: "All-hands meeti...", time: "4:00 PM", color: "purple", attendees: 12 },
-        { id: "e4", title: "Dinner with C...", time: "7:00 PM", color: "red" },
+        { id: "e2", title: "One-on-one w/...", time: "10:00 AM", color: "green", attendees: 2, priority: "High", assignees: [MOCK_STAFF[0], MOCK_STAFF[2]] },
+        { id: "e3", title: "All-hands meeti...", time: "4:00 PM", color: "purple", attendees: 12, priority: "Medium", assignees: [MOCK_STAFF[1]] },
+        { id: "e4", title: "Dinner with C...", time: "7:00 PM", color: "red", priority: "Low" },
     ],
     3: [{ id: "e5", title: "Monday standup", time: "9:00 AM", color: "blue" }],
     5: [{ id: "e6", title: "Friday standup", time: "9:00 AM", color: "blue" }],
@@ -48,9 +65,9 @@ const EVENTS_BY_DAY: DayEvents = {
         { id: "e13", title: "SEO planning", time: "1:30 PM", color: "teal" },
     ],
     10: [
-        { id: "e14", title: "Lunch with...", time: "10:00 PM", color: "green", attendees: 3 },
-        { id: "e15", title: "Olivia x Riley", time: "10:00 AM", color: "pink" },
-        { id: "e16", title: "Product demo", time: "1:30 PM", color: "blue" },
+        { id: "e14", title: "Lunch with...", time: "10:00 PM", color: "green", attendees: 3, priority: "Low" },
+        { id: "e15", title: "Olivia x Riley", time: "10:00 AM", color: "pink", priority: "Medium", assignees: [MOCK_STAFF[0]] },
+        { id: "e16", title: "Product demo", time: "1:30 PM", color: "blue", priority: "High", assignees: [MOCK_STAFF[1], MOCK_STAFF[3]] },
     ],
     11: [
         { id: "e17", title: "House inspe...", time: "10:30 AM", color: "orange" },
@@ -119,12 +136,15 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
 // ─── Small Components ─────────────────────────────────────────────────
 function EventPill({ event, isPast }: { event: CalendarEvent; isPast?: boolean }) {
     const c = COLOR_MAP[event.color] ?? COLOR_MAP.blue;
+    const prio = event.priority ? PRIORITY_CONFIG[event.priority] : null;
+
     return (
         <motion.div
             whileHover={{ scale: 1.02 }}
             className={cn(
-                "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium cursor-pointer truncate",
-                c.bg, c.text
+                "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium cursor-pointer truncate border border-transparent",
+                c.bg, c.text,
+                prio && cn("border-l-2", prio.border)
             )}
         >
             <span className={cn(
@@ -266,6 +286,8 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
     const [color, setColor] = React.useState("blue");
     const [location, setLocation] = React.useState("");
     const [notes, setNotes] = React.useState("");
+    const [priority, setPriority] = React.useState<CalendarEvent["priority"]>("Medium");
+    const [selectedStaff, setSelectedStaff] = React.useState<string[]>([]);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -284,6 +306,8 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
             endTime: fmt(endTime),
             color,
             location: location || undefined,
+            priority,
+            assignees: MOCK_STAFF.filter(s => selectedStaff.includes(s.name)),
         });
         onClose();
     }
@@ -411,6 +435,67 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                             rows={2}
                             className={cn(inputCls, "resize-none")}
                         />
+                    </div>
+
+                    {/* Priority + Staff Selection */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Priority</label>
+                            <Select value={priority} onValueChange={(v: string) => setPriority(v as any)}>
+                                <SelectTrigger className="h-9 text-xs rounded-lg bg-zinc-50 dark:bg-zinc-900">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl">
+                                    {(["High", "Medium", "Low"] as const).map(p => (
+                                        <SelectItem key={p} value={p} className="text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <span className={cn("w-2 h-2 rounded-full", PRIORITY_CONFIG[p].color.replace("text-", "bg-"))} />
+                                                {p}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Assign Staff</label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className="w-full h-9 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-xs font-medium"
+                                    >
+                                        <span className="truncate">{selectedStaff.length > 0 ? `${selectedStaff.length} selected` : "Select staff"}</span>
+                                        <Users className="w-3.5 h-3.5 text-zinc-400" />
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-56 p-2 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl" align="end">
+                                    <div className="flex flex-col gap-1">
+                                        {MOCK_STAFF.map(s => (
+                                            <button
+                                                key={s.name}
+                                                type="button"
+                                                onClick={() => setSelectedStaff(prev => prev.includes(s.name) ? prev.filter(x => x !== s.name) : [...prev, s.name])}
+                                                className={cn(
+                                                    "flex items-center gap-2 w-full p-1.5 rounded-lg text-xs font-bold transition-all",
+                                                    selectedStaff.includes(s.name) ? "bg-zinc-100 dark:bg-zinc-800" : "hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                                )}
+                                            >
+                                                <Avatar className="size-5 shrink-0">
+                                                    <AvatarImage src={s.avatar} />
+                                                    <AvatarFallback>{s.name[0]}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1 text-left min-w-0">
+                                                    <p className="truncate text-zinc-900 dark:text-zinc-100">{s.name}</p>
+                                                    <p className="text-[9px] text-zinc-400 font-medium">{s.role}</p>
+                                                </div>
+                                                {selectedStaff.includes(s.name) && <CheckCircle className="w-3.5 h-3.5 text-blue-500" weight="fill" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </div>
 
                     {/* Color */}
@@ -670,15 +755,31 @@ export function CalendarPage() {
                         </div>
                         {(eventMap[selectedDay] || []).map(ev => {
                             const c = COLOR_MAP[ev.color] ?? COLOR_MAP.blue;
+                            const prio = ev.priority ? PRIORITY_CONFIG[ev.priority] : null;
                             return (
-                                <div key={ev.id} className={cn("flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium shrink-0", c.bg, c.text)}>
+                                <div key={ev.id} className={cn("flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-medium shrink-0", c.bg, c.text)}>
                                     <span className={cn("w-2 h-2 rounded-full", c.dot)} />
-                                    <span>{ev.title}</span>
-                                    <span className="opacity-70">{ev.time}</span>
-                                    {ev.attendees && (
-                                        <span className="flex items-center gap-1 opacity-70">
-                                            <Users className="w-3 h-3" /> {ev.attendees}
-                                        </span>
+                                    <div className="flex flex-col">
+                                        <span>{ev.title}</span>
+                                        <div className="flex items-center gap-2 mt-0.5 opacity-70 text-[10px]">
+                                            <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{ev.time}</span>
+                                            {prio && (
+                                                <span className={cn("flex items-center gap-1 font-black uppercase tracking-widest", prio.color)}>
+                                                    <prio.icon className="w-2.5 h-2.5" weight="bold" /> {prio.label}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {ev.assignees && ev.assignees.length > 0 && (
+                                        <div className="flex -space-x-2 ml-1">
+                                            {ev.assignees.map((s, i) => (
+                                                <Avatar key={i} className="size-6 border-2 border-white dark:border-zinc-950 ring-1 ring-zinc-200/50 dark:ring-zinc-800/50">
+                                                    <AvatarImage src={s.avatar} alt={s.name} />
+                                                    <AvatarFallback className="text-[8px]">{s.name[0]}</AvatarFallback>
+                                                </Avatar>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             );
