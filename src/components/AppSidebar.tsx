@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import { cn } from "@/lib/utils"
+import logog from "@/assets/logog.png"
 import { Syringe, User2Icon } from "lucide-react";
 
 import { UserRole } from "@/models/user";
@@ -129,9 +130,7 @@ export function AppSidebar({
                             className="flex items-center gap-2.5 group cursor-pointer"
                             onClick={() => onPageChange?.("dashboard")}
                         >
-                            <div className="w-7 h-7 rounded-md bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center shrink-0">
-                                <Sparkle className="w-4 h-4 text-white dark:text-zinc-900" />
-                            </div>
+                            <img src={logog} alt="HMS Logo" className="w-12 h-12 object-contain shrink-0" />
                             {!isCollapsed && (
                                 <span className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Leadwave</span>
                             )}
