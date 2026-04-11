@@ -1,7 +1,7 @@
 /**
  * Profile Page – Centered header, horizontal tabs, email-client Attendance tab
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -34,6 +34,14 @@ import {
   SquaresFour,
   CheckCircle,
   XCircle,
+  CaretLeft,
+  CaretRight,
+  FirstAid,
+  Sun,
+  WarningCircle,
+  Baby,
+  PaperPlaneTilt,
+  X,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import claraAvatar from "@/assets/clara_avatar.png";
@@ -264,6 +272,13 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
 // ─────────────────────────────────────────────────────────────────────────────
 function AttendanceView() {
   const todayRef = TODAY_REF;
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  /* ── clock ── */
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   /* ── navigation ── */
   const minDate = new Date(todayRef); minDate.setMonth(minDate.getMonth() - 3); minDate.setDate(1);
@@ -288,6 +303,7 @@ function AttendanceView() {
   const todayKey = `${todayRef.getFullYear()}-${String(todayRef.getMonth() + 1).padStart(2, "0")}-${String(todayRef.getDate()).padStart(2, "0")}`;
   const [selectedKey, setSelectedKey] = useState<string | null>(todayKey);
   const [filter, setFilter] = useState<"All" | "Present" | "Late" | "Absent" | "Holiday">("All");
+  const reqWorkMin = 480; // 8 hours standard
 
   /* ── leave modal ── */
   const [showLeave, setShowLeave] = useState(false);
@@ -296,6 +312,12 @@ function AttendanceView() {
   const [leaveReason, setLeaveReason] = useState("");
   const [leaveSubmitted, setLeaveSubmitted] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
+  const [showDayDetails, setShowDayDetails] = useState(false);
+  const [leaveApps, setLeaveApps] = useState([
+    { id: 101, type: "Earned Leave", from: new Date(2026, 3, 5), to: new Date(2026, 3, 7), status: "Approved", response: "Approved by Admin", date: "2 Apr" },
+    { id: 102, type: "Sick Leave", from: new Date(2026, 3, 10), to: new Date(2026, 3, 10), status: "Rejected", response: "Documentation required", date: "8 Apr" },
+    { id: 103, type: "Casual Leave", from: new Date(2026, 3, 15), to: new Date(2026, 3, 16), status: "Pending", response: "Under review", date: "10 Apr" },
+  ]);
 
   const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Emergency Leave", "Earned Leave", "Maternity/Paternity"];
   const LEAVE_BALANCES: Record<string, { total: number; used: number }> = {
@@ -310,7 +332,19 @@ function AttendanceView() {
     e.preventDefault();
     if (!leaveRange?.from || !leaveRange?.to) return;
     setLeaveSubmitted(true);
+
+    const newApp = {
+      id: Date.now(),
+      type: leaveType,
+      from: leaveRange.from,
+      to: leaveRange.to,
+      status: "Pending",
+      response: "Awaiting review",
+      date: format(new Date(), "d MMM")
+    };
+
     setTimeout(() => {
+      setLeaveApps(prev => [newApp, ...prev]);
       setShowLeave(false);
       setLeaveSubmitted(false);
       setLeaveRange(undefined);
@@ -365,7 +399,7 @@ function AttendanceView() {
 
   /* ── mini calendar for detail pane ── */
   /* ── Kokonut Calendar Grid Logic ── */
-  const firstDayIdx = new Date(year, month, 1).getDay(); // Sunday-indexed for Kokonut style
+  const firstDayIdx = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-indexed for CalendarPage style
   const totalCells = Math.ceil((firstDayIdx + daysInMonth) / 7) * 7;
 
   /* ── status helpers ── */
@@ -391,92 +425,155 @@ function AttendanceView() {
     Holiday: "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
   };
 
-  const reqWorkMin = 9 * 60; // 9 hours
-
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
       className="pb-5">
 
       {/* ── Top bar ── */}
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Attendance</h2>
-          <p className="text-[12px] font-bold text-zinc-400 dark:text-zinc-500 mt-0.5">Jan – Jul 2026 · All records tracked</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowLeave(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[12px] font-black shadow hover:scale-105 active:scale-95 transition-all">
-            <CalendarCheck weight="fill" size={14} />
-            Request Leave
-          </button>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col">
+            <h2 className="text-[22px] font-black text-zinc-950 dark:text-white tracking-tight leading-none">Attendance</h2>
+            <p className="text-[12px] font-bold text-zinc-400 mt-1.5 uppercase tracking-widest">Digital Registry 2026</p>
+          </div>
+
+          <div className="h-10 w-px bg-zinc-100 dark:bg-zinc-800 hidden md:block" />
+
+          <div className="items-center gap-4 hidden md:flex">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.2em]">Real-time Status</span>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[14px] font-black text-zinc-600 dark:text-zinc-300 tabular-nums">
+                  {format(currentTime, "HH:mm:ss")}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => { setYear(todayRef.getFullYear()); setMonth(todayRef.getMonth()); setSelectedKey(todayKey); }}
+              className="px-4 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-black text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white transition-all shadow-sm">
+              Jump to Today
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── Attendance Content (Outer Box Removed) ── */}
-      <div className="flex flex-col">
+      {/* ── Attendance Layout Container ── */}
+      <div className="max-w-[1400px] mx-auto w-full animate-in fade-in duration-1000">
 
+        {/* ── Main Dashboard Shell ── */}
+        <div className="flex flex-col bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden mb-12">
 
-
-        {/* Shell sub-bar: filter pills only */}
-        <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0 h-11 px-5 bg-zinc-50/20 dark:bg-zinc-950/20">
-          <div className="flex items-center gap-1.5 flex-1">
-            {[
-              { id: "All", label: "All", icon: SquaresFour },
-              { id: "Present", label: "Present", icon: CheckCircle },
-              { id: "Late", label: "Late", icon: Clock },
-              { id: "Absent", label: "Absent", icon: XCircle },
-              { id: "Holiday", label: "Holiday", icon: Flag },
-            ].map(f => (
-              <button key={f.id} onClick={() => setFilter(f.id as any)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-1.5 rounded-xl text-[11px] font-black border transition-all",
-                  filter === f.id
-                    ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-sm"
-                    : "bg-white dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 shadow-sm"
-                )}>
-                <f.icon size={14} weight={filter === f.id ? "fill" : "bold"} />
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <div className="hidden md:flex items-center gap-3 text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">
-            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Present</span>
-            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Late</span>
-            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Absent</span>
-          </div>
-        </div>
-
-        {/* Split pane (Kokonut Layout) */}
-        <div className="flex flex-col lg:flex-row min-h-[640px]">
-
-          {/* ── LEFT: Large Calendar Grid ── */}
-          <div className="flex-1 border-r border-zinc-100 dark:border-zinc-800 flex flex-col p-6 bg-white dark:bg-zinc-900">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-[24px] font-black text-zinc-950 dark:text-white tracking-tighter">
-                  {MONTH_NAMES[month]} {year}
-                </h3>
-                <p className="text-[12px] font-bold text-zinc-400 mt-1">{monthStats.working} active records tracked</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={prevMonth} disabled={!canPrev} className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-zinc-400 disabled:opacity-30">
-                  <ArrowLeft size={16} weight="bold" />
-                </button>
-                <button onClick={nextMonth} disabled={!canNext} className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-zinc-400 disabled:opacity-30">
-                  <ArrowRight size={16} weight="bold" />
-                </button>
+          {/* Shell Top: Filter sub-bar */}
+          <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0 h-16 px-8 bg-zinc-50/40 dark:bg-zinc-900">
+            <div className="flex items-center gap-1.5 flex-1">
+              <div className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 rounded-2xl">
+                {[
+                  { id: "All", label: "All", icon: SquaresFour, color: "zinc" },
+                  { id: "Present", label: "Present", icon: CheckCircle, color: "emerald" },
+                  { id: "Late", label: "Late", icon: Clock, color: "amber" },
+                  { id: "Absent", label: "Absent", icon: XCircle, color: "rose" },
+                  { id: "Holiday", label: "Holiday", icon: Flag, color: "blue" },
+                ].map(f => (
+                  <button key={f.id} onClick={() => setFilter(f.id as any)}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black transition-all",
+                      filter === f.id ? (
+                        f.color === "zinc" ? "bg-white dark:bg-zinc-700 text-zinc-950 dark:text-white shadow-sm" :
+                          f.color === "emerald" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" :
+                            f.color === "amber" ? "bg-amber-400 text-amber-950 shadow-lg shadow-amber-400/20" :
+                              f.color === "rose" ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20" :
+                                "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+                      ) : (
+                        "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                      )
+                    )}>
+                    <f.icon size={14} weight={filter === f.id ? "fill" : "bold"} />
+                    {f.label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Grid Days Header */}
-            <div className="grid grid-cols-7 mb-4">
-              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-                <div key={i} className="text-center text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.2em]">{d}</div>
+            <div className="flex items-center gap-3">
+              {/* Leave Application Log Popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="relative w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group">
+                    <ChatDots weight="bold" size={16} />
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-zinc-950 rounded-full" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-950 overflow-hidden" align="end">
+                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+                    <p className="text-[13px] font-black text-zinc-900 dark:text-white">Leave Application Log</p>
+                    <p className="text-[11px] font-bold text-zinc-400 mt-0.5">Track your recent requests</p>
+                  </div>
+                  <div className="max-h-[350px] overflow-y-auto p-2 space-y-1">
+                    {leaveApps.map(app => (
+                      <div key={app.id} className="p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800">
+                        <div className="flex items-start justify-between mb-1.5">
+                          <span className="text-[12px] font-black text-zinc-900 dark:text-white">{app.type}</span>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider",
+                            app.status === "Approved" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" :
+                            app.status === "Rejected" ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" :
+                            "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+                          )}>
+                            {app.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-bold text-zinc-400">
+                          {format(app.from, "d MMM")} — {format(app.to, "d MMM yyyy")}
+                        </p>
+                        <div className="mt-2 p-2 rounded-lg bg-zinc-50/50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                           <p className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 leading-relaxed italic">
+                             "{app.response}"
+                           </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-2.5 px-0.5">
+                           <span className="text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">{app.date}</span>
+                           {app.status === "Approved" && (
+                             <button className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline">Download Form</button>
+                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Month navigation (CalendarPage Style) */}
+              <div className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-0.5">
+                <button onClick={prevMonth} disabled={!canPrev} className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 transition-colors disabled:opacity-30">
+                  <CaretLeft size={16} weight="bold" />
+                </button>
+                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 px-3 min-w-[110px] text-center">{MONTH_NAMES[month]} {year}</span>
+                <button onClick={nextMonth} disabled={!canNext} className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 transition-colors disabled:opacity-30">
+                  <CaretRight size={16} weight="bold" />
+                </button>
+              </div>
+
+              <button onClick={() => setShowLeave(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-md text-xs font-semibold shadow-md shadow-zinc-200/50 dark:shadow-none transition-all hover:scale-[1.03] active:scale-[0.97]">
+                <Plus size={14} weight="bold" />
+                Request Leave
+              </button>
+            </div>
+          </div>
+
+          <div className="p-0">
+            {/* ── Day Labels (CalendarPage Header Style) ── */}
+            <div className="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => (
+                <div key={i} className="py-3 text-center text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-r border-zinc-100 dark:border-zinc-800 last:border-r-0">
+                  {day}
+                </div>
               ))}
             </div>
 
-            {/* Grid Container */}
-            <div className="grid grid-cols-7 gap-px border border-zinc-100 dark:border-zinc-800 rounded-[2rem] overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-sm">
+            {/* ── Grid Grid (CalendarPage Cell Style) ── */}
+            <div className="grid grid-cols-7">
               {Array.from({ length: totalCells }).map((_, idx) => {
                 const dayNum = idx - firstDayIdx + 1;
                 const inMonth = dayNum >= 1 && dayNum <= daysInMonth;
@@ -495,166 +592,181 @@ function AttendanceView() {
                 const showStatus = rec && rec.status !== "Weekend" && rec.status !== "Future" && matchesFilter;
 
                 return (
-                  <div key={idx} className={cn(
-                    "min-h-[110px] bg-white dark:bg-zinc-900 p-3 transition-all relative group",
-                    !inMonth && "bg-zinc-50/50 dark:bg-zinc-950/20",
-                    isSel && "z-10 ring-2 ring-rose-500 dark:ring-rose-400 shadow-[0_0_25px_rgba(244,63,94,0.2)] bg-rose-50/20 dark:bg-rose-900/10"
-                  )}>
-                    {inMonth && (
-                      <>
-                        <button onClick={() => setSelectedKey(k)} className="absolute inset-0 z-0" />
-                        <div className="flex justify-between items-start relative z-10 pointer-events-none">
-                          <span className={cn(
-                            "text-[14px] font-black",
-                            isToday ? "text-rose-500" : "text-zinc-400 dark:text-zinc-500",
-                            isSel && "text-rose-600 dark:text-rose-400"
-                          )}>
-                            {dayNum}
-                          </span>
-                        </div>
+                  <div key={idx}
+                    onClick={() => {
+                      if (!inMonth || !k) return;
+                      // Only allow opening past or current days
+                      if (k > todayKey) return;
+                      setSelectedKey(k);
+                      setShowDayDetails(true);
+                    }}
+                    className={cn(
+                      "min-h-[100px] border-b border-r border-zinc-100 dark:border-zinc-800 last:border-r-0 p-2 transition-all relative group cursor-pointer",
+                      !inMonth && "bg-zinc-50/30 dark:bg-zinc-900/10 grayscale opacity-40",
+                      inMonth && k && k > todayKey && "cursor-default opacity-60", // Visual hint for future
+                      inMonth && k && k <= todayKey && "hover:bg-zinc-50/80 dark:hover:bg-zinc-900/30",
+                      isToday && "bg-blue-50/40 dark:bg-blue-900/10"
+                    )}>
 
-                        {/* Status Pills */}
-                        <div className="mt-6 space-y-1 relative z-10 pointer-events-none">
-                          {hol && (
-                            <div className="px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 text-[9px] font-black text-blue-600 dark:text-blue-300 truncate shadow-sm">
-                              {hol}
-                            </div>
-                          )}
-                          {showStatus && (
-                            <div className={cn(
-                              "px-2 py-1 rounded-lg text-[10px] font-black truncate shadow-sm animate-in fade-in zoom-in-95 duration-300",
-                              STATUS_BADGE[rec.status]
-                            )}>
-                              {rec.status}
-                            </div>
-                          )}
-                          {rec && rec.login && (
-                            <div className="text-[10px] font-bold text-zinc-400 pl-1 mt-1">
-                              {rec.login}
-                            </div>
-                          )}
-                        </div>
-                      </>
+                    {/* Day number (Top Right Circle) */}
+                    <div className="flex justify-end mb-2">
+                      <span className={cn(
+                        "w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold transition-colors",
+                        !inMonth && "text-zinc-300 dark:text-zinc-700",
+                        inMonth && !isToday && "text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100",
+                        isToday && "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900",
+                      )}>
+                        {inMonth ? dayNum : (dayNum <= 0 ? (new Date(year, month, 0).getDate() + dayNum) : (dayNum - daysInMonth))}
+                      </span>
+                    </div>
+
+                    {/* Cell Content (Event Pill Style) */}
+                    {inMonth && (
+                      <div className="flex flex-col gap-0.5">
+                        {hol && (
+                          <div className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/50 truncate animate-in zoom-in-95">
+                            <Flag size={10} weight="fill" className="shrink-0" />
+                            <span className="truncate">{hol}</span>
+                          </div>
+                        )}
+                        {showStatus && (
+                          <div className={cn(
+                            "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-all truncate border border-transparent shadow-sm",
+                            rec.status === "Present" ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-l-2 border-l-emerald-400" :
+                              rec.status === "Late" ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-l-2 border-l-amber-400" :
+                                "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-l-2 border-l-rose-400"
+                          )}>
+                            <span className={cn("w-1.5 h-1.5 rounded-full shrink-0",
+                              rec.status === "Present" ? "bg-emerald-500" :
+                                rec.status === "Late" ? "bg-amber-500" : "bg-rose-500"
+                            )} />
+                            <span className="truncate">{rec.status}</span>
+                            {rec.login && <span className="shrink-0 opacity-50 ml-auto">{rec.login}</span>}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
               })}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* ── RIGHT: Activity Sidebar ── */}
-          <div className="w-full lg:w-[280px] shrink-0 border-l border-zinc-100 dark:border-zinc-800 flex flex-col bg-zinc-50/30 dark:bg-zinc-950/20 p-6">
-            {!selectedKey || !selectedRec ? (
-              <div className="flex flex-col items-center justify-center flex-1 text-center bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800 p-10 shadow-sm">
-                <CalendarCheck size={48} weight="bold" className="text-zinc-200 dark:text-zinc-800 mb-6" />
-                <h5 className="text-[15px] font-black text-zinc-900 dark:text-white">Day Analysis Locked</h5>
-                <p className="text-[12px] font-bold text-zinc-400 mt-2 leading-relaxed">Select any calendar cell on the left to unlock biometric logs and duration analysis.</p>
-              </div>
-            ) : (
-              <div className="flex flex-col flex-1 gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
+      {/* ── Day Details Modal ── */}
+      <AnimatePresence>
+        {showDayDetails && selectedKey && selectedRec && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+            onClick={e => { if (e.target === e.currentTarget) setShowDayDetails(false); }}>
+            <motion.div initial={{ opacity: 0, scale: 0.93, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.93, y: 20 }}
+              transition={{ type: "spring", damping: 22, stiffness: 280 }}
+              className="bg-white rounded-[2rem] shadow-2xl border border-zinc-200 w-full max-w-sm overflow-hidden p-0">
+
+              <div className="flex flex-col animate-in fade-in duration-500">
                 {/* Header Card */}
-                <div className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 dark:bg-rose-500/10 rounded-bl-full translate-x-8 -translate-y-8" />
+                <div className="p-6 pb-2 relative overflow-hidden group">
                   <div className="relative z-10 flex items-center justify-between">
                     <div>
-                      <h4 className="text-[20px] font-black text-zinc-950 dark:text-white tracking-tighter">
+                      <h4 className="text-[20px] font-black text-zinc-950 tracking-tighter">
                         {selectedDay} {MONTH_NAMES[month]}
                       </h4>
-                      <p className="text-[13px] font-bold text-zinc-400">
+                      <p className="text-[14px] font-bold text-zinc-400">
                         {format(new Date(selectedKey), "EEEE")} · {selectedKey === todayKey ? "Today" : "Archive"}
                       </p>
                     </div>
-                    <button onClick={() => setShowLeave(true)} className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-[0_5px_15px_rgba(244,63,94,0.3)] hover:scale-110 active:scale-95 transition-all">
-                      <Plus weight="bold" size={18} />
+                    <button onClick={() => setShowDayDetails(false)}
+                      className="w-10 h-10 rounded-full border border-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-50 transition-all">
+                      <svg viewBox="0 0 256 256" className="w-4 h-4 fill-current">
+                        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                      </svg>
                     </button>
                   </div>
                 </div>
 
-                {/* Biometric Status Area (De-colorized) */}
-                {selectedRec.login ? (
-                  <>
-                    <div className="p-7 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2">
-                          <Clock weight="fill" size={14} className="text-zinc-400" />
-                          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Activity Report</span>
-                        </div>
-                        <div className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                          selectedRec.status === "Present" ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" :
-                            selectedRec.status === "Late" ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20" :
-                              "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                        )}>
-                          {selectedRec.status}
-                        </div>
-                      </div>
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <p className="text-[36px] font-black text-zinc-900 dark:text-white leading-none tracking-tighter tabular-nums">{selectedRec.hours || "--:--"}</p>
-                          <p className="text-[11px] font-bold text-zinc-400 mt-2">Net logged time today</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Timeline List (Subtle Icons) */}
-                    <div className="flex flex-col gap-3">
-                      {[
-                        { label: "Check-in", time: selectedRec.login, icon: <ArrowDown size={14} />, color: "text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400" },
-                        { label: "Check-out", time: selectedRec.logout, icon: <ArrowUp size={14} />, color: "text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400" },
-                      ].map((item, i) => (
-                        <div key={i} className="p-4 bg-white dark:bg-zinc-900 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group">
-                          <div className="flex items-center gap-3">
-                            <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105", item.color)}>
-                              {item.icon}
-                            </div>
-                            <div>
-                              <p className="text-[13px] font-black text-zinc-900 dark:text-white leading-tight">{item.label}</p>
-                              <p className="text-[10px] font-bold text-zinc-400">Gate 04 · Biometric</p>
-                            </div>
+                <div className="px-6 pb-6 flex flex-col gap-4">
+                  {/* Biometric Status Area */}
+                  {selectedRec.login ? (
+                    <>
+                      <div className="p-5 rounded-[1.5rem] bg-white border border-zinc-100 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-2">
+                            <Clock weight="fill" size={16} className="text-zinc-400" />
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Activity Report</span>
                           </div>
-                          <span className="text-[14px] font-black text-zinc-900 dark:text-white tabular-nums">{item.time}</span>
+                          <div className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-zinc-100",
+                            selectedRec.status === "Present" ? "text-emerald-600" :
+                              selectedRec.status === "Late" ? "text-amber-600" : "text-rose-600"
+                          )}>
+                            {selectedRec.status}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Work Progress Ring/Bar */}
-                    <div className="mt-4 p-6 bg-zinc-950 dark:bg-zinc-800 rounded-[2.2rem] shadow-xl">
-                      <div className="flex items-center justify-between mb-3 text-white">
-                        <span className="text-[11px] font-black uppercase tracking-widest opacity-60">Required vs. Actual</span>
-                        <span className="text-[13px] font-black">9h Required</span>
+                        <div className="flex items-end justify-between">
+                          <div>
+                            <p className="text-[32px] font-black text-zinc-900 leading-none tracking-tighter tabular-nums">{selectedRec.hours || "--:--"}</p>
+                            <p className="text-[11px] font-bold text-zinc-400 mt-1.5">Net logged time today</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="h-4 bg-white/10 rounded-full overflow-hidden p-1 shadow-inner">
+
+                      {/* Timeline List */}
+                      <div className="flex flex-col gap-3">
+                        {[
+                          { label: "Check-in", time: selectedRec.login, icon: <ArrowDown size={14} />, color: "text-emerald-600 bg-emerald-50" },
+                          { label: "Check-out", time: selectedRec.logout, icon: <ArrowUp size={14} />, color: "text-rose-600 bg-rose-50" },
+                        ].map((item, i) => (
+                          <div key={i} className="p-3 bg-white rounded-xl border border-zinc-100 flex items-center justify-between group">
+                            <div className="flex items-center gap-3">
+                              <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", item.color)}>
+                                {item.icon}
+                              </div>
+                              <div>
+                                <p className="text-[14px] font-black text-zinc-900 dark:text-white leading-tight">{item.label}</p>
+                                <p className="text-[11px] font-bold text-zinc-400">Biometric Scan</p>
+                              </div>
+                            </div>
+                            <span className="text-[15px] font-black text-zinc-900 dark:text-white tabular-nums">{item.time}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="p-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden h-2.5 mt-2">
                         <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((selectedRec.minutes! / reqWorkMin) * 100, 100)}%` }}
-                          className={cn("h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.3)]",
-                            selectedRec.minutes! >= reqWorkMin ? "bg-emerald-400" : "bg-rose-400"
+                          className={cn("h-full rounded-full",
+                            selectedRec.minutes! >= reqWorkMin ? "bg-emerald-500" : "bg-rose-500"
                           )} />
                       </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-8 bg-white rounded-[2rem] border border-zinc-100 text-center">
+                      <Clock size={32} weight="bold" className="text-zinc-200 mb-4" />
+                      <h5 className="text-[15px] font-black text-zinc-950">Day Empty</h5>
+                      <p className="text-[12px] font-bold text-zinc-400 mt-2 leading-relaxed">No biometric records found for this entry.</p>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800 text-center">
-                    <Clock size={42} weight="bold" className="text-zinc-100 dark:text-zinc-800 mb-4" />
-                    <h5 className="text-[15px] font-black text-zinc-950 dark:text-white">Day Empty</h5>
-                    <p className="text-[12px] font-bold text-zinc-400 mt-2 leading-relaxed">No biometric records found for this entry. User may have been absent or forgot to tag.</p>
-                  </div>
-                )}
+                  )}
 
-                {selectedHoliday && (
-                  <div className="p-6 rounded-[2rem] bg-indigo-50 dark:bg-blue-900/10 border border-indigo-100 dark:border-blue-800/50 flex items-center gap-4 animate-in slide-in-from-bottom-2 duration-300">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                      <Flag weight="fill" size={20} />
+                  {selectedHoliday && (
+                    <div className="p-5 rounded-[1.5rem] bg-white border border-zinc-100 flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-950 text-white flex items-center justify-center shadow-sm">
+                        <Flag weight="fill" size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Public Holiday</p>
+                        <p className="text-[15px] font-black text-zinc-900 tracking-tight">{selectedHoliday}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500 dark:text-blue-400">Public Holiday</p>
-                      <p className="text-[15px] font-black text-zinc-900 dark:text-white tracking-tight">{selectedHoliday}</p>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Leave Request Modal ── */}
       <AnimatePresence>
