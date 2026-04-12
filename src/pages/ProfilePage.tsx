@@ -170,7 +170,7 @@ const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 interface ProfilePageProps { onBack: () => void; }
 
 export function ProfilePage({ onBack }: ProfilePageProps) {
-  const [activeTab, setActiveTab] = useState("Objectives");
+  const [activeTab, setActiveTab] = useState("Attendance");
   const [objectives, setObjectives] = useState(INITIAL_OBJECTIVES);
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -216,39 +216,67 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
       </div>
 
       {/* Profile Header */}
-      <div className="flex flex-col items-center justify-center space-y-6 mb-7 animate-in fade-in slide-in-from-top-4 duration-700">
-        <div className="relative group">
-          <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white dark:border-zinc-900 shadow-xl ring-1 ring-zinc-200 dark:ring-zinc-800">
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-4 animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="relative group shrink-0 mt-2">
+          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 border-white dark:border-zinc-900 shadow-xl ring-1 ring-zinc-200 dark:ring-zinc-800">
             <img src={claraAvatar} alt="Clara Lefèvre" className="w-full h-full object-cover" />
           </div>
-          <button className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center shadow-lg hover:scale-110 transition-transform border-4 border-white dark:border-zinc-900">
-            <Camera weight="fill" size={18} />
+          <button className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center shadow-lg hover:scale-110 transition-transform border-4 border-white dark:border-zinc-900">
+            <Camera weight="fill" size={14} />
           </button>
         </div>
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl md:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">Clara Lefèvre</h1>
-          <div className="flex items-center justify-center gap-2">
-            <span className="px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[11px] font-black uppercase tracking-wider border border-blue-100 dark:border-blue-800/50">R&D Product</span>
-            <span className="text-[13px] font-bold text-zinc-400 dark:text-zinc-500">Product Manager</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Horizontal tab bar */}
-      <div className="flex items-center justify-center mb-6 animate-in fade-in duration-1000">
-        <div className="flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1.5 rounded-2xl shadow-sm">
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "flex items-center gap-2 px-5 py-2 rounded-xl text-[13px] font-bold transition-all",
-                activeTab === tab.id
-                  ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-md"
-                  : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300"
-              )}>
-              <tab.icon weight={activeTab === tab.id ? "fill" : "bold"} size={15} />
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex-1 space-y-6">
+          <div className="space-y-4">
+            <div className="text-center md:text-left space-y-1">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Clara Lefèvre</h1>
+              <p className="text-[14px] font-bold text-zinc-400 dark:text-zinc-500">Product Manager · R&D Product</p>
+            </div>
+
+            {/* Metrics Row */}
+            <div className="flex items-center justify-center md:justify-start gap-12 pt-2">
+              {[
+                { label: "Attendance rate", value: "98%", status: "success" },
+                { label: "Unassigned tasks", value: "8 tasks", status: "none" },
+                { label: "Requirements met", value: "16/33", status: "none" },
+              ].map((m, i) => (
+                <div key={i} className="flex flex-col gap-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-zinc-400 dark:text-zinc-500">{m.label}</span>
+                  <div className="flex items-center gap-2">
+                    {m.status === "success" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+                    <span className="text-[16px] font-black text-zinc-900 dark:text-white">{m.value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Tabs (Pill / Segmented Control Style) */}
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl animate-in fade-in slide-in-from-right-4 duration-1000">
+              {tabs.map((tab) => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex items-center px-4 py-2 rounded-xl text-[12px] font-black transition-all relative group",
+                    activeTab === tab.id
+                      ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-sm"
+                      : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300"
+                  )}>
+                  <div className="flex items-center overflow-hidden">
+                    <tab.icon weight={activeTab === tab.id ? "fill" : "bold"} size={16} className="shrink-0" />
+                    <span className={cn(
+                      "whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out",
+                      activeTab === tab.id
+                        ? "max-w-[100px] ml-2 opacity-100"
+                        : "max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:ml-2 group-hover:opacity-100"
+                    )}>
+                      {tab.label}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -449,11 +477,7 @@ function AttendanceView() {
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => { setYear(todayRef.getFullYear()); setMonth(todayRef.getMonth()); setSelectedKey(todayKey); }}
-              className="px-4 py-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-black text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white transition-all shadow-sm">
-              Jump to Today
-            </button>
+
           </div>
         </div>
       </div>
@@ -466,33 +490,37 @@ function AttendanceView() {
 
           {/* Shell Top: Filter sub-bar */}
           <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0 h-16 px-8 bg-zinc-50/40 dark:bg-zinc-900">
-            <div className="flex items-center gap-1.5 flex-1">
-              <div className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 rounded-2xl">
-                {[
-                  { id: "All", label: "All", icon: SquaresFour, color: "zinc" },
-                  { id: "Present", label: "Present", icon: CheckCircle, color: "emerald" },
-                  { id: "Late", label: "Late", icon: Clock, color: "amber" },
-                  { id: "Absent", label: "Absent", icon: XCircle, color: "rose" },
-                  { id: "Holiday", label: "Holiday", icon: Flag, color: "blue" },
-                ].map(f => (
-                  <button key={f.id} onClick={() => setFilter(f.id as any)}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black transition-all",
-                      filter === f.id ? (
-                        f.color === "zinc" ? "bg-white dark:bg-zinc-700 text-zinc-950 dark:text-white shadow-sm" :
-                          f.color === "emerald" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" :
-                            f.color === "amber" ? "bg-amber-400 text-amber-950 shadow-lg shadow-amber-400/20" :
-                              f.color === "rose" ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20" :
-                                "bg-blue-500 text-white shadow-lg shadow-blue-500/20"
-                      ) : (
-                        "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-                      )
-                    )}>
-                    <f.icon size={14} weight={filter === f.id ? "fill" : "bold"} />
-                    {f.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-center gap-2 flex-1">
+              {[
+                { id: "All", label: "All", icon: SquaresFour, count: monthStats.working },
+                { id: "Present", label: "Present", icon: CheckCircle, count: monthStats.present, color: "emerald" },
+                { id: "Late", label: "Late", icon: Clock, count: monthStats.late, color: "amber" },
+                { id: "Absent", label: "Absent", icon: XCircle, count: monthStats.absent, color: "rose" },
+                { id: "Holiday", label: "Holiday", icon: Flag, count: Object.keys(HOLIDAYS).filter(k => k.startsWith(`${year}-${String(month + 1).padStart(2, "0")}`)).length, color: "blue" },
+              ].map(f => (
+                <button key={f.id} onClick={() => setFilter(f.id as any)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-bold transition-all border",
+                    filter === f.id
+                      ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-sm"
+                      : "bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600"
+                  )}>
+                  <f.icon size={14} weight={filter === f.id ? "fill" : "bold"} className={cn(
+                    filter !== f.id && {
+                      "emerald": "text-emerald-500",
+                      "amber": "text-amber-500",
+                      "rose": "text-rose-500",
+                      "blue": "text-blue-500",
+                    }[f.color as string]
+                  )} />
+                  {f.label}
+                  {f.count !== undefined && (
+                    <span className={cn("ml-1 text-[10px] opacity-60", filter === f.id ? "text-white/70 dark:text-zinc-500" : "text-zinc-400 underline decoration-zinc-100 underline-offset-4")}>
+                      {f.count}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
 
             <div className="flex items-center gap-3">
@@ -517,8 +545,8 @@ function AttendanceView() {
                           <span className={cn(
                             "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider",
                             app.status === "Approved" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" :
-                            app.status === "Rejected" ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" :
-                            "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+                              app.status === "Rejected" ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" :
+                                "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
                           )}>
                             {app.status}
                           </span>
@@ -527,15 +555,15 @@ function AttendanceView() {
                           {format(app.from, "d MMM")} — {format(app.to, "d MMM yyyy")}
                         </p>
                         <div className="mt-2 p-2 rounded-lg bg-zinc-50/50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                           <p className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 leading-relaxed italic">
-                             "{app.response}"
-                           </p>
+                          <p className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 leading-relaxed italic">
+                            "{app.response}"
+                          </p>
                         </div>
                         <div className="flex items-center justify-between mt-2.5 px-0.5">
-                           <span className="text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">{app.date}</span>
-                           {app.status === "Approved" && (
-                             <button className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline">Download Form</button>
-                           )}
+                          <span className="text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">{app.date}</span>
+                          {app.status === "Approved" && (
+                            <button className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline">Download Form</button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -686,77 +714,114 @@ function AttendanceView() {
                   </div>
                 </div>
 
-                <div className="px-6 pb-6 flex flex-col gap-4">
-                  {/* Biometric Status Area */}
-                  {selectedRec.login ? (
-                    <>
-                      <div className="p-5 rounded-[1.5rem] bg-white border border-zinc-100 shadow-sm">
-                        <div className="flex items-center justify-between mb-6">
+                <div className="px-6 pb-8 flex flex-col gap-5 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                  {/* Compliance Status Card */}
+                  {selectedRec.status !== "Weekend" && selectedRec.status !== "Future" ? (
+                    <div className={cn(
+                      "p-5 rounded-[2rem] border relative overflow-hidden shadow-sm transition-all",
+                      selectedRec.status === "Present" ? "bg-emerald-500 text-white border-emerald-400" :
+                        selectedRec.status === "Late" ? "bg-amber-400 text-zinc-950 border-amber-300" :
+                          "bg-rose-500 text-white border-rose-400"
+                    )}>
+                      {/* Decorative background element */}
+                      <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12">
+                        <CalendarCheck weight="fill" size={100} />
+                      </div>
+
+                      <div className="relative z-10 flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Clock weight="fill" size={16} className="text-zinc-400" />
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-400">Activity Report</span>
+                            <div className={cn("w-2 h-2 rounded-full animate-pulse",
+                              selectedRec.status === "Present" ? "bg-emerald-200" :
+                                selectedRec.status === "Late" ? "bg-amber-900/40" : "bg-rose-200"
+                            )} />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Compliance Status</span>
                           </div>
-                          <div className={cn(
-                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-zinc-100",
-                            selectedRec.status === "Present" ? "text-emerald-600" :
-                              selectedRec.status === "Late" ? "text-amber-600" : "text-rose-600"
-                          )}>
-                            {selectedRec.status}
-                          </div>
+                          <span className="text-[11px] font-black uppercase tracking-widest">{selectedRec.status}</span>
                         </div>
                         <div className="flex items-end justify-between">
                           <div>
-                            <p className="text-[32px] font-black text-zinc-900 leading-none tracking-tighter tabular-nums">{selectedRec.hours || "--:--"}</p>
-                            <p className="text-[11px] font-bold text-zinc-400 mt-1.5">Net logged time today</p>
+                            <p className="text-[36px] font-black leading-none tracking-tighter tabular-nums">{selectedRec.hours || "--:--"}</p>
+                            <p className="text-[11px] font-bold mt-2 opacity-70">Authenticated Work Hours</p>
                           </div>
+                          {selectedRec.minutes && (
+                            <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 text-center border border-white/10">
+                              <p className="text-[14px] font-black leading-none">{Math.round((selectedRec.minutes / 480) * 100)}%</p>
+                              <p className="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60">Goal</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-8 rounded-[2rem] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 mx-auto flex items-center justify-center text-zinc-300 dark:text-zinc-600 shadow-sm">
+                        <CalendarCheck size={24} weight="bold" />
+                      </div>
+                      <div>
+                        <h5 className="text-[15px] font-black text-zinc-950 dark:text-white leading-none">{selectedRec.status}</h5>
+                        <p className="text-[12px] font-bold text-zinc-400 mt-2">No biometric activity recorded for this period.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedRec.login && (
+                    <div className="space-y-6">
+                      {/* Professional Timeline */}
+                      <div className="space-y-4">
+                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] px-1">Biometric Timeline</p>
+                        <div className="relative pl-6 space-y-8 before:absolute before:left-[10px] before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-100 dark:before:bg-zinc-800">
+                          {[
+                            { label: "Check-in Authentication", time: selectedRec.login, icon: ArrowDown, color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20", desc: "Terminal ID: HMS-S01-A" },
+                            { label: "Check-out Authentication", time: selectedRec.logout, icon: ArrowUp, color: "text-rose-500 bg-rose-50 dark:bg-rose-950/20", desc: "Terminal ID: HMS-S01-C" }
+                          ].map((item, i) => (
+                            <div key={i} className="relative group/time">
+                              <div className={cn("absolute -left-[24px] top-1 w-4 h-4 rounded-full border-4 border-white dark:border-zinc-950 flex items-center justify-center z-10", item.color)}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                              </div>
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="text-[13px] font-black text-zinc-900 dark:text-white leading-none">{item.label}</p>
+                                  <p className="text-[11px] font-bold text-zinc-400 mt-1">{item.desc}</p>
+                                </div>
+                                <span className="text-[14px] font-black text-zinc-950 dark:text-white tabular-nums">{item.time}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
-                      {/* Timeline List */}
-                      <div className="flex flex-col gap-3">
-                        {[
-                          { label: "Check-in", time: selectedRec.login, icon: <ArrowDown size={14} />, color: "text-emerald-600 bg-emerald-50" },
-                          { label: "Check-out", time: selectedRec.logout, icon: <ArrowUp size={14} />, color: "text-rose-600 bg-rose-50" },
-                        ].map((item, i) => (
-                          <div key={i} className="p-3 bg-white rounded-xl border border-zinc-100 flex items-center justify-between group">
-                            <div className="flex items-center gap-3">
-                              <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", item.color)}>
-                                {item.icon}
-                              </div>
-                              <div>
-                                <p className="text-[14px] font-black text-zinc-900 dark:text-white leading-tight">{item.label}</p>
-                                <p className="text-[11px] font-bold text-zinc-400">Biometric Scan</p>
-                              </div>
+                      {/* Biometric Metadata Section */}
+                      <div className="p-6 rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-900/50 border border-dashed border-zinc-200 dark:border-zinc-800 space-y-5">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck size={14} weight="fill" className="text-zinc-400" />
+                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Biometric Metadata</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-y-6 gap-x-8">
+                          {[
+                            { label: "Device ID", value: "HMS-T09-PX" },
+                            { label: "Terminal", value: "South Wing B2" },
+                            { label: "Method", value: "Neural (Face)" },
+                            { label: "Network", value: "HMS-Private" },
+                          ].map((m, i) => (
+                            <div key={i} className="space-y-1.5">
+                              <p className="text-[9px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.1em]">{m.label}</p>
+                              <p className="text-[12px] font-bold text-zinc-700 dark:text-zinc-300 leading-none">{m.value}</p>
                             </div>
-                            <span className="text-[15px] font-black text-zinc-900 dark:text-white tabular-nums">{item.time}</span>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-
-                      {/* Progress bar */}
-                      <div className="p-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden h-2.5 mt-2">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((selectedRec.minutes! / reqWorkMin) * 100, 100)}%` }}
-                          className={cn("h-full rounded-full",
-                            selectedRec.minutes! >= reqWorkMin ? "bg-emerald-500" : "bg-rose-500"
-                          )} />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-8 bg-white rounded-[2rem] border border-zinc-100 text-center">
-                      <Clock size={32} weight="bold" className="text-zinc-200 mb-4" />
-                      <h5 className="text-[15px] font-black text-zinc-950">Day Empty</h5>
-                      <p className="text-[12px] font-bold text-zinc-400 mt-2 leading-relaxed">No biometric records found for this entry.</p>
                     </div>
                   )}
 
                   {selectedHoliday && (
-                    <div className="p-5 rounded-[1.5rem] bg-white border border-zinc-100 flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-zinc-950 text-white flex items-center justify-center shadow-sm">
+                    <div className="p-5 rounded-[2rem] bg-zinc-950 text-white flex items-center gap-4 border border-zinc-800">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-lg">
                         <Flag weight="fill" size={18} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Public Holiday</p>
-                        <p className="text-[15px] font-black text-zinc-900 tracking-tight">{selectedHoliday}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Public Holiday</p>
+                        <p className="text-[15px] font-black text-white tracking-tight leading-tight">{selectedHoliday}</p>
                       </div>
                     </div>
                   )}

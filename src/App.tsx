@@ -47,9 +47,9 @@ function App() {
 
       {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "dashboard" && (
-        <Dashboard 
-          activeTab={activeDashboardTab} 
-          onTabChange={setActiveDashboardTab} 
+        <Dashboard
+          activeTab={activeDashboardTab}
+          onTabChange={setActiveDashboardTab}
           onProfileClick={() => setCurrentPage("profile")}
         />
       )}

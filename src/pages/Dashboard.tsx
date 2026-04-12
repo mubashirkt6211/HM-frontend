@@ -30,12 +30,12 @@ const TABS = [
   { icon: Star, label: "Reviews" },
 ];
 
-export function Dashboard({ 
-  activeTab, 
-  onTabChange, 
-  onProfileClick 
-}: { 
-  activeTab: string; 
+export function Dashboard({
+  activeTab,
+  onTabChange,
+  onProfileClick
+}: {
+  activeTab: string;
   onTabChange: (tab: string) => void;
   onProfileClick: () => void;
 }) {
@@ -60,7 +60,7 @@ export function Dashboard({
     <article className="flex min-w-0 w-full flex-col gap-8 py-8 px-6 max-w-7xl mx-auto min-h-screen">
       {/* 1. Profile Header */}
       <div className="flex items-center gap-6">
-        <div 
+        <div
           className="relative group cursor-pointer"
           onClick={onProfileClick}
         >

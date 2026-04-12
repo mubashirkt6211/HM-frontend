@@ -78,7 +78,7 @@ export function SiteHeader({
       </div>
 
       <div className="flex items-center gap-4">
-        
+
         {/* Role Switcher */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -93,8 +93,8 @@ export function SiteHeader({
             <DropdownMenuSeparator className="my-1 bg-zinc-100 dark:bg-zinc-800" />
             <DropdownMenuRadioGroup value={userRole} onValueChange={(v) => setUserRole?.(v as UserRole)}>
               {Object.values(UserRole).map((role) => (
-                <DropdownMenuRadioItem 
-                  key={role} 
+                <DropdownMenuRadioItem
+                  key={role}
                   value={role}
                   className="px-2 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
                 >
