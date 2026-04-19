@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
+import React from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
@@ -9,7 +10,7 @@ import {
   Users, Funnel, SortDescending, CaretUp, CaretDown, CaretUpDown,
   CalendarBlank, Star, MapPin, Clock, Envelope, Phone as PhoneIcon,
   UserCircle, Trash, Copy, ArrowSquareOut, PencilSimple,
-  GenderFemale, GenderMale,
+  GenderFemale, GenderMale, ArrowLeft,
 } from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -60,6 +61,19 @@ export const STATUS_CONFIG = {
   "off-duty": { label: "Off Duty", dot: "bg-zinc-400", ring: "ring-zinc-400/30", bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-500   dark:text-zinc-400", border: "border-zinc-200   dark:border-zinc-700" },
 }
 
+// ─── Specialty badge styles (Notion-style) ───────────────────────────
+const SPECIALTY_BADGE: Record<string, { dot: string; text: string; bg: string }> = {
+  Cardiology:   { dot: "bg-red-500",    text: "text-red-700 dark:text-red-400",       bg: "bg-red-50 dark:bg-red-950/30" },
+  Neurology:    { dot: "bg-purple-500", text: "text-purple-700 dark:text-purple-400",  bg: "bg-purple-50 dark:bg-purple-950/30" },
+  Pediatrics:   { dot: "bg-blue-500",   text: "text-blue-700 dark:text-blue-400",     bg: "bg-blue-50 dark:bg-blue-950/30" },
+  Orthopedics:  { dot: "bg-amber-500",  text: "text-amber-700 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-950/30" },
+  Oncology:     { dot: "bg-emerald-500",text: "text-emerald-700 dark:text-emerald-400",bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+  Dermatology:  { dot: "bg-indigo-500", text: "text-indigo-700 dark:text-indigo-400",  bg: "bg-indigo-50 dark:bg-indigo-950/30" },
+  Radiology:    { dot: "bg-cyan-500",   text: "text-cyan-700 dark:text-cyan-400",     bg: "bg-cyan-50 dark:bg-cyan-950/30" },
+  Psychiatry:   { dot: "bg-pink-500",   text: "text-pink-700 dark:text-pink-400",     bg: "bg-pink-50 dark:bg-pink-950/30" },
+}
+const DEFAULT_SPEC_BADGE = { dot: "bg-zinc-400", text: "text-zinc-600 dark:text-zinc-400", bg: "bg-zinc-100 dark:bg-zinc-800" }
+
 // ─── Data ────────────────────────────────────────────────────
 const DOCTORS: Doctor[] = [
   { id: 1, name: "Dr. Alexandra Reed", specialty: "Cardiology", department: "Cardiac Care", email: "a.reed@hospital.com", phone: "+1 (555) 201-4420", avatar: "https://i.pravatar.cc/200?img=47", rating: 4.9, reviews: 218, patients: 142, experience: 14, status: "available", schedule: "Mon – Fri", shiftStart: "08:00 AM", shiftEnd: "04:00 PM", breakTime: "1:00 PM", overtime: "0h 00m", nextAvailable: "Today, 2:30 PM", specialtyIcon: Heartbeat, accentFrom: "from-rose-500", accentTo: "to-pink-600", age: 46, gender: "Female", location: "New York", joinDate: "Jan 10, 2020" },
@@ -72,16 +86,16 @@ const DOCTORS: Doctor[] = [
   { id: 8, name: "Dr. Liam Foster", specialty: "Psychiatry", department: "Mental Health", email: "l.foster@hospital.com", phone: "+1 (555) 334-9902", avatar: "https://i.pravatar.cc/200?img=60", rating: 4.8, reviews: 162, patients: 130, experience: 11, status: "in-surgery", schedule: "Tue – Sat", shiftStart: "10:00 AM", shiftEnd: "06:00 PM", breakTime: "2:00 PM", overtime: "–", nextAvailable: "Tomorrow, 10:00 AM", specialtyIcon: Brain, accentFrom: "from-fuchsia-500", accentTo: "to-pink-600", age: 43, gender: "Male", location: "Sydney", joinDate: "Apr 18, 2022" },
 ]
 
-// ─── Table columns ────────────────────────────────────────────
+// ─── Table columns (Notion-style) ────────────────────────────────
 const TABLE_COLS: { key: SortField | ""; label: string; sortable?: boolean }[] = [
   { key: "name", label: "Doctor", sortable: true },
   { key: "specialty", label: "Specialty", sortable: true },
+  { key: "status", label: "Status", sortable: true },
   { key: "department", label: "Department", sortable: true },
   { key: "rating", label: "Rating", sortable: true },
   { key: "patients", label: "Patients", sortable: true },
   { key: "experience", label: "Experience", sortable: true },
-  { key: "status", label: "Status", sortable: true },
-  { key: "", label: "Schedule", sortable: false },
+  { key: "", label: "Join Date", sortable: false },
   { key: "", label: "", sortable: false },
 ]
 
@@ -93,191 +107,505 @@ function SortIcon({ field, sort }: { field: string; sort: { field: SortField; di
     : <CaretDown weight="fill" className="w-3 h-3 text-zinc-700 dark:text-zinc-200" />
 }
 
-// ─── Doctor Profile Modal ──────────────────────────────────────
-function DoctorProfileModal({ doctor, onClose }: { doctor: Doctor; onClose: () => void }) {
-  const sc = STATUS_CONFIG[doctor.status]
+// ─── Doctor Schedule Modal ─────────────────────────────────────
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+const HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"]
+
+// Seed-based pseudo-random for stable appointment counts
+function seededRand(seed: number) { return ((seed * 9301 + 49297) % 233280) / 233280 }
+
+type SlotType = "consultation" | "surgery" | "break" | "free"
+type TimeSlot = { time: string; type: SlotType; patients?: number; note?: string }
+type DaySchedule = { day: string; slots: TimeSlot[] }
+
+const SLOT_NOTES: Record<string, string[]> = {
+  consultation: ["Follow-up", "New patient", "Review", "Check-up", "Telehealth", "Lab review"],
+  surgery: ["OR-1", "OR-2", "Assisted", "Primary"],
+}
+
+// Parse "08:00 AM" / "04:00 PM" / "12:30 PM" → 24h integer
+function parseHour(t: string): number {
+  const parts = t.trim().split(" ")
+  const [hStr] = parts[0].split(":")
+  let h = parseInt(hStr, 10)
+  const period = (parts[1] ?? "").toUpperCase()
+  if (period === "PM" && h !== 12) h += 12
+  if (period === "AM" && h === 12) h = 0
+  return h
+}
+
+// Parse break time "1:00 PM" → "13:00" (to match HOURS strings)
+function breakToHour(t: string): string {
+  const h = parseHour(t)
+  return String(h).padStart(2, "0") + ":00"
+}
+
+function generateSchedule(doctor: Doctor): DaySchedule[] {
+  const workDayMap: Record<string, string[]> = {
+    "Mon – Fri": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "Tue – Sat": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "Mon – Thu": ["Monday", "Tuesday", "Wednesday", "Thursday"],
+    "Wed – Sun": ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+  }
+  const workDays = workDayMap[doctor.schedule]
+    ?? (doctor.schedule.includes("Mon") ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"] : ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"])
+
+  const shiftStart = parseHour(doctor.shiftStart)  // e.g. 8
+  const shiftEnd = parseHour(doctor.shiftEnd)    // e.g. 16
+  const breakSlot = breakToHour(doctor.breakTime ?? "12:00 PM") // e.g. "13:00"
+
+  return DAYS.map((day, di) => ({
+    day,
+    slots: HOURS.map((time, hi) => {
+      if (!workDays.includes(day)) return { time, type: "free" as SlotType }
+      if (time === breakSlot) return { time, type: "break" as SlotType, note: "Lunch break" }
+      const h = parseInt(time, 10)   // HOURS are "08:00" format → safe
+      if (h < shiftStart || h >= shiftEnd) return { time, type: "free" as SlotType }
+      if (doctor.status === "in-surgery" && (h === 10 || h === 11)) {
+        return { time, type: "surgery" as SlotType, note: SLOT_NOTES.surgery[(di + hi) % SLOT_NOTES.surgery.length] }
+      }
+      const r = seededRand(doctor.id * 100 + di * 10 + hi)
+      const patients = Math.floor(r * 4) + 1
+      return { time, type: "consultation" as SlotType, patients, note: SLOT_NOTES.consultation[(di + hi) % SLOT_NOTES.consultation.length] }
+    }),
+  }))
+}
+
+const SLOT_STYLES: Record<SlotType, string> = {
+  consultation: "bg-violet-100 dark:bg-violet-900/40 text-violet-800 dark:text-violet-200 border border-violet-300 dark:border-violet-700",
+  surgery: "bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-700",
+  break: "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700",
+  free: "bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-600 border border-zinc-200 dark:border-zinc-700",
+}
+
+function DoctorScheduleModal({ doctor, onClose, onBack }: { doctor: Doctor; onClose: () => void; onBack: () => void }) {
+  const schedule = generateSchedule(doctor)
   const SpecialtyIcon = doctor.specialtyIcon
-  const stars = Array.from({ length: 5 }, (_, i) => i < Math.round(doctor.rating))
+  const [selectedDay, setSelectedDay] = useState<string>("all")
+  const [typeFilter, setTypeFilter] = useState<"all" | SlotType>("all")
+
+  // Compute per-day totals
+  const dayTotals = schedule.map(({ slots }) => ({
+    consult: slots.filter(s => s.type === "consultation").reduce((a, s) => a + (s.patients ?? 0), 0),
+    surgery: slots.filter(s => s.type === "surgery").length,
+  }))
+
+  const totalPatients = dayTotals.reduce((a, d) => a + d.consult, 0)
+  const totalSurgeries = dayTotals.reduce((a, d) => a + d.surgery, 0)
+  const workSlots = schedule[0]?.slots.filter(s => s.type === "consultation" || s.type === "surgery").length ?? 0
+
+  // Filtered schedule columns
+  const visibleSchedule = selectedDay === "all" ? schedule : schedule.filter(d => d.day === selectedDay)
+
+  const apptSlots = visibleSchedule.flatMap(({ day, slots }) =>
+    slots
+      .filter(s => (s.type === "consultation" || s.type === "surgery") && (typeFilter === "all" || s.type === typeFilter))
+      .map(s => ({ ...s, day }))
+  )
 
   return (
     <AnimatePresence>
-      {/* Backdrop */}
       <motion.div
-        key="backdrop"
+        key="sched-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="fixed inset-0 z-40 bg-zinc-900/55 backdrop-blur-md"
       />
-
-      {/* Modal */}
       <motion.div
-        key="modal"
-        initial={{ opacity: 0, scale: 0.93, y: 28 }}
+        key="sched-modal"
+        initial={{ opacity: 0, scale: 0.96, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.93, y: 28 }}
-        transition={{ type: "spring", damping: 26, stiffness: 270 }}
+        exit={{ opacity: 0, scale: 0.96, y: 16 }}
+        transition={{ duration: 0.2 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 pointer-events-none"
       >
         <div
-          className="pointer-events-auto w-full max-w-[580px] bg-white dark:bg-zinc-950 rounded-3xl shadow-[0_40px_100px_-16px_rgba(0,0,0,0.35)] border border-white/10 overflow-hidden flex flex-col max-h-[92vh]"
+          className="pointer-events-auto w-full max-w-[860px] bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col max-h-[92vh]"
           onClick={e => e.stopPropagation()}
         >
-          {/* ── HERO ── */}
-          <div className={`relative h-36 bg-gradient-to-br ${doctor.accentFrom} ${doctor.accentTo} shrink-0 overflow-hidden`}>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-            <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle,white 1px,transparent 1px)", backgroundSize: "20px 20px" }} />
-            <SpecialtyIcon weight="duotone" className="absolute -right-8 -bottom-8 w-40 h-40 text-white/10" />
-
-            <span className="absolute top-3.5 left-4 z-10 flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-black/25 text-white border border-white/20 backdrop-blur-sm">
-              <span className={cn("size-1.5 rounded-full bg-white", doctor.status === "in-surgery" && "animate-pulse")} />
-              {sc.label}
-            </span>
-            <button
-              onClick={onClose}
-              className="absolute top-3 right-3 z-10 p-2 rounded-xl bg-black/25 hover:bg-black/45 text-white transition-all"
-            >
+          {/* ── Header ── */}
+          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+            <div className="flex items-center gap-3">
+              <button onClick={onBack} className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                <ArrowLeft className="w-4 h-4" weight="bold" />
+              </button>
+              <Avatar className="size-9 ring-2 ring-zinc-100 dark:ring-zinc-800">
+                <AvatarImage src={doctor.avatar} alt={doctor.name} />
+                <AvatarFallback className="text-[12px] font-bold bg-zinc-100 dark:bg-zinc-800">
+                  {doctor.name.split(" ").map(n => n[0]).slice(1).join("")}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-[15px] font-semibold text-zinc-900 dark:text-white">Weekly Schedule</p>
+                <p className="text-[12px] text-zinc-400 mt-0.5">{doctor.name} · {doctor.specialty} · {doctor.shiftStart} – {doctor.shiftEnd}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
               <X className="w-4 h-4" weight="bold" />
             </button>
           </div>
 
-          {/* ── AVATAR + IDENTITY ── */}
-          <div className="px-6 shrink-0">
-            <div className="-mt-12 mb-3 flex items-end justify-between">
-              <Avatar className="size-24 ring-4 ring-white dark:ring-zinc-950 shadow-xl">
-                <AvatarImage src={doctor.avatar} alt={doctor.name} />
-                <AvatarFallback className="text-[22px] font-black bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200">
-                  {doctor.name.split(" ").map(n => n[0]).slice(1).join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-0.5 mb-2">
-                {stars.map((filled, i) => (
-                  <Star key={i} weight={filled ? "fill" : "regular"} className={cn("w-4 h-4", filled ? "text-amber-400" : "text-zinc-300 dark:text-zinc-700")} />
+          {/* ── Stats banner ── */}
+          <div className="px-6 py-3 bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-100 dark:border-zinc-800 shrink-0 flex items-center gap-5 flex-wrap">
+            {[
+              { label: "Weekly Patients", value: totalPatients, icon: Users, color: "text-violet-600 dark:text-violet-400" },
+              { label: "Surgeries / week", value: totalSurgeries, icon: Stethoscope, color: "text-rose-600   dark:text-rose-400" },
+              { label: "Hrs active / day", value: `${workSlots}h`, icon: Clock, color: "text-emerald-600 dark:text-emerald-400" },
+              { label: "Break", value: doctor.breakTime, icon: CalendarBlank, color: "text-amber-600  dark:text-amber-400" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="flex items-center gap-2">
+                <Icon weight="duotone" className={cn("w-4 h-4 shrink-0", color)} />
+                <span className={cn("text-[13.5px] font-bold tabular-nums", color)}>{value}</span>
+                <span className="text-[11px] text-zinc-400 font-medium">{label}</span>
+              </div>
+            ))}
+            {/* Legend */}
+            <div className="ml-auto flex items-center gap-3">
+              {(["consultation", "surgery", "break", "free"] as const).map(t => (
+                <div key={t} className="flex items-center gap-1.5">
+                  <span className={cn("w-2.5 h-2.5 rounded border",
+                    t === "consultation" ? "bg-violet-200 border-violet-400 dark:bg-violet-700 dark:border-violet-500" :
+                      t === "surgery" ? "bg-rose-200   border-rose-400   dark:bg-rose-700   dark:border-rose-500" :
+                        t === "break" ? "bg-amber-200  border-amber-400  dark:bg-amber-700  dark:border-amber-500" :
+                          "bg-zinc-200 border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600"
+                  )} />
+                  <span className="text-[10.5px] font-semibold text-zinc-500 dark:text-zinc-400 capitalize">{t === "free" ? "Off" : t}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Day filter + type filter ── */}
+          <div className="px-6 py-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0 flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mr-1">Day:</span>
+            {["all", ...DAYS].map(d => (
+              <button
+                key={d}
+                onClick={() => setSelectedDay(d)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[12px] font-semibold border transition-all capitalize",
+                  selectedDay === d
+                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white"
+                    : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400"
+                )}
+              >
+                {d === "all" ? "All" : d.slice(0, 3)}
+              </button>
+            ))}
+            <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1" />
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mr-1">Type:</span>
+            {(["all", "consultation", "surgery"] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t as "all" | SlotType)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[12px] font-semibold border transition-all",
+                  typeFilter === t
+                    ? t === "consultation" ? "bg-violet-600 text-white border-violet-600"
+                      : t === "surgery" ? "bg-rose-600 text-white border-rose-600"
+                        : "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900"
+                    : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-zinc-400"
+                )}
+              >
+                {t === "all" ? "All types" : t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Scrollable body ── */}
+          <div className="flex-1 overflow-auto">
+
+            {/* Grid */}
+            <div className="p-5 pb-2">
+              <div
+                className="grid gap-1.5"
+                style={{ gridTemplateColumns: `58px repeat(${visibleSchedule.length}, 1fr)` }}
+              >
+                {/* Day header row */}
+                <div />
+                {visibleSchedule.map(({ day }, di) => {
+                  const tot = dayTotals[schedule.findIndex(s => s.day === day)]
+                  const isWorkDay = tot.consult > 0 || tot.surgery > 0
+                  return (
+                    <div key={day} className="text-center pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                      <p className={cn("text-[12px] font-bold uppercase tracking-wider", isWorkDay ? "text-zinc-800 dark:text-zinc-100" : "text-zinc-300 dark:text-zinc-700")}>
+                        {day.slice(0, 3)}
+                      </p>
+                      <p className="text-[10px] mt-0.5 h-3">
+                        {isWorkDay && <>
+                          {tot.consult > 0 && <span className="text-violet-500 font-bold">{tot.consult}p </span>}
+                          {tot.surgery > 0 && <span className="text-rose-500 font-bold">{tot.surgery}sx</span>}
+                        </>}
+                      </p>
+                    </div>
+                  )
+                })}
+
+                {/* Time rows */}
+                {HOURS.map((hour) => (
+                  <React.Fragment key={hour}>
+                    <div className="flex items-center justify-end pr-2 h-12">
+                      <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">{hour}</span>
+                    </div>
+                    {visibleSchedule.map(({ day, slots }) => {
+                      const slot = slots.find(s => s.time === hour)!
+                      const dimmed = typeFilter !== "all" && slot.type !== typeFilter && slot.type !== "break" && slot.type !== "free"
+                      return (
+                        <div
+                          key={day + hour}
+                          title={slot.note ?? ""}
+                          className={cn(
+                            "rounded-xl h-12 flex flex-col items-center justify-center transition-all px-1.5 gap-0.5 cursor-default",
+                            dimmed ? "opacity-30" : "",
+                            SLOT_STYLES[slot.type]
+                          )}
+                        >
+                          {slot.type === "consultation" && (
+                            <>
+                              <span className="text-[11px] font-bold leading-tight text-center w-full truncate px-1">{slot.note}</span>
+                              <span className="text-[10px] font-semibold opacity-80">{slot.patients} pt{(slot.patients ?? 0) > 1 ? "s" : ""}</span>
+                            </>
+                          )}
+                          {slot.type === "surgery" && (
+                            <>
+                              <span className="text-[11px] font-bold leading-tight">Surgery</span>
+                              <span className="text-[10px] font-semibold opacity-80">{slot.note}</span>
+                            </>
+                          )}
+                          {slot.type === "break" && <span className="text-[11px] font-bold">Break</span>}
+                          {slot.type === "free" && <span className="text-[11px] text-zinc-400">—</span>}
+                        </div>
+                      )
+                    })}
+                  </React.Fragment>
                 ))}
-                <span className="ml-1.5 text-[14px] font-black text-zinc-800 dark:text-white">{doctor.rating}</span>
-                <span className="text-[12px] text-zinc-400 ml-0.5">({doctor.reviews})</span>
+
+                {/* Totals row */}
+                <div className="flex items-center justify-end pr-2 pt-3">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Total</span>
+                </div>
+                {visibleSchedule.map(({ day }) => {
+                  const tot = dayTotals[schedule.findIndex(s => s.day === day)]
+                  return (
+                    <div key={day} className="pt-3 flex flex-col items-center gap-0.5">
+                      {tot.consult > 0 && <span className="text-[10.5px] font-bold text-violet-700 dark:text-violet-300">{tot.consult} pts</span>}
+                      {tot.surgery > 0 && <span className="text-[10.5px] font-bold text-rose-600 dark:text-rose-400">{tot.surgery} sx</span>}
+                      {tot.consult === 0 && tot.surgery === 0 && <span className="text-[11px] text-zinc-300 dark:text-zinc-700">—</span>}
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
-            <h2 className="text-[22px] font-black text-zinc-900 dark:text-white tracking-tight leading-none">{doctor.name}</h2>
-            <div className="flex items-center gap-2 mt-2.5 mb-4 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-[12px] font-bold px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
-                <SpecialtyIcon weight="fill" className="w-3.5 h-3.5" />
-                {doctor.specialty}
-              </span>
-              <span className="text-[12.5px] text-zinc-500 dark:text-zinc-400 font-medium">{doctor.department}</span>
-              <span className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-              <span className="flex items-center gap-1 text-[12.5px] text-zinc-400 font-medium">
-                <MapPin weight="duotone" className="w-3.5 h-3.5" />{doctor.location}
-              </span>
-              <span className="size-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-              <span className="flex items-center gap-1 text-[12.5px] text-zinc-400 font-medium">
-                {doctor.gender === "Female"
-                  ? <GenderFemale weight="bold" className="w-3.5 h-3.5 text-pink-400" />
-                  : <GenderMale weight="bold" className="w-3.5 h-3.5 text-blue-400" />}
-                {doctor.gender}
-              </span>
-            </div>
-
-            {/* Quick-stat bar */}
-            <div className="grid grid-cols-3 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 mb-5">
-              {[
-                { label: "Patients",   value: `${doctor.patients}+`,            icon: Users },
-                { label: "Experience", value: `${doctor.experience} yrs`,        icon: Clock },
-                { label: "Available",  value: doctor.nextAvailable.split(",")[0], icon: CalendarBlank },
-              ].map(({ label, value, icon: Icon }, i) => (
-                <div key={label} className={cn(
-                  "flex flex-col items-center py-4 bg-zinc-50 dark:bg-zinc-900/50",
-                  i < 2 && "border-r border-zinc-100 dark:border-zinc-800"
-                )}>
-                  <Icon weight="duotone" className="w-4 h-4 text-zinc-400 mb-1.5" />
-                  <span className="text-[16px] font-black text-zinc-900 dark:text-white tabular-nums leading-none">{value}</span>
-                  <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{label}</span>
+            {/* ── Appointment List ── */}
+            <div className="px-5 pb-5">
+              <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.14em]">
+                    {selectedDay === "all" ? "All Appointments" : `${selectedDay} Appointments`}
+                    <span className="ml-2 text-zinc-300 dark:text-zinc-700 font-bold">{apptSlots.length}</span>
+                  </p>
                 </div>
-              ))}
+                {apptSlots.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    {apptSlots.map((slot, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 rounded-xl border",
+                          slot.type === "consultation"
+                            ? "bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800"
+                            : "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-1 self-stretch rounded-full shrink-0",
+                          slot.type === "consultation" ? "bg-violet-400" : "bg-rose-500"
+                        )} />
+                        <div className="flex flex-col shrink-0 w-14">
+                          <span className="text-[12px] font-bold text-zinc-700 dark:text-zinc-200">{slot.time}</span>
+                          {selectedDay === "all" && <span className="text-[10px] text-zinc-400 font-medium">{(slot as any).day?.slice(0, 3)}</span>}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={cn(
+                            "text-[13px] font-semibold leading-tight",
+                            slot.type === "consultation" ? "text-violet-800 dark:text-violet-200" : "text-rose-800 dark:text-rose-200"
+                          )}>
+                            {slot.type === "consultation" ? slot.note : `Surgery – ${slot.note}`}
+                          </p>
+                          {slot.type === "consultation" && (
+                            <p className="text-[11px] text-zinc-400 mt-0.5">{slot.patients} patient{(slot.patients ?? 0) > 1 ? "s" : ""} scheduled</p>
+                          )}
+                          {slot.type === "surgery" && (
+                            <p className="text-[11px] text-zinc-400 mt-0.5">Operating room assigned</p>
+                          )}
+                        </div>
+                        <span className={cn(
+                          "text-[10.5px] font-bold px-2.5 py-1 rounded-full shrink-0",
+                          slot.type === "consultation"
+                            ? "bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300"
+                            : "bg-rose-100   dark:bg-rose-900/60   text-rose-700   dark:text-rose-300"
+                        )}>
+                          {slot.type === "consultation" ? "Consult" : "Surgery"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CalendarBlank className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" weight="duotone" />
+                    <p className="text-[13px] font-medium text-zinc-400">No appointments match the filter</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="h-px bg-zinc-100 dark:bg-zinc-800 mx-6 shrink-0" />
-
-          {/* ── SCROLLABLE BODY ── */}
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-            <div className="grid grid-cols-2 gap-5">
-              {/* Contact */}
-              <div>
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.14em] mb-3">Contact</p>
-                <div className="space-y-3">
-                  {[
-                    { icon: Envelope,  label: "Email",    value: doctor.email },
-                    { icon: PhoneIcon, label: "Phone",    value: doctor.phone },
-                    { icon: MapPin,    label: "Location", value: doctor.location },
-                  ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center shrink-0">
-                        <Icon weight="duotone" className="w-4 h-4 text-zinc-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wide">{label}</p>
-                        <p className="text-[13px] font-semibold text-zinc-800 dark:text-zinc-200 truncate mt-0.5">{value}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Schedule */}
-              <div>
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.14em] mb-3">Schedule</p>
-                <div className="space-y-3">
-                  {[
-                    { icon: CalendarBlank, label: "Days",         value: doctor.schedule },
-                    { icon: Clock,         label: "Shift",        value: `${doctor.shiftStart} – ${doctor.shiftEnd}` },
-                    { icon: UserCircle,    label: "Member Since",  value: doctor.joinDate },
-                  ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center shrink-0">
-                        <Icon weight="duotone" className="w-4 h-4 text-zinc-500" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wide">{label}</p>
-                        <p className="text-[13px] font-semibold text-zinc-800 dark:text-zinc-200 mt-0.5">{value}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          {/* ── Footer ── */}
+          <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <SpecialtyIcon weight="duotone" className="w-4 h-4 text-zinc-400" />
+              <span className="text-[12px] text-zinc-500 font-medium">{doctor.schedule} · {doctor.shiftStart} – {doctor.shiftEnd} · Break @ {doctor.breakTime}</span>
             </div>
-
-            {/* Mini stats strip */}
-            <div className="grid grid-cols-4 gap-2.5">
-              {[
-                { label: "Age",      value: `${doctor.age}` },
-                { label: "Reviews",  value: `${doctor.reviews}` },
-                { label: "Break",    value: doctor.breakTime },
-                { label: "Overtime", value: doctor.overtime === "–" ? "None" : doctor.overtime },
-              ].map(({ label, value }) => (
-                <div key={label} className="p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 text-center">
-                  <p className="text-[15px] font-black text-zinc-900 dark:text-white leading-none">{value}</p>
-                  <p className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wide mt-1">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── FOOTER ACTIONS ── */}
-          <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-3 shrink-0">
-            <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 text-[13px] font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-              <Envelope weight="duotone" className="w-4 h-4 text-zinc-400" />
-              Send Message
-            </button>
-            <button className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r ${doctor.accentFrom} ${doctor.accentTo} text-white text-[13px] font-bold shadow-lg hover:opacity-90 active:scale-[0.98] transition-all`}>
-              <CalendarBlank weight="bold" className="w-4 h-4" />
-              Book Appointment
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[12.5px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all"
+            >
+              Close
             </button>
           </div>
         </div>
       </motion.div>
+    </AnimatePresence>
+  )
+}
+
+// ─── Doctor Profile Modal ──────────────────────────────────────
+function DoctorProfileModal({ doctor, onClose, onViewSchedule }: { doctor: Doctor; onClose: () => void; onViewSchedule: () => void }) {
+  const sc = STATUS_CONFIG[doctor.status]
+  const sb = SPECIALTY_BADGE[doctor.specialty] ?? DEFAULT_SPEC_BADGE
+  
+  // Robust initials: skip "Dr." if present, take first 2
+  const nameParts = doctor.name.split(" ").filter(p => !p.toLowerCase().includes("dr"))
+  const initials = nameParts.length > 0 
+    ? nameParts.map(n => n[0]).join("").slice(0, 2).toUpperCase()
+    : doctor.name[0].toUpperCase()
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Backdrop (cleaner Arto-style) */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-zinc-900/30 backdrop-blur-[2px]"
+        />
+        
+        {/* Modal Window */}
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.98 }}
+          className="relative w-full max-w-xl bg-white dark:bg-zinc-950 rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] border border-zinc-100 dark:border-zinc-800/50 overflow-hidden flex flex-col"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Internal Padding Wrapper to match image spacing */}
+          <div className="p-10">
+            
+            {/* Header: Avatar + Info + Right Status */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Avatar className="size-16 rounded-[22px] border-4 border-white dark:border-zinc-950 shadow-sm">
+                    <AvatarImage src={doctor.avatar} alt={doctor.name} />
+                    <AvatarFallback className="bg-zinc-50 dark:bg-zinc-900 text-zinc-400 font-bold">{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className={cn("absolute -top-0.5 -right-0.5 size-4 rounded-full border-[3px] border-white dark:border-zinc-950 shadow-sm", sc.dot)} />
+                </div>
+                <div className="flex flex-col">
+                  <h2 className="text-[20px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">{doctor.name}</h2>
+                  <span className="text-[14px] text-zinc-400 dark:text-zinc-500 mt-0.5">{doctor.email}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[12px] font-semibold">
+                    <span className="size-1.5 rounded-full bg-emerald-500" />
+                    Active
+                  </span>
+                  <button className="p-1.5 rounded-lg text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all">
+                    <DotsThree className="size-5" weight="bold" />
+                  </button>
+                </div>
+                <span className="text-[11px] font-medium text-zinc-300 dark:text-zinc-600">Next: {doctor.nextAvailable}</span>
+              </div>
+            </div>
+
+            {/* Tags Section */}
+            <div className="flex items-center gap-3 mt-6">
+              <span className={cn("px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors cursor-default", sb.bg, sb.text)}>
+                {doctor.specialty}
+              </span>
+              <span className="px-4 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 text-[13px] font-medium transition-colors cursor-default">
+                {doctor.department}
+              </span>
+            </div>
+
+            {/* Stats Grid (Horizontal like in image) */}
+            <div className="mt-8 bg-zinc-50/60 dark:bg-zinc-900/40 rounded-2xl p-6 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/20">
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] font-medium text-zinc-400 dark:text-zinc-500">Age</span>
+                <span className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-200">{doctor.age} y/o</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] font-medium text-zinc-400 dark:text-zinc-500">Sex</span>
+                <span className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-200">{doctor.gender}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] font-medium text-zinc-400 dark:text-zinc-500">Location</span>
+                <span className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-200">{doctor.location}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] font-medium text-zinc-400 dark:text-zinc-500">Experience</span>
+                <span className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-200">{doctor.experience} yrs</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] font-medium text-zinc-400 dark:text-zinc-500">Status</span>
+                <span className="text-[14px] font-semibold text-zinc-800 dark:text-zinc-200">Confirmed</span>
+              </div>
+            </div>
+
+            {/* Footer: Quick Actions */}
+            <div className="mt-10 flex items-center justify-between">
+              <span className="text-[13px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Quick Actions</span>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={onViewSchedule}
+                  className="flex items-center gap-3 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[14px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-md active:scale-[0.98]"
+                >
+                  <CalendarBlank className="size-4" weight="bold" />
+                  Appointments
+                </button>
+                <div className="relative">
+                  <button className="flex items-center gap-3 px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[14px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all shadow-sm">
+                    <Envelope className="size-4 text-zinc-300" />
+                    Chat
+                  </button>
+                  <span className="absolute -top-1.5 -right-1.5 size-5 flex items-center justify-center bg-rose-500 text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-zinc-950">
+                    2
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </motion.div>
+      </div>
     </AnimatePresence>
   )
 }
@@ -510,6 +838,7 @@ function AddDoctorModal({ open, onClose, onAdd }: { open: boolean; onClose: () =
 export function DoctorsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>(DOCTORS)
   const [drawerDoctorId, setDrawerDoctorId] = useState<number | null>(null)
+  const [scheduleDoctor, setScheduleDoctor] = useState<Doctor | null>(null)
   const [search, setSearch] = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -576,38 +905,60 @@ export function DoctorsPage() {
     { label: "Off Duty", value: offDuty, cls: "text-zinc-400" },
   ]
 
+  // Tabs
+  const [activeTab, setActiveTab] = useState("doctors")
+  const TABS = [
+    { id: "doctors", label: "All Doctors" },
+    { id: "departments", label: "Departments" },
+    { id: "specialties", label: "Specialties" },
+    { id: "schedule", label: "Schedule" },
+  ]
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-950 overflow-hidden">
 
-      {/* ── TOP BAR ── */}
-      <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-900 shrink-0">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-[20px] font-bold text-zinc-900 dark:text-white tracking-tight">Doctors Registry</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[12px] font-medium text-zinc-500">{total} registered doctors</span>
-              {inSurgery > 0 && (
-                <>
-                  <span className="size-1 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-                  <span className="text-[12px] font-semibold text-rose-600">{inSurgery} in surgery</span>
-                </>
-              )}
-            </div>
+      {/* ── HEADER ── */}
+      <div className="px-8 pt-6 pb-0 shrink-0">
+        <h1 className="text-[26px] font-bold text-zinc-900 dark:text-white tracking-tight">
+          Doctors Registry
+        </h1>
+        <p className="text-[13px] text-zinc-500 dark:text-zinc-400 mt-1">
+          Comprehensive doctor management system tracking specialties, schedules, and availability.
+        </p>
+
+        {/* ── Tabs + Actions row ── */}
+        <div className="flex items-center justify-between mt-5">
+          {/* Tabs */}
+          <div className="flex items-center border-b border-zinc-200 dark:border-zinc-800">
+            {TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "px-4 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px",
+                  activeTab === tab.id
+                    ? "border-zinc-900 dark:border-white text-zinc-900 dark:text-white"
+                    : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {/* Action bar */}
+          {/* Actions */}
           <div className="flex items-center gap-2">
             {/* Search */}
             <div
               className={cn(
-                "flex items-center gap-2 px-3 h-9 rounded-xl border transition-all",
+                "flex items-center gap-2 px-3 h-8 rounded-lg border transition-all",
                 searchOpen
-                  ? "w-56 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950"
-                  : "w-9 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                  ? "w-52 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950"
+                  : "w-8 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
               )}
               onClick={() => !searchOpen && setSearchOpen(true)}
             >
-              <MagnifyingGlass className={cn("w-4 h-4 shrink-0 transition-colors", searchOpen ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-500")} />
+              <MagnifyingGlass className={cn("w-3.5 h-3.5 shrink-0 transition-colors", searchOpen ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-400")} />
               {searchOpen && (
                 <input
                   autoFocus
@@ -615,51 +966,31 @@ export function DoctorsPage() {
                   onChange={e => setSearch(e.target.value)}
                   onBlur={() => { if (!search) setSearchOpen(false) }}
                   placeholder="Search doctors…"
-                  className="flex-1 text-[13px] bg-transparent outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 font-medium"
+                  className="flex-1 text-[13px] bg-transparent outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
                 />
               )}
               {search && (
                 <button onClick={e => { e.stopPropagation(); setSearch(""); setSearchOpen(false) }} className="text-zinc-400 hover:text-zinc-600">
-                  <X className="w-3.5 h-3.5" weight="bold" />
+                  <X className="w-3 h-3" weight="bold" />
                 </button>
               )}
             </div>
-
-            <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-800" />
-
-            {/* Sort */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 h-9 px-3 rounded-xl text-[12.5px] font-medium text-zinc-500 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
-                  <SortDescending className="w-4 h-4" />
-                  Sort
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lg border-zinc-200 dark:border-zinc-800">
-                {(["name", "specialty", "department", "status", "rating", "patients", "experience"] as SortField[]).map(f => (
-                  <DropdownMenuItem key={f} onClick={() => toggleSort(f)} className="text-[12.5px] font-medium gap-2 capitalize">
-                    {sort.field === f && <CaretDown className={cn("w-3 h-3", sort.dir === "asc" && "rotate-180")} />}
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {/* Filter */}
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => setFilterOpen(p => !p)}
                 className={cn(
-                  "flex items-center gap-1.5 h-9 px-3 rounded-xl text-[12.5px] font-medium border transition-colors",
+                  "flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border transition-colors",
                   filterOpen || activeFilterCount > 0
-                    ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white"
-                    : "text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-zinc-700 dark:hover:text-zinc-300"
+                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white"
+                    : "text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                 )}
               >
-                <Funnel className="w-4 h-4" weight={filterOpen || activeFilterCount > 0 ? "fill" : "regular"} />
+                <Funnel className="w-3.5 h-3.5" weight={filterOpen || activeFilterCount > 0 ? "fill" : "regular"} />
                 Filter
                 {activeFilterCount > 0 && (
-                  <span className="ml-0.5 size-5 rounded-full bg-white/20 dark:bg-zinc-950/20 text-[11px] font-bold flex items-center justify-center">
+                  <span className="ml-0.5 size-4 rounded-full bg-white/20 dark:bg-zinc-900/20 text-[10px] font-bold flex items-center justify-center">
                     {activeFilterCount}
                   </span>
                 )}
@@ -678,11 +1009,9 @@ export function DoctorsPage() {
               </AnimatePresence>
             </div>
 
-            <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-800" />
-
             <button
               onClick={() => setShowAdd(true)}
-              className="flex items-center gap-2 h-9 px-4 rounded-xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[12.5px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-95 transition-all shadow-sm"
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[12px] font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all"
             >
               <Plus className="w-3.5 h-3.5" weight="bold" />
               Add Doctor
@@ -690,51 +1019,126 @@ export function DoctorsPage() {
           </div>
         </div>
 
-        {/* Stats strip */}
-        <div className="flex items-center gap-4">
-          {STATS.map(({ label, value, cls }) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <span className={cn("text-[14px] font-bold tabular-nums", cls)}>{value}</span>
-              <span className="text-[11.5px] text-zinc-400 font-medium">{label}</span>
-              <span className="w-px h-3 bg-zinc-200 dark:bg-zinc-800 last:hidden ml-2" />
-            </div>
-          ))}
+        {/* Active filter chips */}
+        {activeFilterCount > 0 && (
+          <div className="flex items-center gap-1.5 mt-3">
+            {statusFilter !== "all" && (
+              <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 capitalize">
+                {statusFilter.replace("-", " ")}
+                <button onClick={() => setStatusFilter("all")}><X className="w-2.5 h-2.5" weight="bold" /></button>
+              </span>
+            )}
+            {specialtyFilter !== "all" && (
+              <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                {specialtyFilter}
+                <button onClick={() => setSpecialtyFilter("all")}><X className="w-2.5 h-2.5" weight="bold" /></button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
-          {/* Active filter chips */}
-          {activeFilterCount > 0 && (
-            <div className="ml-auto flex items-center gap-1.5">
-              {statusFilter !== "all" && (
-                <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 capitalize">
-                  {statusFilter.replace("-", " ")}
-                  <button onClick={() => setStatusFilter("all")}><X className="w-2.5 h-2.5" weight="bold" /></button>
-                </span>
+      {/* ── INLINE FILTERS (Arto-style) ── */}
+      <div className="px-8 py-3 flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+        {/* Status pills */}
+        <div className="flex items-center bg-zinc-100 dark:bg-zinc-800/60 rounded-lg p-0.5 gap-0.5">
+          {([
+            { key: "all" as const, label: "All", count: total },
+            { key: "available" as const, label: "Available", count: available },
+            { key: "in-surgery" as const, label: "In Surgery", count: inSurgery },
+            { key: "on-leave" as const, label: "On Leave", count: onLeave },
+            { key: "off-duty" as const, label: "Off Duty", count: offDuty },
+          ]).map(pill => (
+            <button
+              key={pill.key}
+              onClick={() => setStatusFilter(pill.key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
+                statusFilter === pill.key
+                  ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-sm"
+                  : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
               )}
-              {specialtyFilter !== "all" && (
-                <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                  {specialtyFilter}
-                  <button onClick={() => setSpecialtyFilter("all")}><X className="w-2.5 h-2.5" weight="bold" /></button>
-                </span>
-              )}
-            </div>
-          )}
+            >
+              {pill.label}
+              <span className={cn(
+                "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
+                statusFilter === pill.key
+                  ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+                  : "bg-zinc-200/70 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
+              )}>
+                {pill.count}
+              </span>
+            </button>
+          ))}
         </div>
+
+        {/* Specialty dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
+              specialtyFilter !== "all"
+                ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white"
+                : "text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            )}>
+              {specialtyFilter === "all" ? "Specialty" : specialtyFilter}
+              <CaretDown className="w-3 h-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
+            <DropdownMenuItem
+              onClick={() => setSpecialtyFilter("all")}
+              className={cn("text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer", specialtyFilter === "all" && "bg-zinc-100 dark:bg-zinc-800")}
+            >
+              All Specialties
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-0.5" />
+            {Object.keys(SPECIALTY_BADGE).map(spec => (
+              <DropdownMenuItem
+                key={spec}
+                onClick={() => setSpecialtyFilter(spec)}
+                className={cn("text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer", specialtyFilter === spec && "bg-zinc-100 dark:bg-zinc-800")}
+              >
+                <span className={cn("size-2 rounded-full", SPECIALTY_BADGE[spec].dot)} />
+                {spec}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Department dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-zinc-500 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+              Department
+              <CaretDown className="w-3 h-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-44 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
+            {[...new Set(doctors.map(d => d.department))].sort().map(dept => (
+              <DropdownMenuItem key={dept} className="text-[12px] font-medium rounded-lg px-2.5 py-2 cursor-pointer">
+                {dept}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* ── TABLE ── */}
-      <div className="flex-1 overflow-auto mt-4 px-6">
+      <div className="flex-1 overflow-auto">
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-sm">
-            <TableRow className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-transparent">
+          <TableHeader className="sticky top-0 z-10 bg-white dark:bg-zinc-950">
+            <TableRow className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent">
               {TABLE_COLS.map(col => (
                 <TableHead
                   key={col.label + col.key}
                   className={cn(
-                    "py-3 px-4 text-[10.5px] font-semibold text-zinc-400 uppercase tracking-[0.12em] whitespace-nowrap first:pl-2 last:pr-2",
-                    col.sortable && "cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300 select-none"
+                    "py-2 px-4 text-[12px] font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap first:pl-8 last:pr-8",
+                    col.sortable && "cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 select-none"
                   )}
                   onClick={() => col.sortable && col.key && toggleSort(col.key as SortField)}
                 >
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1">
                     {col.label}
                     {col.sortable && col.key && <SortIcon field={col.key} sort={sort} />}
                   </span>
@@ -745,10 +1149,10 @@ export function DoctorsPage() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="hover:bg-transparent border-0">
-                <TableCell colSpan={9} className="py-24 text-center">
-                  <MagnifyingGlass className="w-10 h-10 text-zinc-200 dark:text-zinc-800 mx-auto mb-3" />
-                  <p className="text-[14px] font-semibold text-zinc-500">No doctors found</p>
-                  <p className="text-[12.5px] text-zinc-400 mt-1">Try adjusting your search or filters</p>
+                <TableCell colSpan={9} className="py-20 text-center">
+                  <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
+                  <p className="text-[13px] font-medium text-zinc-500">No doctors found</p>
+                  <p className="text-[12px] text-zinc-400 mt-0.5">Try adjusting your search or filters</p>
                 </TableCell>
               </TableRow>
             ) : filtered.map(d => {
@@ -759,126 +1163,120 @@ export function DoctorsPage() {
                 <TableRow
                   key={d.id}
                   className={cn(
-                    "group border-b border-zinc-100 dark:border-zinc-800 cursor-pointer transition-colors",
-                    isSelected ? "bg-zinc-50 dark:bg-zinc-900/50" : "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
+                    "group border-b border-zinc-100 dark:border-zinc-800/60 transition-colors",
+                    isSelected ? "bg-blue-50/60 dark:bg-blue-950/20" : "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
                   )}
-                  onClick={() => setDrawerDoctorId(isSelected ? null : d.id)}
                 >
                   {/* Doctor */}
-                  <TableCell className="py-3.5 pl-2 pr-4">
+                  <TableCell className="py-2.5 pl-8 pr-4">
                     <div className="flex items-center gap-3">
-                      <div className="relative shrink-0">
-                        <Avatar className={cn("size-9 ring-2 ring-offset-1 dark:ring-offset-zinc-950", sc.ring)}>
-                          <AvatarImage src={d.avatar} alt={d.name} />
-                          <AvatarFallback className="text-[12px] font-semibold bg-zinc-100 dark:bg-zinc-800">
-                            {d.name.split(" ").map(n => n[0]).slice(1).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className={cn("absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-950", sc.dot)} />
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-[13.5px] font-semibold text-zinc-900 dark:text-white truncate block">{d.name}</span>
-                        <p className="text-[12px] text-zinc-400 truncate mt-0.5">{d.email}</p>
+                      <Avatar className="size-8">
+                        <AvatarImage src={d.avatar} alt={d.name} />
+                        <AvatarFallback className="text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800">
+                          {d.name.split(" ").map(n => n[0]).slice(1).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{d.name}</span>
+                        <span className="text-[11px] text-zinc-400 truncate">{d.email}</span>
                       </div>
                     </div>
                   </TableCell>
 
-                  {/* Specialty */}
-                  <TableCell className="py-3.5 px-4">
-                    <span className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-lg border bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/30 dark:text-violet-300 dark:border-violet-900">
-                      <d.specialtyIcon weight="fill" className="w-3.5 h-3.5 shrink-0" />
-                      {d.specialty}
+                  {/* Specialty badge */}
+                  <TableCell className="py-2.5 px-4">
+                    {(() => {
+                      const sb = SPECIALTY_BADGE[d.specialty] ?? DEFAULT_SPEC_BADGE
+                      return (
+                        <span className={cn("inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-md", sb.bg, sb.text)}>
+                          <span className={cn("size-1.5 rounded-full", sb.dot)} />
+                          {d.specialty}
+                        </span>
+                      )
+                    })()}
+                  </TableCell>
+
+                  {/* Status (✓ Active / ✕ Inactive style) */}
+                  <TableCell className="py-2.5 px-4">
+                    <span className={cn(
+                      "inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded",
+                      d.status === "available" && "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
+                      d.status === "in-surgery" && "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30",
+                      d.status === "on-leave" && "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
+                      d.status === "off-duty" && "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
+                    )}>
+                      {d.status === "available" && <span className="text-emerald-500">✓</span>}
+                      {d.status === "in-surgery" && <span className="text-rose-500">•</span>}
+                      {d.status === "on-leave" && <span className="text-amber-500">✕</span>}
+                      {d.status === "off-duty" && <span className="text-zinc-400">✕</span>}
+                      {sc.label}
                     </span>
                   </TableCell>
 
                   {/* Department */}
-                  <TableCell className="py-3.5 px-4">
-                    <p className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">{d.department}</p>
-                    <p className="text-[11px] text-zinc-400 mt-0.5 flex items-center gap-1">
-                      {d.gender === "Female" ? <GenderFemale className="w-3 h-3 text-pink-400" weight="bold" /> : <GenderMale className="w-3 h-3 text-blue-400" weight="bold" />}
-                      {d.location}
-                    </p>
+                  <TableCell className="py-2.5 px-4">
+                    <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.department}</span>
                   </TableCell>
 
                   {/* Rating */}
-                  <TableCell className="py-3.5 px-4">
+                  <TableCell className="py-2.5 px-4">
                     <div className="flex items-center gap-1">
                       <Star weight="fill" className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="text-[13px] font-semibold text-zinc-800 dark:text-zinc-200">{d.rating}</span>
+                      <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">{d.rating}</span>
                       <span className="text-[11px] text-zinc-400">({d.reviews})</span>
                     </div>
                   </TableCell>
 
                   {/* Patients */}
-                  <TableCell className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-zinc-400" weight="duotone" />
-                      <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">{d.patients}</span>
-                    </div>
+                  <TableCell className="py-2.5 px-4">
+                    <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.patients}</span>
                   </TableCell>
 
                   {/* Experience */}
-                  <TableCell className="py-3.5 px-4">
-                    <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">{d.experience} yrs</span>
+                  <TableCell className="py-2.5 px-4">
+                    <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.experience} yrs</span>
                   </TableCell>
 
-                  {/* Status */}
-                  <TableCell className="py-3.5 px-4">
-                    <span className={cn(
-                      "inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border",
-                      sc.bg, sc.text, sc.border
-                    )}>
-                      <span className={cn("size-1.5 rounded-full", sc.dot)} />
-                      {sc.label}
-                    </span>
-                  </TableCell>
-
-                  {/* Schedule */}
-                  <TableCell className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-zinc-400" weight="duotone" />
-                      <div>
-                        <p className="text-[12.5px] font-medium text-zinc-700 dark:text-zinc-300">{d.schedule}</p>
-                        <p className="text-[11px] text-zinc-400">{d.shiftStart} – {d.shiftEnd}</p>
-                      </div>
-                    </div>
+                  {/* Join Date */}
+                  <TableCell className="py-2.5 px-4">
+                    <span className="text-[13px] text-zinc-500 dark:text-zinc-400">{d.joinDate}</span>
                   </TableCell>
 
                   {/* Actions */}
-                  <TableCell className="py-3.5 pl-4 pr-2 text-right">
+                  <TableCell className="py-2.5 pl-4 pr-8 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={e => e.stopPropagation()}
-                          className="p-2 rounded-xl text-zinc-400 hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
+                          className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover:opacity-100"
                         >
-                          <DotsThree className="w-5 h-5" weight="bold" />
+                          <DotsThree className="w-4 h-4" weight="bold" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52 p-1.5 rounded-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl">
+                      <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
                         <DropdownMenuItem
                           onClick={e => { e.stopPropagation(); setDrawerDoctorId(d.id) }}
-                          className="text-[12.5px] font-medium rounded-xl gap-2.5 px-3 py-2.5 cursor-pointer"
+                          className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer"
                         >
                           <UserCircle weight="duotone" className="w-4 h-4 text-zinc-400" />
                           View Profile
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-[12.5px] font-medium rounded-xl gap-2.5 px-3 py-2.5 cursor-pointer">
+                        <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
                           <PencilSimple weight="duotone" className="w-4 h-4 text-zinc-400" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-[12.5px] font-medium rounded-xl gap-2.5 px-3 py-2.5 cursor-pointer">
+                        <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
                           <Copy weight="duotone" className="w-4 h-4 text-zinc-400" />
                           Duplicate
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-[12.5px] font-medium rounded-xl gap-2.5 px-3 py-2.5 cursor-pointer">
+                        <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
                           <ArrowSquareOut weight="duotone" className="w-4 h-4 text-zinc-400" />
                           Copy link
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="my-1" />
+                        <DropdownMenuSeparator className="my-0.5" />
                         <DropdownMenuItem
                           onClick={e => { e.stopPropagation(); setDoctors(prev => prev.filter(x => x.id !== d.id)); if (drawerDoctorId === d.id) setDrawerDoctorId(null) }}
-                          className="text-[12.5px] font-medium rounded-xl gap-2.5 px-3 py-2.5 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20"
+                          className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20"
                         >
                           <Trash weight="duotone" className="w-4 h-4" />
                           Delete
@@ -894,10 +1292,20 @@ export function DoctorsPage() {
       </div>
 
       {/* ── DOCTOR PROFILE MODAL ── */}
-      {drawerDoctor && (
+      {drawerDoctor && !scheduleDoctor && (
         <DoctorProfileModal
           doctor={drawerDoctor}
           onClose={() => setDrawerDoctorId(null)}
+          onViewSchedule={() => setScheduleDoctor(drawerDoctor)}
+        />
+      )}
+
+      {/* ── DOCTOR SCHEDULE MODAL ── */}
+      {scheduleDoctor && (
+        <DoctorScheduleModal
+          doctor={scheduleDoctor}
+          onClose={() => { setScheduleDoctor(null); setDrawerDoctorId(null) }}
+          onBack={() => setScheduleDoctor(null)}
         />
       )}
 
