@@ -20,6 +20,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
+import { Frame } from "@/components/ui/frame"
 
 // ─── Types ────────────────────────────────────────────────────
 export interface Doctor {
@@ -63,14 +64,14 @@ export const STATUS_CONFIG = {
 
 // ─── Specialty badge styles (Notion-style) ───────────────────────────
 const SPECIALTY_BADGE: Record<string, { dot: string; text: string; bg: string }> = {
-  Cardiology:   { dot: "bg-red-500",    text: "text-red-700 dark:text-red-400",       bg: "bg-red-50 dark:bg-red-950/30" },
-  Neurology:    { dot: "bg-purple-500", text: "text-purple-700 dark:text-purple-400",  bg: "bg-purple-50 dark:bg-purple-950/30" },
-  Pediatrics:   { dot: "bg-blue-500",   text: "text-blue-700 dark:text-blue-400",     bg: "bg-blue-50 dark:bg-blue-950/30" },
-  Orthopedics:  { dot: "bg-amber-500",  text: "text-amber-700 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-950/30" },
-  Oncology:     { dot: "bg-emerald-500",text: "text-emerald-700 dark:text-emerald-400",bg: "bg-emerald-50 dark:bg-emerald-950/30" },
-  Dermatology:  { dot: "bg-indigo-500", text: "text-indigo-700 dark:text-indigo-400",  bg: "bg-indigo-50 dark:bg-indigo-950/30" },
-  Radiology:    { dot: "bg-cyan-500",   text: "text-cyan-700 dark:text-cyan-400",     bg: "bg-cyan-50 dark:bg-cyan-950/30" },
-  Psychiatry:   { dot: "bg-pink-500",   text: "text-pink-700 dark:text-pink-400",     bg: "bg-pink-50 dark:bg-pink-950/30" },
+  Cardiology: { dot: "bg-red-500", text: "text-red-700 dark:text-red-400", bg: "bg-red-50 dark:bg-red-950/30" },
+  Neurology: { dot: "bg-purple-500", text: "text-purple-700 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30" },
+  Pediatrics: { dot: "bg-blue-500", text: "text-blue-700 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+  Orthopedics: { dot: "bg-amber-500", text: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+  Oncology: { dot: "bg-emerald-500", text: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+  Dermatology: { dot: "bg-indigo-500", text: "text-indigo-700 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-950/30" },
+  Radiology: { dot: "bg-cyan-500", text: "text-cyan-700 dark:text-cyan-400", bg: "bg-cyan-50 dark:bg-cyan-950/30" },
+  Psychiatry: { dot: "bg-pink-500", text: "text-pink-700 dark:text-pink-400", bg: "bg-pink-50 dark:bg-pink-950/30" },
 }
 const DEFAULT_SPEC_BADGE = { dot: "bg-zinc-400", text: "text-zinc-600 dark:text-zinc-400", bg: "bg-zinc-100 dark:bg-zinc-800" }
 
@@ -486,10 +487,10 @@ function DoctorScheduleModal({ doctor, onClose, onBack }: { doctor: Doctor; onCl
 function DoctorProfileModal({ doctor, onClose, onViewSchedule }: { doctor: Doctor; onClose: () => void; onViewSchedule: () => void }) {
   const sc = STATUS_CONFIG[doctor.status]
   const sb = SPECIALTY_BADGE[doctor.specialty] ?? DEFAULT_SPEC_BADGE
-  
+
   // Robust initials: skip "Dr." if present, take first 2
   const nameParts = doctor.name.split(" ").filter(p => !p.toLowerCase().includes("dr"))
-  const initials = nameParts.length > 0 
+  const initials = nameParts.length > 0
     ? nameParts.map(n => n[0]).join("").slice(0, 2).toUpperCase()
     : doctor.name[0].toUpperCase()
 
@@ -504,7 +505,7 @@ function DoctorProfileModal({ doctor, onClose, onViewSchedule }: { doctor: Docto
           onClick={onClose}
           className="absolute inset-0 bg-zinc-900/30 backdrop-blur-[2px]"
         />
-        
+
         {/* Modal Window */}
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -515,7 +516,7 @@ function DoctorProfileModal({ doctor, onClose, onViewSchedule }: { doctor: Docto
         >
           {/* Internal Padding Wrapper to match image spacing */}
           <div className="p-10">
-            
+
             {/* Header: Avatar + Info + Right Status */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
@@ -584,7 +585,7 @@ function DoctorProfileModal({ doctor, onClose, onViewSchedule }: { doctor: Docto
             <div className="mt-10 flex items-center justify-between">
               <span className="text-[13px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Quick Actions</span>
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={onViewSchedule}
                   className="flex items-center gap-3 px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[14px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all shadow-md active:scale-[0.98]"
                 >
@@ -1126,169 +1127,171 @@ export function DoctorsPage() {
 
       {/* ── TABLE ── */}
       <div className="flex-1 overflow-auto">
-        <Table>
-          <TableHeader className="sticky top-0 z-10 bg-white dark:bg-zinc-950">
-            <TableRow className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent">
-              {TABLE_COLS.map(col => (
-                <TableHead
-                  key={col.label + col.key}
-                  className={cn(
-                    "py-2 px-4 text-[12px] font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap first:pl-8 last:pr-8",
-                    col.sortable && "cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 select-none"
-                  )}
-                  onClick={() => col.sortable && col.key && toggleSort(col.key as SortField)}
-                >
-                  <span className="inline-flex items-center gap-1">
-                    {col.label}
-                    {col.sortable && col.key && <SortIcon field={col.key} sort={sort} />}
-                  </span>
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow className="hover:bg-transparent border-0">
-                <TableCell colSpan={9} className="py-20 text-center">
-                  <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
-                  <p className="text-[13px] font-medium text-zinc-500">No doctors found</p>
-                  <p className="text-[12px] text-zinc-400 mt-0.5">Try adjusting your search or filters</p>
-                </TableCell>
-              </TableRow>
-            ) : filtered.map(d => {
-              const sc = STATUS_CONFIG[d.status]
-              const isSelected = drawerDoctorId === d.id
-
-              return (
-                <TableRow
-                  key={d.id}
-                  className={cn(
-                    "group border-b border-zinc-100 dark:border-zinc-800/60 transition-colors",
-                    isSelected ? "bg-blue-50/60 dark:bg-blue-950/20" : "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
-                  )}
-                >
-                  {/* Doctor */}
-                  <TableCell className="py-2.5 pl-8 pr-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-8">
-                        <AvatarImage src={d.avatar} alt={d.name} />
-                        <AvatarFallback className="text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800">
-                          {d.name.split(" ").map(n => n[0]).slice(1).join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{d.name}</span>
-                        <span className="text-[11px] text-zinc-400 truncate">{d.email}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  {/* Specialty badge */}
-                  <TableCell className="py-2.5 px-4">
-                    {(() => {
-                      const sb = SPECIALTY_BADGE[d.specialty] ?? DEFAULT_SPEC_BADGE
-                      return (
-                        <span className={cn("inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-md", sb.bg, sb.text)}>
-                          <span className={cn("size-1.5 rounded-full", sb.dot)} />
-                          {d.specialty}
-                        </span>
-                      )
-                    })()}
-                  </TableCell>
-
-                  {/* Status (✓ Active / ✕ Inactive style) */}
-                  <TableCell className="py-2.5 px-4">
-                    <span className={cn(
-                      "inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded",
-                      d.status === "available" && "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
-                      d.status === "in-surgery" && "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30",
-                      d.status === "on-leave" && "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
-                      d.status === "off-duty" && "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
-                    )}>
-                      {d.status === "available" && <span className="text-emerald-500">✓</span>}
-                      {d.status === "in-surgery" && <span className="text-rose-500">•</span>}
-                      {d.status === "on-leave" && <span className="text-amber-500">✕</span>}
-                      {d.status === "off-duty" && <span className="text-zinc-400">✕</span>}
-                      {sc.label}
+        <Frame className="w-full">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-white dark:bg-zinc-950">
+              <TableRow className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent">
+                {TABLE_COLS.map(col => (
+                  <TableHead
+                    key={col.label + col.key}
+                    className={cn(
+                      "py-2 px-4 text-[12px] font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap first:pl-8 last:pr-8",
+                      col.sortable && "cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 select-none"
+                    )}
+                    onClick={() => col.sortable && col.key && toggleSort(col.key as SortField)}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {col.label}
+                      {col.sortable && col.key && <SortIcon field={col.key} sort={sort} />}
                     </span>
-                  </TableCell>
-
-                  {/* Department */}
-                  <TableCell className="py-2.5 px-4">
-                    <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.department}</span>
-                  </TableCell>
-
-                  {/* Rating */}
-                  <TableCell className="py-2.5 px-4">
-                    <div className="flex items-center gap-1">
-                      <Star weight="fill" className="w-3.5 h-3.5 text-amber-400" />
-                      <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">{d.rating}</span>
-                      <span className="text-[11px] text-zinc-400">({d.reviews})</span>
-                    </div>
-                  </TableCell>
-
-                  {/* Patients */}
-                  <TableCell className="py-2.5 px-4">
-                    <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.patients}</span>
-                  </TableCell>
-
-                  {/* Experience */}
-                  <TableCell className="py-2.5 px-4">
-                    <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.experience} yrs</span>
-                  </TableCell>
-
-                  {/* Join Date */}
-                  <TableCell className="py-2.5 px-4">
-                    <span className="text-[13px] text-zinc-500 dark:text-zinc-400">{d.joinDate}</span>
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell className="py-2.5 pl-4 pr-8 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          onClick={e => e.stopPropagation()}
-                          className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                          <DotsThree className="w-4 h-4" weight="bold" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
-                        <DropdownMenuItem
-                          onClick={e => { e.stopPropagation(); setDrawerDoctorId(d.id) }}
-                          className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer"
-                        >
-                          <UserCircle weight="duotone" className="w-4 h-4 text-zinc-400" />
-                          View Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
-                          <PencilSimple weight="duotone" className="w-4 h-4 text-zinc-400" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
-                          <Copy weight="duotone" className="w-4 h-4 text-zinc-400" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
-                          <ArrowSquareOut weight="duotone" className="w-4 h-4 text-zinc-400" />
-                          Copy link
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="my-0.5" />
-                        <DropdownMenuItem
-                          onClick={e => { e.stopPropagation(); setDoctors(prev => prev.filter(x => x.id !== d.id)); if (drawerDoctorId === d.id) setDrawerDoctorId(null) }}
-                          className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20"
-                        >
-                          <Trash weight="duotone" className="w-4 h-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow className="hover:bg-transparent border-0">
+                  <TableCell colSpan={9} className="py-20 text-center">
+                    <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
+                    <p className="text-[13px] font-medium text-zinc-500">No doctors found</p>
+                    <p className="text-[12px] text-zinc-400 mt-0.5">Try adjusting your search or filters</p>
                   </TableCell>
                 </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
+              ) : filtered.map(d => {
+                const sc = STATUS_CONFIG[d.status]
+                const isSelected = drawerDoctorId === d.id
+
+                return (
+                  <TableRow
+                    key={d.id}
+                    className={cn(
+                      "group border-b border-zinc-100 dark:border-zinc-800/60 transition-colors",
+                      isSelected ? "bg-blue-50/60 dark:bg-blue-950/20" : "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
+                    )}
+                  >
+                    {/* Doctor */}
+                    <TableCell className="py-2.5 pl-8 pr-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="size-8">
+                          <AvatarImage src={d.avatar} alt={d.name} />
+                          <AvatarFallback className="text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800">
+                            {d.name.split(" ").map(n => n[0]).slice(1).join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{d.name}</span>
+                          <span className="text-[11px] text-zinc-400 truncate">{d.email}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    {/* Specialty badge */}
+                    <TableCell className="py-2.5 px-4">
+                      {(() => {
+                        const sb = SPECIALTY_BADGE[d.specialty] ?? DEFAULT_SPEC_BADGE
+                        return (
+                          <span className={cn("inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-md", sb.bg, sb.text)}>
+                            <span className={cn("size-1.5 rounded-full", sb.dot)} />
+                            {d.specialty}
+                          </span>
+                        )
+                      })()}
+                    </TableCell>
+
+                    {/* Status (✓ Active / ✕ Inactive style) */}
+                    <TableCell className="py-2.5 px-4">
+                      <span className={cn(
+                        "inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded",
+                        d.status === "available" && "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
+                        d.status === "in-surgery" && "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30",
+                        d.status === "on-leave" && "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
+                        d.status === "off-duty" && "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
+                      )}>
+                        {d.status === "available" && <span className="text-emerald-500">✓</span>}
+                        {d.status === "in-surgery" && <span className="text-rose-500">•</span>}
+                        {d.status === "on-leave" && <span className="text-amber-500">✕</span>}
+                        {d.status === "off-duty" && <span className="text-zinc-400">✕</span>}
+                        {sc.label}
+                      </span>
+                    </TableCell>
+
+                    {/* Department */}
+                    <TableCell className="py-2.5 px-4">
+                      <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.department}</span>
+                    </TableCell>
+
+                    {/* Rating */}
+                    <TableCell className="py-2.5 px-4">
+                      <div className="flex items-center gap-1">
+                        <Star weight="fill" className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">{d.rating}</span>
+                        <span className="text-[11px] text-zinc-400">({d.reviews})</span>
+                      </div>
+                    </TableCell>
+
+                    {/* Patients */}
+                    <TableCell className="py-2.5 px-4">
+                      <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.patients}</span>
+                    </TableCell>
+
+                    {/* Experience */}
+                    <TableCell className="py-2.5 px-4">
+                      <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.experience} yrs</span>
+                    </TableCell>
+
+                    {/* Join Date */}
+                    <TableCell className="py-2.5 px-4">
+                      <span className="text-[13px] text-zinc-500 dark:text-zinc-400">{d.joinDate}</span>
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell className="py-2.5 pl-4 pr-8 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            onClick={e => e.stopPropagation()}
+                            className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <DotsThree className="w-4 h-4" weight="bold" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
+                          <DropdownMenuItem
+                            onClick={e => { e.stopPropagation(); setDrawerDoctorId(d.id) }}
+                            className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer"
+                          >
+                            <UserCircle weight="duotone" className="w-4 h-4 text-zinc-400" />
+                            View Profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
+                            <PencilSimple weight="duotone" className="w-4 h-4 text-zinc-400" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
+                            <Copy weight="duotone" className="w-4 h-4 text-zinc-400" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
+                            <ArrowSquareOut weight="duotone" className="w-4 h-4 text-zinc-400" />
+                            Copy link
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="my-0.5" />
+                          <DropdownMenuItem
+                            onClick={e => { e.stopPropagation(); setDoctors(prev => prev.filter(x => x.id !== d.id)); if (drawerDoctorId === d.id) setDrawerDoctorId(null) }}
+                            className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20"
+                          >
+                            <Trash weight="duotone" className="w-4 h-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </Frame>
       </div>
 
       {/* ── DOCTOR PROFILE MODAL ── */}
