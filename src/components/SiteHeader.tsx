@@ -1,5 +1,33 @@
 import React, { useState } from "react";
-import { PanelLeft, UserCheck, Users, CreditCard, Settings, HelpCircle, LogOut, Plus, Zap, Home, ChevronRight, LayoutDashboard, Calendar, UserSquare, Stethoscope, Bell, CheckCircle2, Inbox, Layers, Archive } from "lucide-react";
+import { 
+  PanelLeft, 
+  UserCheck, 
+  Users, 
+  CreditCard, 
+  Settings, 
+  HelpCircle, 
+  LogOut, 
+  Plus, 
+  Zap, 
+  Home, 
+  ChevronRight, 
+  LayoutDashboard, 
+  Calendar, 
+  UserSquare, 
+  Bell, 
+  CheckCircle2, 
+  Inbox, 
+  Layers, 
+  Archive, 
+  BellRing,
+  MessageSquare,
+  CheckSquare,
+  BarChart2,
+  ShieldCheck,
+  User,
+  DollarSign,
+  Activity
+} from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle"
@@ -22,8 +50,15 @@ const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
   dashboard: { label: "Dashboard", icon: LayoutDashboard },
   calender: { label: "Calendar", icon: Calendar },
   calendar: { label: "Calendar", icon: Calendar },
-  patients: { label: "Patients", icon: Stethoscope },
-  doctors: { label: "Team", icon: UserSquare },
+  patients: { label: "Patients", icon: Activity },
+  doctors: { label: "Doctors", icon: UserSquare },
+  messages: { label: "Messages", icon: MessageSquare },
+  tasks: { label: "Tasks", icon: CheckSquare },
+  reports: { label: "Reports", icon: BarChart2 },
+  privillage: { label: "Privileges", icon: ShieldCheck },
+  profile: { label: "Profile", icon: User },
+  revenue: { label: "Revenue", icon: DollarSign },
+  nurse: { label: "Nurse Staff", icon: Activity },
   notifications: { label: "Notifications", icon: Bell },
 };
 
@@ -172,7 +207,7 @@ export function SiteHeader({
       <div className="flex items-center gap-4">
 
         {/* Role Switcher */}
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[12px] font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all">
               <UserCheck className="w-3.5 h-3.5" />
@@ -195,13 +230,13 @@ export function SiteHeader({
               ))}
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
 
         {/* Notification Bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-white dark:hover:bg-zinc-800 transition-all duration-300 shadow-sm hover:shadow-md group outline-none">
-              <Bell className="w-4 h-4 transition-transform group-hover:rotate-12" />
+            <button className="relative w-9 h-9 flex items-center justify-center rounded-full text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-300 group outline-none">
+              <BellRing className="w-4 h-4 transition-transform group-hover:rotate-12" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 text-white">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -301,7 +336,7 @@ export function SiteHeader({
                               <button className="px-3 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
                                 Decline
                               </button>
-                              <button className="px-3 py-1 rounded-lg bg-indigo-600 text-white text-[10px] font-bold hover:bg-indigo-700 transition-colors">
+                              <button className="px-3 py-1 rounded-lg bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold transition-colors">
                                 Accept
                               </button>
                             </div>
@@ -312,7 +347,7 @@ export function SiteHeader({
                             <div className="flex items-center gap-1.5 mt-2.5 overflow-hidden transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0">
                               <button
                                 onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
-                                className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[10px] font-bold flex items-center gap-1.5 hover:bg-indigo-700 transition-all active:scale-95"
+                                className="px-2.5 py-1 rounded-lg bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold flex items-center gap-1.5 transition-all active:scale-95"
                               >
                                 <CheckCircle2 className="w-3 h-3" />
                                 Mark as read

@@ -10,11 +10,12 @@ import { RevenuePage } from "@/pages/RevenuePage"
 import { ProfilePage } from "@/pages/ProfilePage"
 import { NursePage } from "@/pages/NursePage"
 import { PrivilegesPage } from "@/pages/PrivilegesPage"
+import { ReportsPage } from "@/pages/ReportsPage"
 import { UserRole } from "@/models/user";
 
 
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | "reports" | string;
 
 
 function App() {
@@ -44,12 +45,11 @@ function App() {
       {currentPage === "nurse" && <NursePage />}
       {currentPage === "revenue" && <RevenuePage />}
       {currentPage === "privillage" && <PrivilegesPage />}
+      {currentPage === "reports" && <ReportsPage />}
 
       {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "dashboard" && (
         <Dashboard
-          activeTab={activeDashboardTab}
-          onTabChange={setActiveDashboardTab}
           onProfileClick={() => setCurrentPage("profile")}
         />
       )}

@@ -5,7 +5,12 @@ import {
     Sparkle, TreeStructure, Users, UserFocus, MagnifyingGlass, Command,
     CaretDown, User, CalendarCheck, Chats, ListChecks, CurrencyEur, Scales, UsersThree,
     StethoscopeIcon,
-    CashRegisterIcon
+    CashRegisterIcon,
+    Star,
+    ChartLineUp,
+    MessengerLogoIcon,
+    AddressBookTabsIcon,
+    ToothIcon
 } from "@phosphor-icons/react";
 
 import {
@@ -22,9 +27,10 @@ import {
 
 import { cn } from "@/lib/utils"
 import logog from "@/assets/logog.png"
-import { Syringe } from "lucide-react";
+import { LayoutGrid, Syringe } from "lucide-react";
 
 import { UserRole } from "@/models/user";
+import { ListChecksIcon, NotepadIcon } from "@phosphor-icons/react/dist/ssr";
 
 interface NavItemConfig {
     icon?: React.ElementType;
@@ -39,7 +45,7 @@ interface NavItemConfig {
 
 const mainNavigation: NavItemConfig[] = [
     {
-        icon: House,
+        icon: LayoutGrid,
         title: "Dashboard",
         pageId: "dashboard",
         subItems: [
@@ -48,10 +54,11 @@ const mainNavigation: NavItemConfig[] = [
             { title: "Revenue", pageId: "revenue", icon: CurrencyEur, roles: [UserRole.ADMIN, UserRole.MANAGER] },
         ]
     },
-    { icon: Chats, title: "Messages", pageId: "messages", badge: "12" },
+    { icon: MessengerLogoIcon, title: "Messages", pageId: "messages", badge: "12" },
+    { icon: ToothIcon, title: "Orthodontics", pageId: "orthodontics", },
     { icon: CalendarCheck, title: "Calender", pageId: "calender" },
-    { icon: UserFocus, title: "Privileges", pageId: "privillage", badge: "4" },
-    { icon: ListChecks, title: "Tasks", pageId: "tasks" },
+    { icon: AddressBookTabsIcon, title: "Privileges", pageId: "privillage", badge: "4" },
+    { icon: ListChecksIcon, title: "Tasks", pageId: "tasks" },
     {
         icon: UsersThree, title: "Team", pageId: "team",
         roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR, UserRole.RECEPTIONIST],
@@ -61,29 +68,29 @@ const mainNavigation: NavItemConfig[] = [
             { title: "Receptionist", pageId: "receptionist", icon: CashRegisterIcon, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
         ]
     },
-    { icon: FileText, title: "Notes", pageId: "notes" },
+    { icon: NotepadIcon, title: "Notes", pageId: "notes" },
     { icon: Envelope, title: "Emails", pageId: "emails", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
-    { icon: ChartBar, title: "Reports", pageId: "reports", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
+    { icon: ChartLineUp, title: "Reports", pageId: "reports", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
     { icon: Sparkle, title: "Automations", pageId: "automations", roles: [UserRole.ADMIN] },
     { icon: TreeStructure, title: "Workflows", pageId: "workflows", roles: [UserRole.ADMIN] },
 ];
 
-// const favoritesNavigation: NavItemConfig[] = [
-//     { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-//     { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-//     { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-//     { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-// ];
+const favoritesNavigation: NavItemConfig[] = [
+    { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400" },
+    { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400" },
+    { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400" },
+    { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400" },
+];
 
 const recordsNavigation: NavItemConfig[] = [
     { icon: Users, title: "Clients", pageId: "clients", roles: [UserRole.ADMIN, UserRole.MANAGER] },
     { icon: UserFocus, title: "Contacts", pageId: "contacts", roles: [UserRole.ADMIN, UserRole.MANAGER] },
 ];
 
-// const listNavigation: NavItemConfig[] = [
-//     { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
-//     { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true, roles: [UserRole.ADMIN] },
-// ];
+const listNavigation: NavItemConfig[] = [
+    { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true },
+    { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true },
+];
 
 export function AppSidebar({
     currentPage = "dashboard",
@@ -108,9 +115,9 @@ export function AppSidebar({
     };
 
     const filteredMainNavigation = filterByRole(mainNavigation);
-    // const filteredFavoritesNavigation = filterByRole(favoritesNavigation);
+    const filteredFavoritesNavigation = filterByRole(favoritesNavigation);
     const filteredRecordsNavigation = filterByRole(recordsNavigation);
-    // const filteredListNavigation = filterByRole(listNavigation);
+    const filteredListNavigation = filterByRole(listNavigation);
 
     return (
         <Sidebar
@@ -168,7 +175,7 @@ export function AppSidebar({
                                         title={item.title}
                                         isCollapsed={isCollapsed}
                                         isActive={item.pageId ? (currentPage === item.pageId || (item.subItems?.some(s => s.pageId === currentPage))) : false}
-                                        onClick={item.pageId && !item.subItems ? () => onPageChange?.(item.pageId as string) : undefined}
+                                        onClick={item.pageId ? () => onPageChange?.(item.pageId as string) : undefined}
                                         badge={item.badge}
                                         subItems={item.subItems}
                                         currentPage={currentPage}
@@ -180,7 +187,7 @@ export function AppSidebar({
                     </SidebarGroup>
 
                     {/* FAVORITES */}
-                    {/* {!isCollapsed && (
+                    {!isCollapsed && (
                         <SidebarGroup className="p-0 mt-6">
                             <div className="flex items-center justify-between px-3 mb-2">
                                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -204,7 +211,7 @@ export function AppSidebar({
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
-                    )} */}
+                    )}
 
                     {/* RECORDS */}
                     {!isCollapsed && (
@@ -233,7 +240,7 @@ export function AppSidebar({
                     )}
 
                     {/* LIST */}
-                    {/* {!isCollapsed && (
+                    {!isCollapsed && (
                         <SidebarGroup className="p-0 mt-6">
                             <div className="flex items-center justify-between px-3 mb-2">
                                 <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
@@ -252,13 +259,13 @@ export function AppSidebar({
                                             title={item.title}
                                             isCollapsed={isCollapsed}
                                             isActive={currentPage === item.pageId}
-                                            onClick={() => onPageChange?.(item.pageId)}
+                                            onClick={() => onPageChange?.(item.pageId as string)}
                                         />
                                     ))}
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
-                    )} */}
+                    )}
 
                 </SidebarContent>
 
