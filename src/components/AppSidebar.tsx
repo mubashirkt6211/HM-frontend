@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import * as React from "react";
 import {
-    House, CheckSquare, FileText, Envelope, ChartBar,
-    Sparkle, TreeStructure, Star, Users, UserFocus, MagnifyingGlass, Command,
+    House, FileText, Envelope, ChartBar,
+    Sparkle, TreeStructure, Users, UserFocus, MagnifyingGlass, Command,
     CaretDown, User, CalendarCheck, Chats, ListChecks, CurrencyEur, Scales, UsersThree,
     StethoscopeIcon,
     CashRegisterIcon
@@ -22,7 +22,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import logog from "@/assets/logog.png"
-import { Syringe, User2Icon } from "lucide-react";
+import { Syringe } from "lucide-react";
 
 import { UserRole } from "@/models/user";
 
@@ -168,7 +168,7 @@ export function AppSidebar({
                                         title={item.title}
                                         isCollapsed={isCollapsed}
                                         isActive={item.pageId ? (currentPage === item.pageId || (item.subItems?.some(s => s.pageId === currentPage))) : false}
-                                        onClick={item.pageId && !item.subItems ? () => onPageChange?.(item.pageId) : undefined}
+                                        onClick={item.pageId && !item.subItems ? () => onPageChange?.(item.pageId as string) : undefined}
                                         badge={item.badge}
                                         subItems={item.subItems}
                                         currentPage={currentPage}
@@ -198,7 +198,7 @@ export function AppSidebar({
                                             title={item.title}
                                             isCollapsed={isCollapsed}
                                             isActive={currentPage === item.pageId}
-                                            onClick={() => onPageChange?.(item.pageId)}
+                                            onClick={() => onPageChange?.(item.pageId as string)}
                                         />
                                     ))}
                                 </SidebarMenu>
@@ -224,7 +224,7 @@ export function AppSidebar({
                                             title={item.title}
                                             isCollapsed={isCollapsed}
                                             isActive={currentPage === item.pageId}
-                                            onClick={() => onPageChange?.(item.pageId)}
+                                            onClick={() => onPageChange?.(item.pageId as string)}
                                         />
                                     ))}
                                 </SidebarMenu>
