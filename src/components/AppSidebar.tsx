@@ -10,7 +10,8 @@ import {
     ChartLineUp,
     MessengerLogoIcon,
     AddressBookTabsIcon,
-    ToothIcon
+    ToothIcon,
+    Hammer
 } from "@phosphor-icons/react";
 
 import {
@@ -27,7 +28,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import logog from "@/assets/logog.png"
-import { LayoutGrid, Syringe } from "lucide-react";
+import { BoneIcon, LayoutGrid, Syringe } from "lucide-react";
 
 import { UserRole } from "@/models/user";
 import { ListChecksIcon, NotepadIcon } from "@phosphor-icons/react/dist/ssr";
@@ -55,7 +56,8 @@ const mainNavigation: NavItemConfig[] = [
         ]
     },
     { icon: MessengerLogoIcon, title: "Messages", pageId: "messages", badge: "12" },
-    { icon: ToothIcon, title: "Orthodontics", pageId: "orthodontics", },
+    { icon: ToothIcon, title: "Orthodontics", pageId: "orthodontics" },
+    { icon: Hammer, title: "Orthopedics", pageId: "orthopedics" },
     { icon: CalendarCheck, title: "Calender", pageId: "calender" },
     { icon: AddressBookTabsIcon, title: "Privileges", pageId: "privillage", badge: "4" },
     { icon: ListChecksIcon, title: "Tasks", pageId: "tasks" },

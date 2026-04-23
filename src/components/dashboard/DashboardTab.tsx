@@ -9,6 +9,7 @@ import {
   Circle,
   Clock,
   CalendarCheck,
+  CalendarBlank,
   Users,
   Bed,
   Heart,
@@ -19,10 +20,12 @@ import {
   MagnifyingGlass,
   DotsThree,
   Warning,
+  WarningCircle,
   Bell,
   X,
   UserCircle,
   ListChecks,
+  ListDashes,
   ClipboardText,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
@@ -92,6 +95,8 @@ export function DashboardTab() {
   const [sortBy, setSortBy] = useState<"none" | "priority" | "due">("none");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
 
   const activeReminders = REMINDERS.filter(r => !dismissedReminders.includes(r.id));
   const doneCount = tasks.filter(t => t.status === "Done").length;
@@ -241,60 +246,82 @@ export function DashboardTab() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
                 {/* Filter */}
-                <Popover>
+                <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                   <PopoverTrigger asChild>
                     <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", filterStatus !== "All" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
                       <FunnelSimple className="w-3.5 h-3.5" weight="bold" />
                       {filterStatus === "All" ? "Filter" : filterStatus}
+                      {filterStatus !== "All" && (
+                        <span
+                          role="button"
+                          onClick={(e) => { e.stopPropagation(); setFilterStatus("All"); }}
+                          className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </span>
+                      )}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="start" className="w-44 p-1">
+                  <PopoverContent align="start" className="w-44 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
                     <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Status</p>
-                    {["All", "Done", "In Progress", "Not Started"].map(s => (
+                    {[
+                      { id: "All", icon: ListChecks },
+                      { id: "Done", icon: CheckCircle },
+                      { id: "In Progress", icon: Clock },
+                      { id: "Not Started", icon: Circle }
+                    ].map(s => (
                       <button
-                        key={s}
-                        onClick={() => setFilterStatus(s)}
+                        key={s.id}
+                        onClick={() => { setFilterStatus(s.id); setFilterOpen(false); }}
                         className={cn(
-                          "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
-                          filterStatus === s
+                          "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                          filterStatus === s.id
                             ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                             : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                         )}
                       >
-                        <span className="flex items-center gap-2">
-                          <span className={cn("w-2 h-2 rounded-full", s === "Done" && "bg-emerald-500", s === "In Progress" && "bg-blue-500", s === "Not Started" && "bg-zinc-300 dark:bg-zinc-600", s === "All" && "bg-zinc-400")} />
-                          {s}
-                        </span>
+                        <s.icon className={cn("w-4 h-4", s.id === "Done" && "text-emerald-500", s.id === "In Progress" && "text-blue-500", s.id === "Not Started" && "text-zinc-400", s.id === "All" && "text-zinc-500")} weight={s.id === "Done" ? "fill" : "regular"} />
+                        {s.id}
                       </button>
                     ))}
                   </PopoverContent>
                 </Popover>
 
                 {/* Sort */}
-                <Popover>
+                <Popover open={sortOpen} onOpenChange={setSortOpen}>
                   <PopoverTrigger asChild>
                     <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", sortBy !== "none" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
                       <ArrowsDownUp className="w-3.5 h-3.5" weight="bold" />
                       {sortBy === "none" ? "Sort" : sortBy === "priority" ? "Priority ↑" : "Due Date ↑"}
+                      {sortBy !== "none" && (
+                        <span
+                          role="button"
+                          onClick={(e) => { e.stopPropagation(); setSortBy("none"); }}
+                          className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </span>
+                      )}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="start" className="w-44 p-1">
+                  <PopoverContent align="start" className="w-44 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
                     <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Sort by</p>
                     {[
-                      { id: "none" as const, label: "Default" },
-                      { id: "priority" as const, label: "Priority" },
-                      { id: "due" as const, label: "Due Date" },
+                      { id: "none" as const, label: "Default", icon: ListDashes },
+                      { id: "priority" as const, label: "Priority", icon: WarningCircle },
+                      { id: "due" as const, label: "Due Date", icon: CalendarBlank },
                     ].map(opt => (
                       <button
                         key={opt.id}
-                        onClick={() => setSortBy(opt.id)}
+                        onClick={() => { setSortBy(opt.id); setSortOpen(false); }}
                         className={cn(
-                          "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
+                          "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
                           sortBy === opt.id
                             ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                             : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                         )}
                       >
+                        <opt.icon className="w-4 h-4" />
                         {opt.label}
                       </button>
                     ))}
@@ -302,28 +329,51 @@ export function DashboardTab() {
                 </Popover>
 
                 {/* Search */}
-                <button
-                  onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
-                  className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", showSearch ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}
-                >
-                  <MagnifyingGlass className="w-3.5 h-3.5" weight="bold" /> Search
-                </button>
+                {!showSearch ? (
+                  <button
+                    onClick={() => setShowSearch(true)}
+                    className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", searchQuery ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}
+                  >
+                    <MagnifyingGlass className="w-3.5 h-3.5" weight="bold" /> Search
+                    {searchQuery && (
+                      <span
+                        role="button"
+                        onClick={(e) => { e.stopPropagation(); setSearchQuery(""); }}
+                        className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  <motion.div
+                    initial={{ width: 80, opacity: 0 }}
+                    animate={{ width: 220, opacity: 1 }}
+                    className="relative overflow-hidden flex items-center"
+                  >
+                    <MagnifyingGlass className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search tasks..."
+                      autoFocus
+                      onBlur={() => { if (!searchQuery) setShowSearch(false); }}
+                      onKeyDown={(e) => { if (e.key === "Escape") { setShowSearch(false); setSearchQuery(""); } }}
+                      className="pl-8 pr-8 h-[30px] bg-zinc-100 dark:bg-zinc-800 border-transparent focus-visible:border-zinc-300 dark:focus-visible:border-zinc-600 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-[13px] rounded-md w-full shadow-none focus-visible:ring-0"
+                    />
+                    <button
+                      onMouseDown={(e) => { e.preventDefault(); setSearchQuery(""); setShowSearch(false); }}
+                      className="absolute right-1.5 p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </motion.div>
+                )}
               </div>
               <button className="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                 <DotsThree className="w-5 h-5" weight="bold" />
               </button>
             </div>
-            {showSearch && (
-              <div className="mb-3">
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Type to search tasks..."
-                  autoFocus
-                  className="text-[13px]"
-                />
-              </div>
-            )}
 
             {/* Table */}
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">

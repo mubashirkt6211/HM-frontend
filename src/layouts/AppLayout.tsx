@@ -55,7 +55,7 @@ export function AppLayout({
                             setUserRole={setUserRole}
                         />
 
-                        <div className={`flex-1 w-full pb-10 ${currentPage === "doctors" ? "px-0" : "px-6 md:px-10"}`}>
+                        <div className={`flex-1 w-full pb-10 ${["doctors", "privillage"].includes(currentPage) ? "px-0" : "px-6 md:px-10"}`}>
                             {children}
                         </div>
                     </main>

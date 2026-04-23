@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import React from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
@@ -10,17 +10,16 @@ import {
   Users, Funnel, SortDescending, CaretUp, CaretDown, CaretUpDown,
   CalendarBlank, Star, MapPin, Clock, Envelope, Phone as PhoneIcon,
   UserCircle, Trash, Copy, ArrowSquareOut, PencilSimple,
-  GenderFemale, GenderMale, ArrowLeft,
+  GenderFemale, GenderMale, ArrowLeft, FunnelSimple, ArrowsDownUp, ListDashes,
 } from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table"
 import { Frame } from "@/components/ui/frame"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
 
 // ─── Types ────────────────────────────────────────────────────
 export interface Doctor {
@@ -88,25 +87,17 @@ const DOCTORS: Doctor[] = [
 ]
 
 // ─── Table columns (Notion-style) ────────────────────────────────
-const TABLE_COLS: { key: SortField | ""; label: string; sortable?: boolean }[] = [
-  { key: "name", label: "Doctor", sortable: true },
-  { key: "specialty", label: "Specialty", sortable: true },
-  { key: "status", label: "Status", sortable: true },
-  { key: "department", label: "Department", sortable: true },
-  { key: "rating", label: "Rating", sortable: true },
-  { key: "patients", label: "Patients", sortable: true },
-  { key: "experience", label: "Experience", sortable: true },
-  { key: "", label: "Join Date", sortable: false },
-  { key: "", label: "", sortable: false },
+const TABLE_COLS: { key: string; label: string }[] = [
+  { key: "name", label: "Doctor" },
+  { key: "specialty", label: "Specialty" },
+  { key: "status", label: "Status" },
+  { key: "department", label: "Department" },
+  { key: "rating", label: "Rating" },
+  { key: "patients", label: "Patients" },
+  { key: "experience", label: "Experience" },
+  { key: "", label: "Join Date" },
+  { key: "", label: "" },
 ]
-
-function SortIcon({ field, sort }: { field: string; sort: { field: SortField; dir: SortDir } }) {
-  if (!field) return null
-  if (sort.field !== field) return <CaretUpDown className="w-3 h-3 text-zinc-300 dark:text-zinc-700" />
-  return sort.dir === "asc"
-    ? <CaretUp weight="fill" className="w-3 h-3 text-zinc-700 dark:text-zinc-200" />
-    : <CaretDown weight="fill" className="w-3 h-3 text-zinc-700 dark:text-zinc-200" />
-}
 
 // ─── Doctor Schedule Modal ─────────────────────────────────────
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -841,13 +832,21 @@ export function DoctorsPage() {
   const [drawerDoctorId, setDrawerDoctorId] = useState<number | null>(null)
   const [scheduleDoctor, setScheduleDoctor] = useState<Doctor | null>(null)
   const [search, setSearch] = useState("")
-  const [searchOpen, setSearchOpen] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
+  const [specialtyOpen, setSpecialtyOpen] = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState("all")
   const [specialtyFilter, setSpecialtyFilter] = useState("all")
   const [sort, setSort] = useState<{ field: SortField; dir: SortDir }>({ field: "name", dir: "asc" })
   const [showAdd, setShowAdd] = useState(false)
-  const filterRef = useRef<HTMLDivElement>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(5)
+
+  // Reset to page 1 on filter or items per page change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, statusFilter, specialtyFilter, sort, itemsPerPage])
 
   const drawerDoctor = drawerDoctorId != null ? doctors.find(d => d.id === drawerDoctorId) ?? null : null
 
@@ -882,12 +881,10 @@ export function DoctorsPage() {
     })
   }, [doctors, search, statusFilter, specialtyFilter, sort])
 
-  const toggleSort = (field: SortField) => {
-    setSort(prev => prev.field === field
-      ? { field, dir: prev.dir === "asc" ? "desc" : "asc" }
-      : { field, dir: "asc" }
-    )
-  }
+  const paginatedDoctors = useMemo(() => {
+    return filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  }, [filtered, currentPage, itemsPerPage])
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
 
   const handleAddDoctor = (doc: Doctor) => setDoctors(prev => [doc, ...prev])
 
@@ -906,15 +903,6 @@ export function DoctorsPage() {
     { label: "Off Duty", value: offDuty, cls: "text-zinc-400" },
   ]
 
-  // Tabs
-  const [activeTab, setActiveTab] = useState("doctors")
-  const TABS = [
-    { id: "doctors", label: "All Doctors" },
-    { id: "departments", label: "Departments" },
-    { id: "specialties", label: "Specialties" },
-    { id: "schedule", label: "Schedule" },
-  ]
-
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-950 overflow-hidden">
 
@@ -927,87 +915,185 @@ export function DoctorsPage() {
           Comprehensive doctor management system tracking specialties, schedules, and availability.
         </p>
 
-        {/* ── Tabs + Actions row ── */}
-        <div className="flex items-center justify-between mt-5">
-          {/* Tabs */}
-          <div className="flex items-center border-b border-zinc-200 dark:border-zinc-800">
-            {TABS.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "px-4 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px",
-                  activeTab === tab.id
-                    ? "border-zinc-900 dark:border-white text-zinc-900 dark:text-white"
-                    : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
+        {/* ── Actions row ── */}
+        <div className="flex items-center justify-end mt-5">
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Search */}
-            <div
-              className={cn(
-                "flex items-center gap-2 px-3 h-8 rounded-lg border transition-all",
-                searchOpen
-                  ? "w-52 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950"
-                  : "w-8 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-              )}
-              onClick={() => !searchOpen && setSearchOpen(true)}
-            >
-              <MagnifyingGlass className={cn("w-3.5 h-3.5 shrink-0 transition-colors", searchOpen ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-400")} />
-              {searchOpen && (
-                <input
-                  autoFocus
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  onBlur={() => { if (!search) setSearchOpen(false) }}
-                  placeholder="Search doctors…"
-                  className="flex-1 text-[13px] bg-transparent outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
-                />
-              )}
-              {search && (
-                <button onClick={e => { e.stopPropagation(); setSearch(""); setSearchOpen(false) }} className="text-zinc-400 hover:text-zinc-600">
-                  <X className="w-3 h-3" weight="bold" />
-                </button>
-              )}
-            </div>
+            <div className="flex items-center gap-1.5 mr-2">
+              {/* Filter Popover */}
+              <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                <PopoverTrigger asChild>
+                  <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", statusFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                    <FunnelSimple className="w-3.5 h-3.5" weight="bold" />
+                    {statusFilter === "all" ? "Filter" : statusFilter.replace("-", " ")}
+                    {statusFilter !== "all" && (
+                      <span
+                        role="button"
+                        onClick={(e) => { e.stopPropagation(); setStatusFilter("all"); }}
+                        className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-44 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                  <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Status</p>
+                  {[
+                    { id: "all", label: "All" },
+                    { id: "available", label: "Available" },
+                    { id: "in-surgery", label: "In Surgery" },
+                    { id: "on-leave", label: "On Leave" },
+                    { id: "off-duty", label: "Off Duty" }
+                  ].map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => { setStatusFilter(s.id); setFilterOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2 capitalize",
+                        statusFilter === s.id
+                          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                      )}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
 
-            {/* Filter */}
-            <div className="relative" ref={filterRef}>
-              <button
-                onClick={() => setFilterOpen(p => !p)}
-                className={cn(
-                  "flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border transition-colors",
-                  filterOpen || activeFilterCount > 0
-                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white"
-                    : "text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                )}
-              >
-                <Funnel className="w-3.5 h-3.5" weight={filterOpen || activeFilterCount > 0 ? "fill" : "regular"} />
-                Filter
-                {activeFilterCount > 0 && (
-                  <span className="ml-0.5 size-4 rounded-full bg-white/20 dark:bg-zinc-900/20 text-[10px] font-bold flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-              <AnimatePresence>
-                {filterOpen && (
-                  <FilterPanel
-                    statusFilter={statusFilter}
-                    specialtyFilter={specialtyFilter}
-                    onStatusChange={v => setStatusFilter(v)}
-                    onSpecialtyChange={v => setSpecialtyFilter(v)}
-                    onClear={() => { setStatusFilter("all"); setSpecialtyFilter("all") }}
-                    onClose={() => setFilterOpen(false)}
+              {/* Specialty Popover */}
+              <Popover open={specialtyOpen} onOpenChange={setSpecialtyOpen}>
+                <PopoverTrigger asChild>
+                  <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", specialtyFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                    <Stethoscope className="w-3.5 h-3.5" weight="bold" />
+                    {specialtyFilter === "all" ? "Specialty" : specialtyFilter}
+                    {specialtyFilter !== "all" && (
+                      <span
+                        role="button"
+                        onClick={(e) => { e.stopPropagation(); setSpecialtyFilter("all"); }}
+                        className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-48 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                  <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Specialty</p>
+                  <button
+                    onClick={() => { setSpecialtyFilter("all"); setSpecialtyOpen(false); }}
+                    className={cn(
+                      "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                      specialtyFilter === "all"
+                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                    )}
+                  >
+                    All Specialties
+                  </button>
+                  <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
+                  {Object.keys(SPECIALTY_BADGE).map(spec => (
+                    <button
+                      key={spec}
+                      onClick={() => { setSpecialtyFilter(spec); setSpecialtyOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                        specialtyFilter === spec
+                          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                      )}
+                    >
+                      <span className={cn("size-2 rounded-full", SPECIALTY_BADGE[spec].dot)} />
+                      {spec}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+
+              {/* Sort Popover */}
+              <Popover open={sortOpen} onOpenChange={setSortOpen}>
+                <PopoverTrigger asChild>
+                  <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", sort.field !== "name" || sort.dir !== "asc" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                    <ArrowsDownUp className="w-3.5 h-3.5" weight="bold" />
+                    Sort
+                    {(sort.field !== "name" || sort.dir !== "asc") && (
+                      <span
+                        role="button"
+                        onClick={(e) => { e.stopPropagation(); setSort({ field: "name", dir: "asc" }); }}
+                        className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-44 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                  <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Sort by</p>
+                  {[
+                    { field: "name", dir: "asc", label: "Name (A-Z)", icon: ListDashes },
+                    { field: "rating", dir: "desc", label: "Highest Rating", icon: Star },
+                    { field: "patients", dir: "desc", label: "Most Patients", icon: Users },
+                    { field: "experience", dir: "desc", label: "Most Experienced", icon: Clock },
+                  ].map(opt => (
+                    <button
+                      key={opt.field + opt.dir}
+                      onClick={() => { setSort({ field: opt.field as SortField, dir: opt.dir as SortDir }); setSortOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                        sort.field === opt.field && sort.dir === opt.dir
+                          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                      )}
+                    >
+                      <opt.icon className="w-4 h-4" />
+                      {opt.label}
+                    </button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+
+              {/* Search */}
+              {!showSearch ? (
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", search ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}
+                >
+                  <MagnifyingGlass className="w-3.5 h-3.5" weight="bold" /> Search
+                  {search && (
+                    <span
+                      role="button"
+                      onClick={(e) => { e.stopPropagation(); setSearch(""); }}
+                      className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </span>
+                  )}
+                </button>
+              ) : (
+                <motion.div
+                  initial={{ width: 80, opacity: 0 }}
+                  animate={{ width: 220, opacity: 1 }}
+                  className="relative overflow-hidden flex items-center"
+                >
+                  <MagnifyingGlass className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search doctors..."
+                    autoFocus
+                    onBlur={() => { if (!search) setShowSearch(false); }}
+                    onKeyDown={(e) => { if (e.key === "Escape") { setShowSearch(false); setSearch(""); } }}
+                    className="pl-8 pr-8 h-[30px] bg-zinc-100 dark:bg-zinc-800 border-transparent focus-visible:border-zinc-300 dark:focus-visible:border-zinc-600 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-[13px] rounded-md w-full shadow-none focus-visible:ring-0"
                   />
-                )}
-              </AnimatePresence>
+                  <button
+                    onMouseDown={(e) => { e.preventDefault(); setSearch(""); setShowSearch(false); }}
+                    className="absolute right-1.5 p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
+              )}
             </div>
 
             <button
@@ -1019,174 +1105,72 @@ export function DoctorsPage() {
             </button>
           </div>
         </div>
-
-        {/* Active filter chips */}
-        {activeFilterCount > 0 && (
-          <div className="flex items-center gap-1.5 mt-3">
-            {statusFilter !== "all" && (
-              <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 capitalize">
-                {statusFilter.replace("-", " ")}
-                <button onClick={() => setStatusFilter("all")}><X className="w-2.5 h-2.5" weight="bold" /></button>
-              </span>
-            )}
-            {specialtyFilter !== "all" && (
-              <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                {specialtyFilter}
-                <button onClick={() => setSpecialtyFilter("all")}><X className="w-2.5 h-2.5" weight="bold" /></button>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── INLINE FILTERS (Arto-style) ── */}
-      <div className="px-8 py-3 flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-        {/* Status pills */}
-        <div className="flex items-center bg-zinc-100 dark:bg-zinc-800/60 rounded-lg p-0.5 gap-0.5">
-          {([
-            { key: "all" as const, label: "All", count: total },
-            { key: "available" as const, label: "Available", count: available },
-            { key: "in-surgery" as const, label: "In Surgery", count: inSurgery },
-            { key: "on-leave" as const, label: "On Leave", count: onLeave },
-            { key: "off-duty" as const, label: "Off Duty", count: offDuty },
-          ]).map(pill => (
-            <button
-              key={pill.key}
-              onClick={() => setStatusFilter(pill.key)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
-                statusFilter === pill.key
-                  ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-sm"
-                  : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
-              )}
-            >
-              {pill.label}
-              <span className={cn(
-                "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
-                statusFilter === pill.key
-                  ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-                  : "bg-zinc-200/70 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
-              )}>
-                {pill.count}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Specialty dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
-              specialtyFilter !== "all"
-                ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white"
-                : "text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-            )}>
-              {specialtyFilter === "all" ? "Specialty" : specialtyFilter}
-              <CaretDown className="w-3 h-3" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
-            <DropdownMenuItem
-              onClick={() => setSpecialtyFilter("all")}
-              className={cn("text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer", specialtyFilter === "all" && "bg-zinc-100 dark:bg-zinc-800")}
-            >
-              All Specialties
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="my-0.5" />
-            {Object.keys(SPECIALTY_BADGE).map(spec => (
-              <DropdownMenuItem
-                key={spec}
-                onClick={() => setSpecialtyFilter(spec)}
-                className={cn("text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer", specialtyFilter === spec && "bg-zinc-100 dark:bg-zinc-800")}
-              >
-                <span className={cn("size-2 rounded-full", SPECIALTY_BADGE[spec].dot)} />
-                {spec}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Department dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-zinc-500 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-              Department
-              <CaretDown className="w-3 h-3" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-44 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
-            {[...new Set(doctors.map(d => d.department))].sort().map(dept => (
-              <DropdownMenuItem key={dept} className="text-[12px] font-medium rounded-lg px-2.5 py-2 cursor-pointer">
-                {dept}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
 
       {/* ── TABLE ── */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto mt-4 px-8 pb-8">
         <Frame className="w-full">
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-white dark:bg-zinc-950">
-              <TableRow className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent">
-                {TABLE_COLS.map(col => (
-                  <TableHead
-                    key={col.label + col.key}
-                    className={cn(
-                      "py-2 px-4 text-[12px] font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap first:pl-8 last:pr-8",
-                      col.sortable && "cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 select-none"
-                    )}
-                    onClick={() => col.sortable && col.key && toggleSort(col.key as SortField)}
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {col.label}
-                      {col.sortable && col.key && <SortIcon field={col.key} sort={sort} />}
-                    </span>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden min-w-[1050px]">
+            {/* Header */}
+            <div
+              className="grid items-center bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800 px-4"
+              style={{ gridTemplateColumns: "minmax(200px, 1fr) 130px 120px 130px 90px 80px 90px 100px 40px" }}
+            >
+              {TABLE_COLS.map((col, idx) => (
+                <div
+                  key={col.label + col.key + idx}
+                  className={cn(
+                    "py-2 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider",
+                    col.label === "" ? "text-right" : ""
+                  )}
+                >
+                  <span className={cn("inline-flex items-center gap-1", col.label === "" && "justify-end w-full")}>
+                    {col.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Body */}
+            <div>
               {filtered.length === 0 ? (
-                <TableRow className="hover:bg-transparent border-0">
-                  <TableCell colSpan={9} className="py-20 text-center">
-                    <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
-                    <p className="text-[13px] font-medium text-zinc-500">No doctors found</p>
-                    <p className="text-[12px] text-zinc-400 mt-0.5">Try adjusting your search or filters</p>
-                  </TableCell>
-                </TableRow>
-              ) : filtered.map(d => {
+                <div className="py-20 text-center border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                  <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
+                  <p className="text-[13px] font-medium text-zinc-500">No doctors found</p>
+                  <p className="text-[12px] text-zinc-400 mt-0.5">Try adjusting your search or filters</p>
+                </div>
+              ) : paginatedDoctors.map((d, i) => {
                 const sc = STATUS_CONFIG[d.status]
                 const isSelected = drawerDoctorId === d.id
 
                 return (
-                  <TableRow
+                  <motion.div
                     key={d.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.02, duration: 0.2 }}
                     className={cn(
-                      "group border-b border-zinc-100 dark:border-zinc-800/60 transition-colors",
+                      "group grid items-center border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-colors px-4",
                       isSelected ? "bg-blue-50/60 dark:bg-blue-950/20" : "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
                     )}
+                    style={{ gridTemplateColumns: "minmax(200px, 1fr) 130px 120px 130px 90px 80px 90px 100px 40px" }}
                   >
                     {/* Doctor */}
-                    <TableCell className="py-2.5 pl-8 pr-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                          <AvatarImage src={d.avatar} alt={d.name} />
-                          <AvatarFallback className="text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800">
-                            {d.name.split(" ").map(n => n[0]).slice(1).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{d.name}</span>
-                          <span className="text-[11px] text-zinc-400 truncate">{d.email}</span>
-                        </div>
+                    <div className="py-3 flex items-center gap-3 pr-4">
+                      <Avatar className="size-8">
+                        <AvatarImage src={d.avatar} alt={d.name} />
+                        <AvatarFallback className="text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800">
+                          {d.name.split(" ").map(n => n[0]).slice(1).join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[14px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{d.name}</span>
+                        <span className="text-[12px] text-zinc-400 truncate">{d.email}</span>
                       </div>
-                    </TableCell>
+                    </div>
 
                     {/* Specialty badge */}
-                    <TableCell className="py-2.5 px-4">
+                    <div className="py-3">
                       {(() => {
                         const sb = SPECIALTY_BADGE[d.specialty] ?? DEFAULT_SPEC_BADGE
                         return (
@@ -1196,10 +1180,10 @@ export function DoctorsPage() {
                           </span>
                         )
                       })()}
-                    </TableCell>
+                    </div>
 
-                    {/* Status (✓ Active / ✕ Inactive style) */}
-                    <TableCell className="py-2.5 px-4">
+                    {/* Status */}
+                    <div className="py-3">
                       <span className={cn(
                         "inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded",
                         d.status === "available" && "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
@@ -1213,46 +1197,46 @@ export function DoctorsPage() {
                         {d.status === "off-duty" && <span className="text-zinc-400">✕</span>}
                         {sc.label}
                       </span>
-                    </TableCell>
+                    </div>
 
                     {/* Department */}
-                    <TableCell className="py-2.5 px-4">
+                    <div className="py-3">
                       <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.department}</span>
-                    </TableCell>
+                    </div>
 
                     {/* Rating */}
-                    <TableCell className="py-2.5 px-4">
+                    <div className="py-3">
                       <div className="flex items-center gap-1">
                         <Star weight="fill" className="w-3.5 h-3.5 text-amber-400" />
                         <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-200">{d.rating}</span>
                         <span className="text-[11px] text-zinc-400">({d.reviews})</span>
                       </div>
-                    </TableCell>
+                    </div>
 
                     {/* Patients */}
-                    <TableCell className="py-2.5 px-4">
+                    <div className="py-3">
                       <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.patients}</span>
-                    </TableCell>
+                    </div>
 
                     {/* Experience */}
-                    <TableCell className="py-2.5 px-4">
+                    <div className="py-3">
                       <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{d.experience} yrs</span>
-                    </TableCell>
+                    </div>
 
                     {/* Join Date */}
-                    <TableCell className="py-2.5 px-4">
-                      <span className="text-[13px] text-zinc-500 dark:text-zinc-400">{d.joinDate}</span>
-                    </TableCell>
+                    <div className="py-3">
+                      <span className="text-[12px] text-zinc-500 dark:text-zinc-400">{d.joinDate}</span>
+                    </div>
 
                     {/* Actions */}
-                    <TableCell className="py-2.5 pl-4 pr-8 text-right">
+                    <div className="py-3 flex items-center justify-end">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
                             onClick={e => e.stopPropagation()}
                             className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover:opacity-100"
                           >
-                            <DotsThree className="w-4 h-4" weight="bold" />
+                            <DotsThree className="w-5 h-5" weight="bold" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
@@ -1275,7 +1259,7 @@ export function DoctorsPage() {
                             <ArrowSquareOut weight="duotone" className="w-4 h-4 text-zinc-400" />
                             Copy link
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator className="my-0.5" />
+                          <DropdownMenuSeparator className="my-0.5 border-zinc-100 dark:border-zinc-800" />
                           <DropdownMenuItem
                             onClick={e => { e.stopPropagation(); setDoctors(prev => prev.filter(x => x.id !== d.id)); if (drawerDoctorId === d.id) setDrawerDoctorId(null) }}
                             className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20"
@@ -1285,13 +1269,81 @@ export function DoctorsPage() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </motion.div>
                 )
               })}
-            </TableBody>
-          </Table>
+            </div>
+          </div>
         </Frame>
+
+        {/* Pagination Controls */}
+        {filtered.length > 0 && (
+          <div className="mt-4 flex items-center justify-between px-1">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] text-zinc-500 dark:text-zinc-400">Rows per page</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white text-[12px] font-medium transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700">
+                      {itemsPerPage}
+                      <CaretDown className="w-3 h-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="min-w-[60px] p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                    {[5, 10, 15, 30].map(val => (
+                      <DropdownMenuItem
+                        key={val}
+                        onClick={() => setItemsPerPage(val)}
+                        className={cn(
+                          "rounded-sm text-[12px] px-2 py-1.5 cursor-pointer transition-colors",
+                          itemsPerPage === val ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium" : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                        )}
+                      >
+                        {val}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <p className="text-[12px] text-zinc-500 dark:text-zinc-400">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} doctors
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setCurrentPage(p)}
+                    className={cn(
+                      "w-7 h-7 rounded-md text-[13px] font-medium flex items-center justify-center transition-colors",
+                      currentPage === p 
+                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" 
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    )}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <button 
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── DOCTOR PROFILE MODAL ── */}

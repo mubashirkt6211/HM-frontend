@@ -11,27 +11,16 @@ import {
     Funnel, SortDescending, CaretUp, CaretDown, CaretUpDown,
     IdentificationCard, DeviceMobile, Clock, CalendarBlank,
     ArrowSquareOut, Copy, ShieldWarning, LockLaminated,
-    SignIn, UserMinus, UserCheck, Key, Sliders,
+    SignIn, UserMinus, UserCheck, Key, Sliders, FunnelSimple, ArrowsDownUp, ListDashes,
 } from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     DropdownMenu, DropdownMenuContent,
     DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table"
-import {
-    type ColumnDef,
-    flexRender,
-    getCoreRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    type SortingState,
-    useReactTable,
-    type ColumnFiltersState,
-    getFilteredRowModel,
-} from "@tanstack/react-table"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import { Frame } from "@/components/ui/frame"
 import { UserRole } from "@/models/user"
 
 // ─── Types ────────────────────────────────────────────────────
@@ -61,15 +50,7 @@ interface HospitalStaff {
 type SortField = "name" | "role" | "department" | "status" | "lastLogin" | "joinDate"
 type SortDir = "asc" | "desc"
 
-interface FilterState {
-    roles: UserRole[]
-    departments: string[]
-    statuses: ("active" | "pending" | "suspended")[]
-    credentialHealth: ("healthy" | "at_risk" | "critical")[]
-    lastLoginRange: "any" | "today" | "week" | "month" | "never"
-    passwordStatus: "any" | "set" | "not_set"
-    twoFactor: "any" | "enabled" | "disabled"
-}
+
 
 // ─── Constants ────────────────────────────────────────────────
 const DEPARTMENTS = [
@@ -489,171 +470,7 @@ function CredentialDrawer({
     )
 }
 
-// ─── Filter Panel ─────────────────────────────────────────────
-function FilterPanel({
-    filters, onChange, onClear, onClose
-}: {
-    filters: FilterState
-    onChange: (f: Partial<FilterState>) => void
-    onClear: () => void
-    onClose: () => void
-}) {
-    const toggleArr = <T,>(arr: T[], val: T): T[] =>
-        arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val]
 
-    const ChipGroup = <T extends string>({
-        label, options, active, onToggle,
-    }: {
-        label: string
-        options: { value: T; label: string; color?: string }[]
-        active: T[]
-        onToggle: (v: T) => void
-    }) => (
-        <div className="space-y-2">
-            <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{label}</p>
-            <div className="flex flex-wrap gap-1.5">
-                {options.map(({ value, label: lbl, color }) => (
-                    <button
-                        key={value}
-                        onClick={() => onToggle(value)}
-                        className={cn(
-                            "px-2.5 py-1 rounded-lg text-[12px] font-medium border transition-all",
-                            active.includes(value)
-                                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white"
-                                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-600"
-                        )}
-                    >
-                        {lbl}
-                    </button>
-                ))}
-            </div>
-        </div>
-    )
-
-    const RadioGroup = <T extends string>({
-        label, options, active, onChange: onCh,
-    }: {
-        label: string
-        options: { value: T; label: string }[]
-        active: T
-        onChange: (v: T) => void
-    }) => (
-        <div className="space-y-2">
-            <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{label}</p>
-            <div className="flex flex-wrap gap-1.5">
-                {options.map(({ value, label: lbl }) => (
-                    <button
-                        key={value}
-                        onClick={() => onCh(value)}
-                        className={cn(
-                            "px-2.5 py-1 rounded-lg text-[12px] font-medium border transition-all",
-                            active === value
-                                ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white"
-                                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400"
-                        )}
-                    >
-                        {lbl}
-                    </button>
-                ))}
-            </div>
-        </div>
-    )
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.97 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full right-0 mt-2 w-[360px] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl z-30 overflow-hidden"
-        >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                <p className="text-[13px] font-semibold text-zinc-900 dark:text-white">Filters</p>
-                <div className="flex items-center gap-2">
-                    <button onClick={onClear} className="text-[12px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">Clear all</button>
-                    <button onClick={onClose} className="p-1 rounded-md text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900">
-                        <X className="w-3.5 h-3.5" weight="bold" />
-                    </button>
-                </div>
-            </div>
-            <div className="p-4 space-y-4 max-h-[480px] overflow-y-auto">
-                <ChipGroup
-                    label="Status"
-                    options={[
-                        { value: "active", label: "Active" },
-                        { value: "pending", label: "Pending" },
-                        { value: "suspended", label: "Suspended" },
-                    ] as { value: "active" | "pending" | "suspended"; label: string }[]}
-                    active={filters.statuses}
-                    onToggle={v => onChange({ statuses: toggleArr(filters.statuses, v) })}
-                />
-                <ChipGroup
-                    label="Credential Health"
-                    options={[
-                        { value: "healthy", label: "Healthy" },
-                        { value: "at_risk", label: "At Risk" },
-                        { value: "critical", label: "Critical" },
-                    ] as { value: "healthy" | "at_risk" | "critical"; label: string }[]}
-                    active={filters.credentialHealth}
-                    onToggle={v => onChange({ credentialHealth: toggleArr(filters.credentialHealth, v) })}
-                />
-                <ChipGroup
-                    label="Role"
-                    options={[
-                        { value: UserRole.ADMIN, label: "Admin" },
-                        { value: UserRole.DOCTOR, label: "Doctor" },
-                        { value: UserRole.RECEPTIONIST, label: "Reception" },
-                        { value: UserRole.PHARMACIST, label: "Pharmacy" },
-                        { value: UserRole.AMBULANCE_DRIVER, label: "Ambulance" },
-                        { value: UserRole.MANAGER, label: "Manager" },
-                        { value: UserRole.STAFF, label: "Lab Tech" },
-                        { value: UserRole.USER, label: "New User" },
-                    ]}
-                    active={filters.roles}
-                    onToggle={v => onChange({ roles: toggleArr(filters.roles, v) })}
-                />
-                <ChipGroup
-                    label="Department"
-                    options={DEPARTMENTS.map(d => ({ value: d, label: d }))}
-                    active={filters.departments}
-                    onToggle={v => onChange({ departments: toggleArr(filters.departments, v) })}
-                />
-                <RadioGroup
-                    label="Password Status"
-                    options={[
-                        { value: "any", label: "Any" },
-                        { value: "set", label: "Set" },
-                        { value: "not_set", label: "Not Set" },
-                    ] as { value: "any" | "set" | "not_set"; label: string }[]}
-                    active={filters.passwordStatus}
-                    onChange={v => onChange({ passwordStatus: v })}
-                />
-                <RadioGroup
-                    label="2FA"
-                    options={[
-                        { value: "any", label: "Any" },
-                        { value: "enabled", label: "Enabled" },
-                        { value: "disabled", label: "Disabled" },
-                    ] as { value: "any" | "enabled" | "disabled"; label: string }[]}
-                    active={filters.twoFactor}
-                    onChange={v => onChange({ twoFactor: v })}
-                />
-                <RadioGroup
-                    label="Last Login"
-                    options={[
-                        { value: "any", label: "Any time" },
-                        { value: "today", label: "Today" },
-                        { value: "week", label: "This week" },
-                        { value: "month", label: "This month" },
-                        { value: "never", label: "Never" },
-                    ] as { value: "any" | "today" | "week" | "month" | "never"; label: string }[]}
-                    active={filters.lastLoginRange}
-                    onChange={v => onChange({ lastLoginRange: v })}
-                />
-            </div>
-        </motion.div>
-    )
-}
 
 // ─── Table ────────────────────────────────────────────────────
 const TABLE_COLS: { key: SortField | ""; label: string; width: string; sortable?: boolean }[] = [
@@ -887,84 +704,81 @@ export function PrivilegesPage() {
     const [staff, setStaff] = useState<HospitalStaff[]>(MOCK_STAFF)
     const [drawerStaffId, setDrawerId] = useState<string | null>(null)
     const [search, setSearch] = useState("")
-    const [searchOpen, setSearchOpen] = useState(false)
+    const [showSearch, setShowSearch] = useState(false)
     const [filterOpen, setFilterOpen] = useState(false)
-    const [filters, setFilters] = useState<FilterState>({
-        roles: [], departments: [], statuses: [],
-        credentialHealth: [],
-        lastLoginRange: "any", passwordStatus: "any", twoFactor: "any",
-    })
-    const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }])
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+    const [roleOpen, setRoleOpen] = useState(false)
+    const [deptOpen, setDeptOpen] = useState(false)
+    const [sortOpen, setSortOpen] = useState(false)
+    const [statusFilter, setStatusFilter] = useState("all")
+    const [roleFilter, setRoleFilter] = useState("all")
+    const [deptFilter, setDeptFilter] = useState("all")
+    const [sort, setSort] = useState<{ field: SortField; dir: SortDir }>({ field: "name", dir: "asc" })
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
 
-    const activeFilterCount = [
-        filters.roles.length,
-        filters.departments.length,
-        filters.statuses.length,
-        filters.credentialHealth.length,
-        filters.lastLoginRange !== "any" ? 1 : 0,
-        filters.passwordStatus !== "any" ? 1 : 0,
-        filters.twoFactor !== "any" ? 1 : 0,
-    ].reduce((a, b) => a + b, 0)
+    const TABLE_COLS: { key: SortField | ""; label: string; width: string; sortable?: boolean }[] = [
+        { key: "name", label: "Personnel", width: "minmax(220px,1fr)", sortable: true },
+        { key: "role", label: "Role", width: "160px", sortable: true },
+        { key: "department", label: "Department", width: "150px", sortable: true },
+        { key: "", label: "Credentials", width: "160px" },
+        { key: "status", label: "Status", width: "120px", sortable: true },
+        { key: "lastLogin", label: "Last Login", width: "120px", sortable: true },
+        { key: "joinDate", label: "Joined", width: "110px", sortable: true },
+        { key: "", label: "", width: "80px" },
+    ]
+    const drawerStaff = drawerStaffId ? staff.find(s => s.id === drawerStaffId) ?? null : null
+    const activeFilterCount = [statusFilter !== "all" ? 1 : 0, roleFilter !== "all" ? 1 : 0, deptFilter !== "all" ? 1 : 0].reduce((a, b) => a + b, 0)
+
+    // Reset to page 1 on filter or items per page change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [search, statusFilter, roleFilter, deptFilter, sort, itemsPerPage])
+
+    const filtered = useMemo(() => {
+        let list = staff
+        if (search) {
+            const q = search.toLowerCase()
+            list = list.filter(s =>
+                `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
+                s.email.toLowerCase().includes(q) ||
+                s.employeeId.toLowerCase().includes(q) ||
+                s.department.toLowerCase().includes(q)
+            )
+        }
+        if (statusFilter !== "all") list = list.filter(s => s.status === statusFilter)
+        if (roleFilter !== "all") list = list.filter(s => s.role === roleFilter)
+        if (deptFilter !== "all") list = list.filter(s => s.department === deptFilter)
+
+        return [...list].sort((a, b) => {
+            const dir = sort.dir === "asc" ? 1 : -1
+            const nameA = `${a.firstName} ${a.lastName}`
+            const nameB = `${b.firstName} ${b.lastName}`
+            switch (sort.field) {
+                case "name": return dir * nameA.localeCompare(nameB)
+                case "role": return dir * a.role.localeCompare(b.role)
+                case "department": return dir * a.department.localeCompare(b.department)
+                case "status": return dir * a.status.localeCompare(b.status)
+                case "lastLogin": return dir * a.lastLogin.localeCompare(b.lastLogin)
+                case "joinDate": return dir * a.joinDate.localeCompare(b.joinDate)
+                default: return 0
+            }
+        })
+    }, [staff, search, statusFilter, roleFilter, deptFilter, sort])
+
+    const paginatedStaff = useMemo(() => {
+        return filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    }, [filtered, currentPage, itemsPerPage])
+    const totalPages = Math.ceil(filtered.length / itemsPerPage)
 
     const updateStaff = (id: string, patch: Partial<HospitalStaff>) => {
         setStaff(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
     }
 
-    const columns = useMemo(() => getColumns(updateStaff, (id) => setDrawerId(id), (id) => setDrawerId(id)), [])
-
-    const table = useReactTable({
-        data: staff,
-        columns,
-        state: {
-            sorting,
-            globalFilter: search,
-            columnFilters,
-        },
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        initialState: {
-            pagination: {
-                pageSize: 10,
-            },
-        },
-    })
-
-    const filterRef = useRef<HTMLDivElement>(null)
-    const drawerStaff = drawerStaffId ? staff.find(s => s.id === drawerStaffId) ?? null : null
-
-    useEffect(() => {
-        const cfs: ColumnFiltersState = []
-        if (filters.statuses.length) cfs.push({ id: "status", value: filters.statuses })
-        if (filters.roles.length) cfs.push({ id: "role", value: filters.roles })
-        if (filters.departments.length) cfs.push({ id: "department", value: filters.departments })
-        setColumnFilters(cfs)
-    }, [filters])
-
     const handleOnboard = (id: string) => {
         setDrawerId(id)
     }
 
-    // Stats
-    const total = staff.length
-    const active = staff.filter(s => s.status === "active").length
-    const pending = staff.filter(s => s.status === "pending").length
-    const suspended = staff.filter(s => s.status === "suspended").length
-    const atRisk = staff.filter(s => credHealth(s) === "at_risk").length
-    const critical = staff.filter(s => credHealth(s) === "critical").length
 
-    const STATS = [
-        { label: "Total Staff", value: total, cls: "text-zinc-900 dark:text-white" },
-        { label: "Active", value: active, cls: "text-emerald-600" },
-        { label: "Pending", value: pending, cls: "text-amber-600" },
-        { label: "Suspended", value: suspended, cls: "text-rose-600" },
-        { label: "At Risk", value: atRisk, cls: "text-amber-600" },
-        { label: "Needs Action", value: critical, cls: "text-rose-600" },
-    ]
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-zinc-950 overflow-hidden">
@@ -978,91 +792,235 @@ export function PrivilegesPage() {
                     Manage staff credentials, roles, access levels, and account security.
                 </p>
 
-                {/* ── Tabs + Actions row ── */}
-                <div className="flex items-center justify-between mt-5">
-                    {/* Tabs */}
-                    <div className="flex items-center border-b border-zinc-200 dark:border-zinc-800">
-                        {[{ id: "staff", label: "All Staff" }, { id: "pending", label: `Pending (${pending})` }, { id: "suspended", label: "Suspended" }].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => {
-                                    if (tab.id === "pending") setFilters(prev => ({ ...prev, statuses: ["pending"] }))
-                                    else if (tab.id === "suspended") setFilters(prev => ({ ...prev, statuses: ["suspended"] }))
-                                    else setFilters(prev => ({ ...prev, statuses: [] }))
-                                }}
-                                className={cn(
-                                    "px-4 py-2.5 text-[13px] font-medium transition-colors border-b-2 -mb-px",
-                                    (tab.id === "staff" && filters.statuses.length === 0) ||
-                                        (tab.id === "pending" && filters.statuses.length === 1 && filters.statuses[0] === "pending") ||
-                                        (tab.id === "suspended" && filters.statuses.length === 1 && filters.statuses[0] === "suspended")
-                                        ? "border-zinc-900 dark:border-white text-zinc-900 dark:text-white"
-                                        : "border-transparent text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-
+                {/* ── Actions row ── */}
+                <div className="flex items-center justify-end mt-5">
                     {/* Actions */}
                     <div className="flex items-center gap-2">
-                        {/* Search */}
-                        <div
-                            className={cn(
-                                "flex items-center gap-2 px-3 h-8 rounded-lg border transition-all",
-                                searchOpen
-                                    ? "w-52 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950"
-                                    : "w-8 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                            )}
-                            onClick={() => !searchOpen && setSearchOpen(true)}
-                        >
-                            <MagnifyingGlass className={cn("w-3.5 h-3.5 shrink-0 transition-colors", searchOpen ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-400")} />
-                            {searchOpen && (
-                                <input
-                                    autoFocus
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    onBlur={() => { if (!search) setSearchOpen(false) }}
-                                    placeholder="Search registry…"
-                                    className="flex-1 text-[13px] bg-transparent outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
-                                />
-                            )}
-                            {search && (
-                                <button onClick={e => { e.stopPropagation(); setSearch(""); setSearchOpen(false) }} className="text-zinc-400 hover:text-zinc-600">
-                                    <X className="w-3 h-3" weight="bold" />
-                                </button>
-                            )}
-                        </div>
+                        <div className="flex items-center gap-1.5 mr-2">
+                            {/* Status Filter */}
+                            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+                                <PopoverTrigger asChild>
+                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", statusFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                        <FunnelSimple className="w-3.5 h-3.5" weight="bold" />
+                                        {statusFilter === "all" ? "Status" : statusFilter.replace("-", " ")}
+                                        {statusFilter !== "all" && (
+                                            <span
+                                                role="button"
+                                                onClick={(e) => { e.stopPropagation(); setStatusFilter("all"); }}
+                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </span>
+                                        )}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent align="start" className="w-44 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                                    <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Filter Status</p>
+                                    {[
+                                        { id: "all", label: "All" },
+                                        { id: "active", label: "Active" },
+                                        { id: "pending", label: "Pending" },
+                                        { id: "suspended", label: "Suspended" }
+                                    ].map(s => (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => { setStatusFilter(s.id); setFilterOpen(false); }}
+                                            className={cn(
+                                                "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2 capitalize",
+                                                statusFilter === s.id
+                                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                                                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                            )}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </PopoverContent>
+                            </Popover>
 
-                        {/* Filter */}
-                        <div className="relative" ref={filterRef}>
-                            <button
-                                onClick={() => setFilterOpen(p => !p)}
-                                className={cn(
-                                    "flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border transition-colors",
-                                    filterOpen || activeFilterCount > 0
-                                        ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white"
-                                        : "text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                                )}
-                            >
-                                <Funnel className="w-3.5 h-3.5" weight={filterOpen || activeFilterCount > 0 ? "fill" : "regular"} />
-                                Filter
-                                {activeFilterCount > 0 && (
-                                    <span className="ml-0.5 size-4 rounded-full bg-white/20 dark:bg-zinc-900/20 text-[10px] font-bold flex items-center justify-center">
-                                        {activeFilterCount}
-                                    </span>
-                                )}
-                            </button>
-                            <AnimatePresence>
-                                {filterOpen && (
-                                    <FilterPanel
-                                        filters={filters}
-                                        onChange={patch => setFilters(prev => ({ ...prev, ...patch }))}
-                                        onClear={() => setFilters({ roles: [], departments: [], statuses: [], credentialHealth: [], lastLoginRange: "any", passwordStatus: "any", twoFactor: "any" })}
-                                        onClose={() => setFilterOpen(false)}
+                            {/* Role Filter */}
+                            <Popover open={roleOpen} onOpenChange={setRoleOpen}>
+                                <PopoverTrigger asChild>
+                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", roleFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                        <UserGear className="w-3.5 h-3.5" weight="bold" />
+                                        {roleFilter === "all" ? "Role" : ROLE_META[roleFilter as UserRole]?.label || roleFilter}
+                                        {roleFilter !== "all" && (
+                                            <span
+                                                role="button"
+                                                onClick={(e) => { e.stopPropagation(); setRoleFilter("all"); }}
+                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </span>
+                                        )}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent align="start" className="w-48 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                                    <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Filter Role</p>
+                                    <button
+                                        onClick={() => { setRoleFilter("all"); setRoleOpen(false); }}
+                                        className={cn(
+                                            "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
+                                            roleFilter === "all"
+                                                ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                        )}
+                                    >
+                                        All Roles
+                                    </button>
+                                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
+                                    {Object.entries(ROLE_META)
+                                        .filter(([r]) => r !== UserRole.USER && r !== UserRole.PATIENT)
+                                        .map(([r, m]) => (
+                                            <button
+                                                key={r}
+                                                onClick={() => { setRoleFilter(r); setRoleOpen(false); }}
+                                                className={cn(
+                                                    "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                                                    roleFilter === r
+                                                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                                                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                                )}
+                                            >
+                                                <m.icon weight="fill" className="w-3.5 h-3.5" style={{ color: m.text }} />
+                                                {m.label}
+                                            </button>
+                                        ))
+                                    }
+                                </PopoverContent>
+                            </Popover>
+
+                            {/* Department Filter */}
+                            <Popover open={deptOpen} onOpenChange={setDeptOpen}>
+                                <PopoverTrigger asChild>
+                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", deptFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                        <Buildings className="w-3.5 h-3.5" weight="bold" />
+                                        {deptFilter === "all" ? "Department" : deptFilter}
+                                        {deptFilter !== "all" && (
+                                            <span
+                                                role="button"
+                                                onClick={(e) => { e.stopPropagation(); setDeptFilter("all"); }}
+                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </span>
+                                        )}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent align="start" className="w-56 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700 max-h-[320px] overflow-y-auto">
+                                    <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Filter Department</p>
+                                    <button
+                                        onClick={() => { setDeptFilter("all"); setDeptOpen(false); }}
+                                        className={cn(
+                                            "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
+                                            deptFilter === "all"
+                                                ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                        )}
+                                    >
+                                        All Departments
+                                    </button>
+                                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
+                                    {DEPARTMENTS.sort().map(dept => (
+                                        <button
+                                            key={dept}
+                                            onClick={() => { setDeptFilter(dept); setDeptOpen(false); }}
+                                            className={cn(
+                                                "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
+                                                deptFilter === dept
+                                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                                                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                            )}
+                                        >
+                                            {dept}
+                                        </button>
+                                    ))}
+                                </PopoverContent>
+                            </Popover>
+
+                            {/* Sort */}
+                            <Popover open={sortOpen} onOpenChange={setSortOpen}>
+                                <PopoverTrigger asChild>
+                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", sort.field !== "name" || sort.dir !== "asc" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                        <ArrowsDownUp className="w-3.5 h-3.5" weight="bold" />
+                                        Sort
+                                        {(sort.field !== "name" || sort.dir !== "asc") && (
+                                            <span
+                                                role="button"
+                                                onClick={(e) => { e.stopPropagation(); setSort({ field: "name", dir: "asc" }); }}
+                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </span>
+                                        )}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent align="start" className="w-44 p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                                    <p className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Sort by</p>
+                                    {[
+                                        { field: "name", dir: "asc", label: "Name (A-Z)", icon: ListDashes },
+                                        { field: "joinDate", dir: "desc", label: "Newest Members", icon: CalendarBlank },
+                                        { field: "lastLogin", dir: "desc", label: "Last Active", icon: Clock },
+                                        { field: "role", dir: "asc", label: "Role Type", icon: ShieldCheck },
+                                    ].map(opt => (
+                                        <button
+                                            key={opt.field + opt.dir}
+                                            onClick={() => { setSort({ field: opt.field as SortField, dir: opt.dir as SortDir }); setSortOpen(false); }}
+                                            className={cn(
+                                                "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                                                sort.field === opt.field && sort.dir === opt.dir
+                                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
+                                                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                            )}
+                                        >
+                                            <opt.icon className="w-4 h-4" />
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </PopoverContent>
+                            </Popover>
+
+                            {/* Search */}
+                            {!showSearch ? (
+                                <button
+                                    onClick={() => setShowSearch(true)}
+                                    className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", search ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}
+                                >
+                                    <MagnifyingGlass className="w-3.5 h-3.5" weight="bold" /> Search
+                                    {search && (
+                                        <span
+                                            role="button"
+                                            onClick={(e) => { e.stopPropagation(); setSearch(""); }}
+                                            className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </span>
+                                    )}
+                                </button>
+                            ) : (
+                                <motion.div
+                                    initial={{ width: 80, opacity: 0 }}
+                                    animate={{ width: 220, opacity: 1 }}
+                                    className="relative overflow-hidden flex items-center"
+                                >
+                                    <MagnifyingGlass className="absolute left-2.5 w-3.5 h-3.5 text-zinc-400" />
+                                    <Input
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        placeholder="Search staff..."
+                                        autoFocus
+                                        onBlur={() => { if (!search) setShowSearch(false); }}
+                                        onKeyDown={(e) => { if (e.key === "Escape") { setShowSearch(false); setSearch(""); } }}
+                                        className="pl-8 pr-8 h-[30px] bg-zinc-100 dark:bg-zinc-800 border-transparent focus-visible:border-zinc-300 dark:focus-visible:border-zinc-600 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-[13px] rounded-md w-full shadow-none focus-visible:ring-0"
                                     />
-                                )}
-                            </AnimatePresence>
+                                    <button
+                                        onMouseDown={(e) => { e.preventDefault(); setSearch(""); setShowSearch(false); }}
+                                        className="absolute right-1.5 p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </motion.div>
+                            )}
                         </div>
 
                         <button
@@ -1073,302 +1031,261 @@ export function PrivilegesPage() {
                         </button>
                     </div>
                 </div>
-
-                {/* Active filter chips */}
-                {activeFilterCount > 0 && (
-                    <div className="flex items-center gap-1.5 mt-3">
-                        {filters.statuses.map(s => (
-                            <span key={s} className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 capitalize">
-                                {s}
-                                <button onClick={() => setFilters(p => ({ ...p, statuses: p.statuses.filter(x => x !== s) }))}><X className="w-2.5 h-2.5" weight="bold" /></button>
-                            </span>
-                        ))}
-                        {filters.roles.map(r => (
-                            <span key={r} className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                                {ROLE_META[r].shortLabel}
-                                <button onClick={() => setFilters(p => ({ ...p, roles: p.roles.filter(x => x !== r) }))}><X className="w-2.5 h-2.5" weight="bold" /></button>
-                            </span>
-                        ))}
-                        {filters.twoFactor !== "any" && (
-                            <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                                2FA: {filters.twoFactor}
-                                <button onClick={() => setFilters(p => ({ ...p, twoFactor: "any" }))}><X className="w-2.5 h-2.5" weight="bold" /></button>
-                            </span>
-                        )}
-                        {filters.passwordStatus !== "any" && (
-                            <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-                                Pwd: {filters.passwordStatus}
-                                <button onClick={() => setFilters(p => ({ ...p, passwordStatus: "any" }))}><X className="w-2.5 h-2.5" weight="bold" /></button>
-                            </span>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* ── INLINE FILTER BAR (Arto-style) ── */}
-            <div className="px-8 py-3 flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-                {/* Status pills */}
-                <div className="flex items-center bg-zinc-100 dark:bg-zinc-800/60 rounded-lg p-0.5 gap-0.5">
-                    {([
-                        { key: "all" as const, label: "All", count: total },
-                        { key: "active" as const, label: "Active", count: active },
-                        { key: "pending" as const, label: "Pending", count: pending },
-                        { key: "suspended" as const, label: "Suspended", count: suspended },
-                    ]).map(pill => (
-                        <button
-                            key={pill.key}
-                            onClick={() => {
-                                if (pill.key === "all") setFilters(prev => ({ ...prev, statuses: [] }))
-                                else setFilters(prev => ({ ...prev, statuses: [pill.key] }))
-                            }}
-                            className={cn(
-                                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all",
-                                (pill.key === "all" && filters.statuses.length === 0) ||
-                                    (pill.key !== "all" && filters.statuses.length === 1 && filters.statuses[0] === pill.key)
-                                    ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-sm"
-                                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
-                            )}
-                        >
-                            {pill.label}
-                            <span className={cn(
-                                "text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
-                                (pill.key === "all" && filters.statuses.length === 0) ||
-                                    (pill.key !== "all" && filters.statuses.length === 1 && filters.statuses[0] === pill.key)
-                                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-                                    : "bg-zinc-200/70 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400"
-                            )}>
-                                {pill.count}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Role dropdown */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
-                            filters.roles.length > 0
-                                ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white"
-                                : "text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                        )}>
-                            {filters.roles.length === 0 ? "Role" : `${ROLE_META[filters.roles[0]].shortLabel}${filters.roles.length > 1 ? ` +${filters.roles.length - 1}` : ""}`}
-                            <CaretDown className="w-3 h-3" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
-                        <DropdownMenuItem
-                            onClick={() => setFilters(prev => ({ ...prev, roles: [] }))}
-                            className={cn("text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer", filters.roles.length === 0 && "bg-zinc-100 dark:bg-zinc-800")}
-                        >
-                            All Roles
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="my-0.5" />
-                        {Object.entries(ROLE_META)
-                            .filter(([r]) => r !== UserRole.USER && r !== UserRole.PATIENT)
-                            .map(([r, m]) => (
-                                <DropdownMenuItem
-                                    key={r}
-                                    onClick={() => {
-                                        const role = r as UserRole
-                                        setFilters(prev => ({
-                                            ...prev,
-                                            roles: prev.roles.includes(role)
-                                                ? prev.roles.filter(x => x !== role)
-                                                : [...prev.roles, role]
-                                        }))
-                                    }}
-                                    className={cn("text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer", filters.roles.includes(r as UserRole) && "bg-zinc-100 dark:bg-zinc-800")}
-                                >
-                                    <span className="size-2 rounded-full" style={{ background: m.text }} />
-                                    {m.label}
-                                </DropdownMenuItem>
-                            ))
-                        }
-                    </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Department dropdown */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-zinc-500 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                            Department
-                            <CaretDown className="w-3 h-3" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-44 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
-                        {DEPARTMENTS.sort().map(dept => (
-                            <DropdownMenuItem
-                                key={dept}
-                                onClick={() => setFilters(prev => ({
-                                    ...prev,
-                                    departments: prev.departments.includes(dept)
-                                        ? prev.departments.filter(x => x !== dept)
-                                        : [...prev.departments, dept]
-                                }))}
-                                className={cn("text-[12px] font-medium rounded-lg px-2.5 py-2 cursor-pointer", filters.departments.includes(dept) && "bg-zinc-100 dark:bg-zinc-800")}
-                            >
-                                {dept}
-                            </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Stats */}
-                <div className="ml-auto flex items-center gap-4">
-                    {STATS.map(({ label, value, cls }) => (
-                        <div key={label} className="flex items-center gap-1">
-                            <span className={cn("text-[14px] font-bold tabular-nums", cls)}>{value}</span>
-                            <span className="text-[11px] text-zinc-400 font-medium">{label}</span>
-                        </div>
-                    ))}
-                </div>
             </div>
 
             {/* ── TABLE ── */}
-            <div className="flex-1 overflow-auto">
-                <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-white dark:bg-zinc-950">
-                        {table.getHeaderGroups().map(headerGroup => (
-                            <TableRow key={headerGroup.id} className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-transparent">
-                                {headerGroup.headers.map(header => (
-                                    <TableHead
-                                        key={header.id}
-                                        className={cn(
-                                            "py-2 px-4 text-[12px] font-medium text-zinc-500 dark:text-zinc-400 whitespace-nowrap first:pl-8 last:pr-8",
-                                            header.column.getCanSort() && "cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 select-none"
-                                        )}
-                                        onClick={header.column.getToggleSortingHandler()}
-                                    >
-                                        <span className="inline-flex items-center gap-1">
-                                            {flexRender(header.column.columnDef.header, header.getContext())}
-                                            {header.column.getCanSort() && (
-                                                <SortIcon isSorted={header.column.getIsSorted()} />
-                                            )}
-                                        </span>
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows.length === 0 ? (
-                            <TableRow className="hover:bg-transparent border-0">
-                                <TableCell colSpan={columns.length} className="py-20 text-center">
-                                    <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
-                                    <p className="text-[13px] font-medium text-zinc-500">No results found</p>
-                                    <p className="text-[12px] text-zinc-400 mt-0.5">Try adjusting your search or filters</p>
-                                </TableCell>
-                            </TableRow>
-                        ) : table.getRowModel().rows.map(row => {
-                            const isSelected = drawerStaffId === row.original.id
-                            const isPending = row.original.status === "pending"
-
-                            return (
-                                <TableRow
-                                    key={row.id}
+            <div className="flex-1 overflow-auto mt-4 px-8 pb-8 flex flex-col">
+                <Frame className="flex-1 flex flex-col overflow-hidden">
+                    <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden flex flex-col flex-1 min-w-[1100px]">
+                        {/* Header */}
+                        <div
+                            className="grid items-center bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800 px-4 shrink-0"
+                            style={{ gridTemplateColumns: "minmax(220px, 1fr) 160px 150px 160px 120px 120px 110px 80px" }}
+                        >
+                            {TABLE_COLS.map((col, idx) => (
+                                <div
+                                    key={col.label + idx}
                                     className={cn(
-                                        "group border-b border-zinc-100 dark:border-zinc-800/60 transition-colors cursor-pointer",
-                                        isSelected ? "bg-blue-50/60 dark:bg-blue-950/20" :
-                                            isPending ? "bg-amber-50/40 dark:bg-amber-950/10 hover:bg-amber-50/70" :
-                                                "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
+                                        "py-2 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider",
+                                        col.label === "" ? "text-right" : ""
                                     )}
-                                    onClick={() => setDrawerId(isSelected ? null : row.original.id)}
                                 >
-                                    {row.getVisibleCells().map(cell => (
-                                        <TableCell
-                                            key={cell.id}
-                                            className={cn(
-                                                "py-2.5 px-4 first:pl-8 last:pr-8",
-                                                cell.column.id === "actions" && "text-right"
-                                            )}
-                                        >
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            )
-                        })}
-                    </TableBody>
-                </Table>
-            </div>
+                                    {col.label}
+                                </div>
+                            ))}
+                        </div>
 
-            {/* ── TABLE 18 PAGINATION FOOTER ── */}
-            <div className="px-8 py-3 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 shrink-0">
-                {/* Result Info */}
-                <div className="text-[13px] text-zinc-500 dark:text-zinc-400 font-medium">
-                    {table.getFilteredRowModel().rows.length === 0 ? (
-                        "No results"
-                    ) : (
-                        <>
-                            Showing <span className="text-zinc-900 dark:text-white font-bold">
-                                {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
-                            </span> to <span className="text-zinc-900 dark:text-white font-bold">
-                                {Math.min(
-                                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                    table.getFilteredRowModel().rows.length
-                                )}
-                            </span> of <span className="text-zinc-900 dark:text-white font-bold">
-                                {table.getFilteredRowModel().rows.length}
-                            </span> staff
-                        </>
-                    )}
-                </div>
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto">
+                            {filtered.length === 0 ? (
+                                <div className="py-20 text-center">
+                                    <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
+                                    <p className="text-[13px] font-medium text-zinc-500">No staff members found</p>
+                                    <p className="text-[12px] text-zinc-400 mt-0.5">Try adjusting your search or filters</p>
+                                </div>
+                            ) : paginatedStaff.map((s, i) => {
+                                const rm = ROLE_META[s.role]
+                                const RIcon = rm.icon
+                                const ac = avatarColor(`${s.firstName} ${s.lastName}`)
+                                const isSelected = drawerStaffId === s.id
+                                const isPending = s.status === "pending"
+
+                                return (
+                                    <motion.div
+                                        key={s.id}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: i * 0.02, duration: 0.2 }}
+                                        className={cn(
+                                            "group grid items-center border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-colors px-4 cursor-pointer",
+                                            isSelected ? "bg-blue-50/60 dark:bg-blue-950/20" :
+                                                isPending ? "bg-amber-50/30 dark:bg-amber-950/10 hover:bg-amber-50/60" :
+                                                    "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
+                                        )}
+                                        style={{ gridTemplateColumns: "minmax(220px, 1fr) 160px 150px 160px 120px 120px 110px 80px" }}
+                                        onClick={() => setDrawerId(isSelected ? null : s.id)}
+                                    >
+                                        {/* Personnel */}
+                                        <div className="py-3 flex items-center gap-3 pr-4">
+                                            <div className="relative shrink-0">
+                                                <Avatar className="size-8">
+                                                    <AvatarImage src={s.avatar} />
+                                                    <AvatarFallback className="text-[11px] font-semibold" style={{ background: ac.bg, color: ac.tx }}>
+                                                        {initials(s)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                {isPending && <span className="absolute -top-0.5 -right-0.5 size-2 bg-amber-400 rounded-full border-2 border-white dark:border-zinc-950 animate-pulse" />}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                                                        {s.firstName} {s.lastName}
+                                                    </span>
+                                                    {isPending && (
+                                                        <span className="text-[9px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50 uppercase tracking-wider shrink-0">
+                                                            New
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-[11px] text-zinc-400 truncate">
+                                                    {isPending ? "Provisioning required" : s.email}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Role */}
+                                        <div className="py-3">
+                                            <span
+                                                className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-md"
+                                                style={{ background: rm.bg, color: rm.text }}
+                                            >
+                                                <RIcon weight="fill" className="w-3.5 h-3.5 shrink-0" />
+                                                {rm.shortLabel}
+                                            </span>
+                                        </div>
+
+                                        {/* Department */}
+                                        <div className="py-3 text-[13px] text-zinc-600 dark:text-zinc-400 truncate">
+                                            {s.department}
+                                        </div>
+
+                                        {/* Credentials */}
+                                        <div className="py-3 flex items-center gap-1.5">
+                                            <span title={s.passwordSet ? "Password set" : "No password"} className={cn(
+                                                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-tight",
+                                                s.passwordSet
+                                                    ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30"
+                                                    : "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30"
+                                            )}>
+                                                {s.passwordSet ? <CheckCircle weight="fill" className="w-3 h-3" /> : <XCircle weight="fill" className="w-3 h-3" />}
+                                                Pwd
+                                            </span>
+                                            <span title={s.twoFactorEnabled ? "2FA enabled" : "No 2FA"} className={cn(
+                                                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-tight",
+                                                s.twoFactorEnabled
+                                                    ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30"
+                                                    : "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800"
+                                            )}>
+                                                {s.twoFactorEnabled ? <CheckCircle weight="fill" className="w-3 h-3" /> : <ShieldWarning weight="fill" className="w-3 h-3" />}
+                                                2FA
+                                            </span>
+                                        </div>
+
+                                        {/* Status */}
+                                        <div className="py-3">
+                                            <span className={cn(
+                                                "inline-flex items-center gap-1.5 text-[12px] font-medium px-2 py-0.5 rounded",
+                                                s.status === "active" && "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
+                                                s.status === "pending" && "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
+                                                s.status === "suspended" && "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
+                                            )}>
+                                                <span className={cn("size-1.5 rounded-full", s.status === "active" ? "bg-emerald-500" : s.status === "pending" ? "bg-amber-400 animate-pulse" : "bg-zinc-400")} />
+                                                {s.status.charAt(0).toUpperCase() + s.status.slice(1)}
+                                            </span>
+                                        </div>
+
+                                        {/* Last Login */}
+                                        <div className="py-3 text-[12px] text-zinc-500 dark:text-zinc-400">
+                                            {s.lastLogin}
+                                        </div>
+
+                                        {/* Joined */}
+                                        <div className="py-3 text-[12px] text-zinc-400">
+                                            {s.joinDate}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="py-3 flex justify-end pr-2">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button
+                                                        onClick={e => e.stopPropagation()}
+                                                        className="p-1.5 rounded-lg text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        <DotsThree weight="bold" className="w-5 h-5" />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl">
+                                                    <DropdownMenuItem
+                                                        onClick={e => { e.stopPropagation(); setDrawerId(s.id) }}
+                                                        className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer"
+                                                    >
+                                                        <IdentificationCard weight="duotone" className="w-4 h-4 text-zinc-400" />
+                                                        View Credentials
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
+                                                        <ShieldCheck weight="duotone" className="w-4 h-4 text-zinc-400" />
+                                                        Audit Logs
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator className="my-0.5" />
+                                                    <DropdownMenuItem
+                                                        onClick={e => { e.stopPropagation(); updateStaff(s.id, { status: s.status === "suspended" ? "active" : "suspended" }) }}
+                                                        className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-amber-600 focus:text-amber-600 focus:bg-amber-50 dark:focus:bg-amber-950/20"
+                                                    >
+                                                        {s.status === "suspended" ? <UserCheck weight="duotone" className="w-4 h-4" /> : <UserMinus weight="duotone" className="w-4 h-4" />}
+                                                        {s.status === "suspended" ? "Reinstate" : "Suspend"}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20">
+                                                        <Trash weight="duotone" className="w-4 h-4" />
+                                                        Terminate Access
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </Frame>
 
                 {/* Pagination Controls */}
-                <div className="flex items-center gap-6">
-                    {/* Page Size Selector */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-[12px] text-zinc-400 font-medium">Rows per page</span>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className="flex items-center gap-1 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                                    {table.getState().pagination.pageSize}
-                                    <CaretDown className="w-3 h-3" />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-20 p-1 rounded-xl">
-                                {[10, 20, 30, 40, 50].map(size => (
-                                    <DropdownMenuItem
-                                        key={size}
-                                        onClick={() => table.setPageSize(size)}
+                {filtered.length > 0 && (
+                    <div className="mt-4 flex items-center justify-between px-1 shrink-0">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[12px] text-zinc-500 dark:text-zinc-400">Rows per page</span>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button className="flex items-center gap-1 px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white text-[12px] font-medium transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-700">
+                                            {itemsPerPage}
+                                            <CaretDown className="w-3 h-3" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="min-w-[60px] p-1 bg-white dark:bg-[#232323] border-zinc-200 dark:border-zinc-700">
+                                        {[10, 20, 30, 50].map(val => (
+                                            <DropdownMenuItem
+                                                key={val}
+                                                onClick={() => setItemsPerPage(val)}
+                                                className={cn(
+                                                    "rounded-sm text-[12px] px-2 py-1.5 cursor-pointer transition-colors",
+                                                    itemsPerPage === val ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium" : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                                                )}
+                                            >
+                                                {val}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            <p className="text-[12px] text-zinc-500 dark:text-zinc-400">
+                                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} members
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                            >
+                                Previous
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                    <button
+                                        key={p}
+                                        onClick={() => setCurrentPage(p)}
                                         className={cn(
-                                            "text-[12px] font-medium rounded-lg px-2 py-1.5 cursor-pointer",
-                                            table.getState().pagination.pageSize === size && "bg-zinc-100 dark:bg-zinc-800"
+                                            "w-7 h-7 rounded-md text-[13px] font-medium flex items-center justify-center transition-colors",
+                                            currentPage === p
+                                                ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                         )}
                                     >
-                                        {size}
-                                    </DropdownMenuItem>
+                                        {p}
+                                    </button>
                                 ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-
-                    {/* Navigation buttons */}
-                    <div className="flex items-center gap-1.5">
-                        <div className="flex items-center gap-1 mr-2 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg">
-                            <button
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
-                                className="flex items-center justify-center size-7 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
-                            >
-                                <CaretUp weight="bold" className="w-3.5 h-3.5 -rotate-90" />
-                            </button>
-                            <div className="w-px h-3 bg-zinc-200 dark:border-zinc-800 mx-1" />
-                            <div className="text-[12px] font-bold text-zinc-900 dark:text-white px-2">
-                                {table.getState().pagination.pageIndex + 1} <span className="text-zinc-400 font-medium mx-1">/</span> {table.getPageCount()}
                             </div>
-                            <div className="w-px h-3 bg-zinc-200 dark:border-zinc-800 mx-1" />
                             <button
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                                className="flex items-center justify-center size-7 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
                             >
-                                <CaretUp weight="bold" className="w-3.5 h-3.5 rotate-90" />
+                                Next
                             </button>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* ── CREDENTIAL DRAWER BACKDROP ── */}

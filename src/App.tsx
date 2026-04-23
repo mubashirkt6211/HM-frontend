@@ -11,11 +11,13 @@ import { ProfilePage } from "@/pages/ProfilePage"
 import { NursePage } from "@/pages/NursePage"
 import { PrivilegesPage } from "@/pages/PrivilegesPage"
 import { ReportsPage } from "@/pages/ReportsPage"
+import { ComingSoonPage } from "@/pages/ComingSoonPage"
+import { Hammer, Tooth } from "@phosphor-icons/react"
 import { UserRole } from "@/models/user";
 
 
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | "reports" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | "reports" | "orthopedics" | "orthodontics" | string;
 
 
 function App() {
@@ -46,6 +48,9 @@ function App() {
       {currentPage === "revenue" && <RevenuePage />}
       {currentPage === "privillage" && <PrivilegesPage />}
       {currentPage === "reports" && <ReportsPage />}
+      {currentPage === "orthopedics" && <ComingSoonPage title="Orthopedics Registry" icon={Hammer} />}
+      {currentPage === "orthopedicts" && <ComingSoonPage title="Orthopedics Registry" icon={Hammer} />}
+      {currentPage === "orthodontics" && <ComingSoonPage title="Orthodontics Registry" icon={Tooth} />}
 
       {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "dashboard" && (
