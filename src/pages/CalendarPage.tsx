@@ -770,7 +770,7 @@ export function CalendarPage() {
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     {ev.assignees && ev.assignees.length > 0 && (
                                         <div className="flex -space-x-2 ml-1">
                                             {ev.assignees.map((s, i) => (

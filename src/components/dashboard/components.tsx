@@ -317,19 +317,19 @@ export function StatusBadge({ status }: { status: string }) {
 /**
  * HeroBanner - Swiggy-style promotional banner
  */
-export function HeroBanner({ 
-  title, 
-  subtitle, 
+export function HeroBanner({
+  title,
+  subtitle,
   image,
-  ctaText 
-}: { 
-  title: string; 
-  subtitle: string; 
+  ctaText
+}: {
+  title: string;
+  subtitle: string;
   image: string;
   ctaText: string;
 }) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="relative w-full h-[280px] rounded-[40px] overflow-hidden group shadow-2xl"
@@ -337,9 +337,9 @@ export function HeroBanner({
       <img src={image} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
       <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/90 via-zinc-900/40 to-transparent flex flex-col justify-center p-12">
         <motion.div
-           initial={{ x: -20, opacity: 0 }}
-           animate={{ x: 0, opacity: 1 }}
-           transition={{ delay: 0.2 }}
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
         >
           <span className="inline-block px-3 py-1 rounded-full bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest mb-4">
             Exclusive
@@ -355,24 +355,24 @@ export function HeroBanner({
           </button>
         </motion.div>
       </div>
-      
+
       {/* Glossy overlay */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none bg-gradient-to-tr from-white/5 to-transparent opacity-50" />
     </motion.div>
   );
 }
 
-export function CategoryCard({ 
-  label, 
-  image, 
-  color 
-}: { 
-  label: string; 
-  image: string; 
+export function CategoryCard({
+  label,
+  image,
+  color
+}: {
+  label: string;
+  image: string;
   color: string;
 }) {
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ y: -8 }}
       className="flex flex-col items-center gap-4 group cursor-pointer"
     >
@@ -380,9 +380,9 @@ export function CategoryCard({
         "w-28 h-28 rounded-[35px] overflow-hidden p-6 transition-all shadow-xl group-hover:shadow-2xl group-hover:rotate-3 backdrop-blur-xl border border-white/20 dark:border-white/10",
         color.replace('bg-', 'bg-opacity-40 bg-')
       )}>
-        <img 
-          src={image} 
-          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform group-hover:scale-125 drop-shadow-sm" 
+        <img
+          src={image}
+          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform group-hover:scale-125 drop-shadow-sm"
         />
       </div>
       <span className="text-[14px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-widest text-center group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
