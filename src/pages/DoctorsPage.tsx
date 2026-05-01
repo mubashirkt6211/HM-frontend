@@ -923,14 +923,19 @@ export function DoctorsPage() {
               {/* Filter Popover */}
               <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                 <PopoverTrigger asChild>
-                  <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", statusFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                  <button className={cn(
+                    "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                    statusFilter !== "all" 
+                      ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                      : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  )}>
                     <FunnelSimple className="w-3.5 h-3.5" weight="bold" />
                     {statusFilter === "all" ? "Filter" : statusFilter.replace("-", " ")}
                     {statusFilter !== "all" && (
                       <span
                         role="button"
                         onClick={(e) => { e.stopPropagation(); setStatusFilter("all"); }}
-                        className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                        className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                       >
                         <X className="w-3 h-3" />
                       </span>
@@ -950,7 +955,7 @@ export function DoctorsPage() {
                       key={s.id}
                       onClick={() => { setStatusFilter(s.id); setFilterOpen(false); }}
                       className={cn(
-                        "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2 capitalize",
+                        "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors flex items-center gap-2 capitalize",
                         statusFilter === s.id
                           ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                           : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -965,14 +970,19 @@ export function DoctorsPage() {
               {/* Specialty Popover */}
               <Popover open={specialtyOpen} onOpenChange={setSpecialtyOpen}>
                 <PopoverTrigger asChild>
-                  <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", specialtyFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                  <button className={cn(
+                    "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                    specialtyFilter !== "all" 
+                      ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                      : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  )}>
                     <Stethoscope className="w-3.5 h-3.5" weight="bold" />
                     {specialtyFilter === "all" ? "Specialty" : specialtyFilter}
                     {specialtyFilter !== "all" && (
                       <span
                         role="button"
                         onClick={(e) => { e.stopPropagation(); setSpecialtyFilter("all"); }}
-                        className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                        className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                       >
                         <X className="w-3 h-3" />
                       </span>
@@ -984,7 +994,7 @@ export function DoctorsPage() {
                   <button
                     onClick={() => { setSpecialtyFilter("all"); setSpecialtyOpen(false); }}
                     className={cn(
-                      "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                      "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors flex items-center gap-2",
                       specialtyFilter === "all"
                         ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                         : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -998,7 +1008,7 @@ export function DoctorsPage() {
                       key={spec}
                       onClick={() => { setSpecialtyFilter(spec); setSpecialtyOpen(false); }}
                       className={cn(
-                        "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                        "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors flex items-center gap-2",
                         specialtyFilter === spec
                           ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                           : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -1014,14 +1024,19 @@ export function DoctorsPage() {
               {/* Sort Popover */}
               <Popover open={sortOpen} onOpenChange={setSortOpen}>
                 <PopoverTrigger asChild>
-                  <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", sort.field !== "name" || sort.dir !== "asc" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                  <button className={cn(
+                    "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                    sort.field !== "name" || sort.dir !== "asc" 
+                      ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                      : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  )}>
                     <ArrowsDownUp className="w-3.5 h-3.5" weight="bold" />
                     Sort
                     {(sort.field !== "name" || sort.dir !== "asc") && (
                       <span
                         role="button"
                         onClick={(e) => { e.stopPropagation(); setSort({ field: "name", dir: "asc" }); }}
-                        className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                        className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                       >
                         <X className="w-3 h-3" />
                       </span>
@@ -1040,7 +1055,7 @@ export function DoctorsPage() {
                       key={opt.field + opt.dir}
                       onClick={() => { setSort({ field: opt.field as SortField, dir: opt.dir as SortDir }); setSortOpen(false); }}
                       className={cn(
-                        "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                        "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors flex items-center gap-2",
                         sort.field === opt.field && sort.dir === opt.dir
                           ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                           : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -1057,14 +1072,19 @@ export function DoctorsPage() {
               {!showSearch ? (
                 <button
                   onClick={() => setShowSearch(true)}
-                  className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", search ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}
+                  className={cn(
+                    "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                    search 
+                      ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                      : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  )}
                 >
                   <MagnifyingGlass className="w-3.5 h-3.5" weight="bold" /> Search
                   {search && (
                     <span
                       role="button"
                       onClick={(e) => { e.stopPropagation(); setSearch(""); }}
-                      className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </span>
@@ -1174,10 +1194,17 @@ export function DoctorsPage() {
                       {(() => {
                         const sb = SPECIALTY_BADGE[d.specialty] ?? DEFAULT_SPEC_BADGE
                         return (
-                          <span className={cn("inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-md", sb.bg, sb.text)}>
+                          <button
+                            type="button"
+                            onClick={e => e.stopPropagation()}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 rounded-lg border shadow-sm transition-all hover:brightness-95 active:scale-95 cursor-pointer",
+                              sb.bg, sb.text, "border-zinc-200/50 dark:border-zinc-700/50"
+                            )}
+                          >
                             <span className={cn("size-1.5 rounded-full", sb.dot)} />
                             {d.specialty}
-                          </span>
+                          </button>
                         )
                       })()}
                     </div>

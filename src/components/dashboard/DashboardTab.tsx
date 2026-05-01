@@ -14,6 +14,7 @@ import {
   Bed,
   Heart,
   CaretRight,
+  CaretLeft,
   Plus,
   FunnelSimple,
   ArrowsDownUp,
@@ -36,6 +37,17 @@ import {
   Lightning,
   Info,
   ArrowRight,
+  ShieldCheck,
+  Flag,
+  MapPin,
+  Smiley,
+  Eyedropper,
+  Leaf,
+  Pill,
+  NotePencil,
+  Tag,
+  Hourglass,
+  Calendar,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -115,10 +127,13 @@ export function DashboardTab() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [taskName, setTaskName] = useState("");
-  const [priority, setPriority] = useState<"High" | "Medium" | "Low">("Medium");
-  const [peopleWithAccess, setPeopleWithAccess] = useState([
+  const [priority, setPriority] = useState<"High" | "Medium" | "Low" | null>(null);
+
+  const INITIAL_PEOPLE = [
     { name: "Dr. Amanda Blake", email: "amanda@hms.hospital", role: "owner", avatar: doctorAvatar },
-  ]);
+  ];
+
+  const [peopleWithAccess, setPeopleWithAccess] = useState(INITIAL_PEOPLE);
 
   const SUGGESTIONS = [
     { name: "Dr. Sarah Johnson", email: "sarah@hms.hospital", avatar: null },
@@ -133,6 +148,31 @@ export function DashboardTab() {
 
   const activeReminders = REMINDERS.filter(r => !dismissedReminders.includes(r.id));
   const doneCount = tasks.filter(t => t.status === "Done").length;
+
+  const [selectedDay, setSelectedDay] = useState(5); // Default to Mon Apr 05
+  const days = [
+    { name: "Mon", date: "05", entries: 4, active: true },
+    { name: "Tue", date: "06", entries: 10 },
+    { name: "Wed", date: "07", entries: 6 },
+    { name: "Thu", date: "08", entries: 5 },
+    { name: "Fri", date: "09", entries: 4 },
+    { name: "Sat", date: "10", entries: 6 },
+    { name: "Sun", date: "11", entries: 8 },
+    { name: "Mon", date: "12", entries: 2 },
+  ];
+
+  const timelineEntries = [
+    { time: "8:00 am", checkin: "08:02 AM", rounds: 12, procedures: 2, admin: 5, meds: 8, checkout: "-" },
+    { time: "1:00 pm", checkin: "-", rounds: 8, procedures: 1, admin: 3, meds: 12, checkout: "-" },
+    { time: "4:00 pm", checkin: "-", rounds: 4, procedures: 0, admin: 8, meds: 5, checkout: "04:30 PM" },
+  ];
+
+  const dailyWorkSummary = [
+    { id: 1, task: "Morning Rounds - Cardiology Ward", time: "08:30 AM", status: "Done" },
+    { id: 2, task: "Review Lab Results - P-2024003", time: "10:15 AM", status: "Done" },
+    { id: 3, task: "Emergency Procedure - Ward B", time: "11:45 AM", status: "Done" },
+    { id: 4, task: "Patient Consultation: Amanda Blake", time: "02:20 PM", status: "Done" },
+  ];
 
   const priorityOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
   const dueOrder: Record<string, number> = { Today: 0, Tomorrow: 1, "This Week": 2 };
@@ -514,39 +554,168 @@ export function DashboardTab() {
           </motion.div>
         )}
 
-        {/* ── ATTENDANCE TABLE ── */}
+        {/* ── ATTENDANCE HIGH-FIDELITY VIEW (Restored + Dark Mode Fixes) ── */}
         {activeSection === "attendance" && (
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            className="space-y-8 pb-20"
           >
-            <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
-              {/* Header */}
-              <div className="grid grid-cols-[1fr_120px_120px_110px_110px] items-center bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800 px-4">
-                <div className="py-2 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Date</div>
-                <div className="py-2 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Check In</div>
-                <div className="py-2 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Check Out</div>
-                <div className="py-2 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Hours</div>
-                <div className="py-2 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Status</div>
+            {/* Header Section */}
+            <div className="flex items-start justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[12px] font-medium text-zinc-400">
+                  <span>Home</span>
+                  <CaretRight className="w-3 h-3" />
+                  <span className="text-zinc-600 dark:text-zinc-300">Staff Attendance</span>
+                </div>
+                <h1 className="text-[32px] font-bold text-zinc-900 dark:text-white tracking-tight">Attendance & Performance Log</h1>
+                
+                <div className="grid grid-cols-2 gap-x-12 gap-y-3 mt-6">
+                  {[
+                    { label: "Role", val: "Senior Surgeon", icon: MapPin, color: "text-blue-500" },
+                    { label: "Shift Duration", val: "8 hours / day", icon: Hourglass, color: "text-purple-500" },
+                    { label: "Weekly Progress", val: "32 hrs / 40 hrs", icon: Tag, color: "text-rose-500" },
+                    { label: "Performance Score", val: "94% Efficiency", icon: NotePencil, color: "text-emerald-500" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-3">
+                      <div className={cn("w-5 h-5 flex items-center justify-center", item.color)}>
+                        <item.icon className="w-4 h-4" weight="fill" />
+                      </div>
+                      <span className="text-[13px] text-zinc-400 w-32">{item.label}</span>
+                      <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-200 flex-1">{item.val}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Rows */}
-              {ATTENDANCE_LOG.map((row, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.02, duration: 0.2 }}
-                  className="grid grid-cols-[1fr_120px_120px_110px_110px] items-center border-b border-zinc-100 dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors px-4"
-                >
-                  <div className="py-3 text-[14px] font-medium text-zinc-900 dark:text-white">{row.date}</div>
-                  <div className="py-3 text-[13px] text-zinc-600 dark:text-zinc-400">{row.checkIn}</div>
-                  <div className="py-3 text-[13px] text-zinc-600 dark:text-zinc-400">{row.checkOut}</div>
-                  <div className="py-3 text-[13px] font-medium text-zinc-900 dark:text-white">{row.hours}</div>
-                  <div className="py-3"><StatusPill status={row.status} /></div>
-                </motion.div>
+              <div className="flex items-center gap-3 mt-10">
+                <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white font-bold text-[14px] shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all">
+                  <DotsThree className="w-5 h-5" weight="bold" />
+                  View History
+                </button>
+                <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-500 text-white font-bold text-[14px] shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all">
+                  <Plus className="w-5 h-5" weight="bold" />
+                  Clock In
+                </button>
+              </div>
+            </div>
+
+            {/* Date Picker Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-4 text-[13px] font-bold text-zinc-400">
+                  <span className="text-zinc-900 dark:text-white cursor-pointer">April</span>
+                  <span className="hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer">May</span>
+                  <span className="hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer">June</span>
+                  <span className="hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer">Today</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setSelectedDay(prev => Math.max(5, prev - 1))}
+                    className="w-8 h-8 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-95 shadow-sm"
+                  >
+                    <CaretLeft className="w-4 h-4" weight="bold" />
+                  </button>
+                  <button 
+                    onClick={() => setSelectedDay(prev => Math.min(12, prev + 1))}
+                    className="w-8 h-8 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-95 shadow-sm"
+                  >
+                    <CaretRight className="w-4 h-4" weight="bold" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto pb-4 custom-scrollbar no-scrollbar relative">
+                {days.map((day, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setSelectedDay(parseInt(day.date))}
+                    className={cn(
+                      "flex-shrink-0 w-[100px] p-2 rounded-2xl transition-all cursor-pointer border-2",
+                      selectedDay === parseInt(day.date)
+                        ? "bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-700 shadow-lg dark:shadow-black/20 shadow-zinc-200/50"
+                        : "bg-transparent border-transparent"
+                    )}
+                  >
+                    <div className="text-center py-2">
+                      <p className={cn("text-[13px] font-bold mb-1", selectedDay === parseInt(day.date) ? "text-zinc-900 dark:text-white" : "text-zinc-500")}>
+                        {day.name} <span className="text-zinc-400 font-medium">{day.date === "05" ? "Apr" : ""}</span>
+                      </p>
+                      <h4 className={cn("text-[20px] font-black", selectedDay === parseInt(day.date) ? "text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-600")}>
+                        {day.date}
+                      </h4>
+                    </div>
+                    <div className={cn(
+                      "mt-2 h-8 rounded-xl flex items-center justify-center gap-1.5 transition-all",
+                      selectedDay === parseInt(day.date) ? "bg-[#FF4F4F] text-white shadow-md shadow-red-500/20" : "bg-zinc-100/50 dark:bg-zinc-900/50 text-zinc-400 border border-zinc-100 dark:border-zinc-800"
+                    )}>
+                      <Lightning className="w-3.5 h-3.5" weight="fill" />
+                      <span className="text-[12px] font-bold">{day.entries} Tasks</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Timeline View */}
+            <div className="bg-zinc-100/50 dark:bg-zinc-900/30 rounded-[32px] p-8 space-y-6">
+              {timelineEntries.map((entry, i) => (
+                <div key={i} className="flex gap-8">
+                  <div className="w-16 pt-2">
+                    <p className="text-[13px] font-bold text-zinc-400 text-right leading-tight">
+                      {entry.time.split(" ")[0]}
+                      <br />
+                      <span className="text-[11px] font-medium opacity-60 uppercase">{entry.time.split(" ")[1]}</span>
+                    </p>
+                  </div>
+                  
+                  <div className="flex-1 grid grid-cols-6 gap-3">
+                    {[
+                      { label: "Arrival", val: entry.checkin, icon: Smiley, color: "text-purple-500" },
+                      { label: "Rounds", val: `${entry.rounds} patients`, icon: Eyedropper, color: "text-rose-500" },
+                      { label: "Procedures", val: `${entry.procedures} items`, icon: MapPin, color: "text-emerald-500" },
+                      { label: "Admin Work", val: `${entry.admin} reports`, icon: Leaf, color: "text-blue-500" },
+                      { label: "Prescriptions", val: `${entry.meds} auths`, icon: Pill, color: "text-sky-500" },
+                      { label: "Check-out", val: entry.checkout, icon: NotePencil, color: "text-amber-500" },
+                    ].map((cat) => (
+                      <div key={cat.label} className="bg-white dark:bg-zinc-800/80 p-4 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 hover:shadow-md dark:hover:bg-zinc-800 transition-all cursor-pointer group">
+                        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", cat.color, "bg-zinc-50 dark:bg-zinc-900")}>
+                          <cat.icon className="w-4 h-4" weight="fill" />
+                        </div>
+                        <h6 className="text-[12px] font-bold text-zinc-900 dark:text-zinc-200 leading-tight">{cat.label}</h6>
+                        <p className="text-[11px] text-zinc-400 mt-1">{cat.val}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
+            </div>
+
+            {/* Daily Work Summary Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-[18px] font-bold text-zinc-900 dark:text-white">Daily Work Summary</h3>
+                <span className="text-[12px] text-zinc-400 font-medium">Monday, April 05</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {dailyWorkSummary.map((item) => (
+                  <div key={item.id} className="flex items-center gap-4 p-4 rounded-[24px] bg-white dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md dark:hover:bg-zinc-800 transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 border border-zinc-100 dark:border-zinc-800">
+                      <Lightning className="w-5 h-5" weight="duotone" />
+                    </div>
+                    <div className="flex-1">
+                      <h5 className="text-[14px] font-bold text-zinc-900 dark:text-zinc-100 leading-tight">{item.task}</h5>
+                      <p className="text-[12px] text-zinc-400 mt-1">{item.time}</p>
+                    </div>
+                    <div className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                      {item.status}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
@@ -778,7 +947,7 @@ export function DashboardTab() {
           )}
         </AnimatePresence>
 
-        {/* ── ADD TASK FORM MODAL (Detailed) ── */}
+        {/* ── UNIFIED NEW TASK & INVITE MODAL (Single-Screen) ── */}
         <AnimatePresence>
           {showFormModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -797,55 +966,70 @@ export function DashboardTab() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
                 transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-                className="relative w-full max-w-[680px] bg-white dark:bg-[#1c1c1c] rounded-[32px] border border-zinc-200 dark:border-zinc-800 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col"
+                className="relative w-full max-w-[460px] bg-white dark:bg-[#1c1c1c] rounded-[32px] border border-zinc-200 dark:border-zinc-800 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col"
               >
-                {/* 0. Task Header (Name + Priority) */}
-                <div className="p-8 border-b border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/30 dark:bg-zinc-900/20">
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest px-1">Task Title</label>
-                      <input
-                        type="text"
-                        value={taskName}
-                        onChange={(e) => setTaskName(e.target.value)}
-                        placeholder="e.g., Patient Rounds"
-                        className="w-full bg-transparent border-none text-[28px] font-bold text-zinc-900 dark:text-white placeholder:text-zinc-200 dark:placeholder:text-zinc-800 focus:outline-none focus:ring-0 px-0"
-                        autoFocus
-                      />
+                {/* 1. Header & Context */}
+                <div className="p-5 pb-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center shadow-lg">
+                        <Plus className="w-3.5 h-3.5 text-white dark:text-zinc-900" weight="bold" />
+                      </div>
+                      <h3 className="text-[13px] font-bold text-zinc-900 dark:text-white">New Task</h3>
+                    </div>
+                    <button onClick={() => setShowFormModal(false)} className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                      <X className="w-4 h-4" weight="bold" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    {/* Task Title Input */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-1">Task Title</label>
+                      <div className="flex items-center gap-2 p-1 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 focus-within:ring-2 focus-within:ring-zinc-900/5 transition-all">
+                        <input
+                          type="text"
+                          value={taskName}
+                          onChange={(e) => setTaskName(e.target.value)}
+                          placeholder="e.g. Morning Rounds - Ward B"
+                          className="flex-1 bg-transparent border-none text-[14px] font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-300 focus:outline-none focus:ring-0 pl-3 h-[42px]"
+                          autoFocus
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest px-1">Priority</label>
-                        <div className="flex items-center gap-2">
-                          {[
-                            { label: "High", color: "bg-rose-500", text: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-500/10" },
-                            { label: "Medium", color: "bg-amber-500", text: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/10" },
-                            { label: "Low", color: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/10" }
-                          ].map((p) => (
-                            <button
-                              key={p.label}
-                              onClick={() => setPriority(p.label as any)}
-                              className={cn(
-                                "flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all border",
-                                priority === p.label
-                                  ? `${p.bg} border-zinc-200 dark:border-zinc-700 shadow-sm scale-105`
-                                  : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-500 opacity-60 hover:opacity-100"
-                              )}
-                            >
-                              <div className={cn("w-2 h-2 rounded-full", p.color)} />
-                              <span className={priority === p.label ? p.text : ""}>{p.label}</span>
-                            </button>
-                          ))}
-                        </div>
+                    {/* Priority Selector (Stacked Under Title) */}
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-1">Set Priority</label>
+                      <div className="flex items-center gap-1.5 bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 p-1.5 rounded-2xl">
+                        {[
+                          { label: "High", icon: Flag, color: "text-rose-500", bg: "bg-rose-500", val: "High" },
+                          { label: "Medium", icon: Flag, color: "text-amber-500", bg: "bg-amber-500", val: "Medium" },
+                          { label: "Low", icon: Flag, color: "text-emerald-500", bg: "bg-emerald-500", val: "Low" }
+                        ].map((p) => (
+                          <button
+                            key={p.val}
+                            onClick={() => setPriority(p.val as any)}
+                            className={cn(
+                              "flex-1 h-10 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-2 border border-transparent",
+                              priority === p.val
+                                ? cn(p.bg, "text-white shadow-lg shadow-black/10")
+                                : "text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-300"
+                            )}
+                          >
+                            <p.icon className={cn("w-3.5 h-3.5", priority === p.val ? "text-white" : p.color)} weight={priority === p.val ? "fill" : "bold"} />
+                            {p.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
+                  <div className="h-px w-full bg-zinc-50 dark:bg-zinc-800/50" />
                 </div>
 
-                {/* 1. Invite Header */}
-                <div className="p-5 border-b border-zinc-100 dark:border-zinc-800/50">
-                  <div className="flex items-center gap-3 p-1 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                {/* 2. Invite Input (Compact) */}
+                <div className="p-5 py-3">
+                  <div className="flex items-center gap-2 p-1 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 focus-within:ring-2 focus-within:ring-zinc-900/5 transition-all">
                     <input
                       type="text"
                       value={inviteEmail}
@@ -856,40 +1040,36 @@ export function DashboardTab() {
                           setFilteredSuggestions(SUGGESTIONS.filter(s =>
                             (s.name.toLowerCase().includes(val.toLowerCase()) ||
                               s.email.toLowerCase().includes(val.toLowerCase())) &&
-                            !selectedPeople.find(p => p.email === s.email) &&
                             !peopleWithAccess.find(p => p.email === s.email)
                           ));
                         } else {
                           setFilteredSuggestions([]);
                         }
                       }}
-                      placeholder="Search people to invite..."
-                      className="flex-1 bg-transparent border-none text-[14px] text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-0 pl-4 h-[44px]"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && inviteEmail.trim()) {
-                          const newPerson = {
-                            name: inviteEmail.split("@")[0] || inviteEmail,
-                            email: inviteEmail.includes("@") ? inviteEmail : `${inviteEmail}@hms.hospital`,
-                            avatar: null
-                          };
-                          setSelectedPeople(prev => [...prev, newPerson]);
-                          setInviteEmail("");
-                          setFilteredSuggestions([]);
-                        }
-                      }}
+                      placeholder="Email, name..."
+                      className="flex-1 bg-transparent border-none text-[13px] text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-0 pl-3 h-[38px]"
                     />
-                    <div className="h-6 w-[1px] bg-zinc-200 dark:bg-zinc-800" />
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                      can view
-                      <CaretRight className="w-3.5 h-3.5 rotate-90" />
-                    </button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-zinc-500 dark:text-zinc-400 hover:bg-white dark:hover:bg-zinc-800 shadow-sm border border-transparent hover:border-zinc-100 transition-all">
+                          can view
+                          <CaretRight className="w-3.5 h-3.5 rotate-90" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-36 p-1 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl">
+                        {["can edit", "can view"].map(r => (
+                          <button
+                            key={r}
+                            className="w-full text-left px-3 py-2 rounded-xl text-[12px] text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
                     <button
                       onClick={() => {
-                        if (selectedPeople.length > 0) {
-                          setPeopleWithAccess(prev => [...prev, ...selectedPeople.map(p => ({ ...p, role: "can view" }))]);
-                          setSelectedPeople([]);
-                          setShowSuccessModal(true);
-                        } else if (inviteEmail.trim()) {
+                        if (inviteEmail.trim()) {
                           const newPerson = {
                             name: inviteEmail.split("@")[0] || inviteEmail,
                             email: inviteEmail.includes("@") ? inviteEmail : `${inviteEmail}@hms.hospital`,
@@ -898,10 +1078,10 @@ export function DashboardTab() {
                           };
                           setPeopleWithAccess(prev => [...prev, newPerson]);
                           setInviteEmail("");
-                          setShowSuccessModal(true);
+                          setFilteredSuggestions([]);
                         }
                       }}
-                      className="px-6 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[14px] font-bold hover:opacity-90 transition-opacity mx-1"
+                      className="px-6 h-[38px] rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-bold hover:opacity-90 transition-opacity active:scale-95"
                     >
                       Invite
                     </button>
@@ -914,24 +1094,20 @@ export function DashboardTab() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute left-6 w-full max-w-[340px] mt-1 z-20 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden"
+                        className="absolute left-6 right-6 mt-1 z-20 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden"
                       >
-                        {filteredSuggestions.map((s, idx) => (
+                        {filteredSuggestions.map((s) => (
                           <button
                             key={s.email}
                             onClick={() => {
-                              setSelectedPeople(prev => [...prev, s]);
+                              setPeopleWithAccess(prev => [...prev, { ...s, role: "can view" }]);
                               setInviteEmail("");
                               setFilteredSuggestions([]);
                             }}
-                            className="w-full flex items-center gap-3 p-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-left border-b border-zinc-100 dark:border-zinc-800/50 last:border-0"
+                            className="w-full flex items-center gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-left border-b border-zinc-100 dark:border-zinc-800/50 last:border-0"
                           >
                             <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex items-center justify-center border border-zinc-200 dark:border-zinc-800">
-                              {s.avatar ? (
-                                <img src={s.avatar} className="w-full h-full object-cover" />
-                              ) : (
-                                <UserCircle className="w-5 h-5 text-zinc-400" />
-                              )}
+                              <UserCircle className="w-5 h-5 text-zinc-400" />
                             </div>
                             <div>
                               <h5 className="text-[13px] font-semibold text-zinc-900 dark:text-white">{s.name}</h5>
@@ -944,56 +1120,67 @@ export function DashboardTab() {
                   </AnimatePresence>
                 </div>
 
-                <div className="flex-1 overflow-y-auto max-h-[380px] p-5 pt-2 space-y-6 custom-scrollbar">
-                  {/* 1. General Access Section (Optional/Static) */}
+                <div className="flex-1 overflow-y-auto max-h-[280px] p-5 pt-2 space-y-5 custom-scrollbar scroll-smooth">
+                  {/* General Access */}
                   <div className="space-y-3">
-                    <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest px-1">General access</h4>
-                    <div className="space-y-0.5">
-                      <button className="w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-left group">
-                        <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 group-hover:bg-white dark:group-hover:bg-zinc-700 transition-colors">
-                          <Users className="w-4.5 h-4.5" weight="duotone" />
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">General access</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-1 rounded-xl transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-500 border border-zinc-100 dark:border-zinc-800">
+                          <Users className="w-4 h-4" weight="duotone" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Only those invited</h5>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">{peopleWithAccess.length} people have access</p>
+                        <div className="flex-1">
+                          <h5 className="text-[12px] font-semibold text-zinc-900 dark:text-white leading-tight">Only those invited</h5>
+                          <p className="text-[11px] text-zinc-400 leading-tight">{peopleWithAccess.length} people</p>
                         </div>
-                      </button>
+                      </div>
+                      <div className="flex items-center gap-3 group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-1 rounded-xl transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-500 border border-zinc-100 dark:border-zinc-800">
+                          <Link className="w-4 h-4" weight="bold" />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="text-[12px] font-semibold text-zinc-900 dark:text-white leading-tight">Link access</h5>
+                          <p className="text-[11px] text-zinc-400 leading-tight">Only users with shared link</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* 2. People with Access Section (Owner + Selected) */}
+                  {/* People with Access */}
                   <div className="space-y-3">
-                    <h4 className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest px-1">People with access</h4>
-                    <div className="space-y-0.5">
-                      {/* Render existing access (Owner) */}
+                    <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">People with access</h4>
+                    <div className="space-y-1">
                       {peopleWithAccess.map((person) => (
-                        <div key={person.email} className="group relative flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                          <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
+                        <div key={person.email} className="group relative flex items-center gap-3 p-1 pr-1 group-hover:pr-10 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all overflow-hidden">
+                          <div className="w-8 h-8 rounded-full overflow-hidden border border-zinc-100 dark:border-zinc-800 bg-zinc-100 flex-shrink-0">
                             {person.avatar ? (
                               <img src={person.avatar} className="w-full h-full object-cover" />
                             ) : (
-                              <UserCircle className="w-5 h-5 text-zinc-400" weight="duotone" />
+                              <div className="w-full h-full flex items-center justify-center text-[12px] font-bold text-zinc-400 uppercase">
+                                {person.name[0]}
+                              </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">{person.name}</h5>
-                            <p className="text-[11px] text-zinc-400 truncate">{person.email}</p>
+                            <h5 className="text-[12px] font-semibold text-zinc-900 dark:text-white truncate leading-tight">{person.name}</h5>
+                            <p className="text-[11px] text-zinc-400 truncate leading-tight">{person.email}</p>
                           </div>
-                          <div className="flex items-center gap-2">
+
+                          <div className="flex items-center gap-2 mr-2">
                             {person.role === "owner" ? (
-                              <div className="flex items-center gap-1.5 px-2 py-1 text-zinc-400 text-[12px] font-medium">
+                              <div className="flex items-center gap-2 px-2 py-1 text-zinc-400 text-[11px] font-medium">
                                 owner
-                                <Globe className="w-3.5 h-3.5" weight="bold" />
+                                <ShieldCheck className="w-3.5 h-3.5" weight="fill" />
                               </div>
                             ) : (
                               <Popover>
                                 <PopoverTrigger asChild>
-                                  <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[12px] font-semibold transition-colors">
+                                  <button className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[11px] font-medium transition-colors">
                                     {person.role}
-                                    <CaretRight className="w-3 h-3 rotate-90" />
+                                    <CaretRight className="w-2.5 h-2.5 rotate-90" />
                                   </button>
                                 </PopoverTrigger>
-                                <PopoverContent align="end" className="w-40 p-1 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl">
+                                <PopoverContent align="end" className="w-32 p-1 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl">
                                   {["can edit", "can view"].map(r => (
                                     <button
                                       key={r}
@@ -1001,83 +1188,72 @@ export function DashboardTab() {
                                         setPeopleWithAccess(prev => prev.map(p => p.email === person.email ? { ...p, role: r } : p));
                                       }}
                                       className={cn(
-                                        "w-full text-left px-3 py-2 rounded-xl text-[12px] transition-colors",
+                                        "w-full text-left px-2 py-1.5 rounded-lg text-[11px] transition-colors",
                                         person.role === r ? "bg-zinc-50 dark:bg-zinc-800 font-bold text-zinc-900 dark:text-white" : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                                       )}
                                     >
                                       {r}
                                     </button>
                                   ))}
-                                  <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-1" />
-                                  <button
-                                    onClick={() => setPeopleWithAccess(prev => prev.filter(p => p.email !== person.email))}
-                                    className="w-full text-left px-3 py-2 rounded-xl text-[12px] text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors font-medium"
-                                  >
-                                    Remove access
-                                  </button>
                                 </PopoverContent>
                               </Popover>
                             )}
                           </div>
+
+                          {/* Hover Remove Action (Strip with Cross) */}
+                          {person.role !== "owner" && (
+                            <button
+                              onClick={() => setPeopleWithAccess(prev => prev.filter(p => p.email !== person.email))}
+                              className="absolute right-0 top-0 bottom-0 w-8 bg-[#FF5F37] opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center"
+                            >
+                              <X className="w-3 h-3 text-rose-100" weight="bold" />
+                            </button>
+                          )}
                         </div>
                       ))}
-
-                      {/* Render Selected (Pending) Invitations */}
-                      <AnimatePresence>
-                        {selectedPeople.map((person) => (
-                          <motion.div
-                            key={person.email}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 10 }}
-                            className="group relative flex items-center gap-3 p-2 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-colors"
-                          >
-                            <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/30 overflow-hidden flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
-                              {person.avatar ? (
-                                <img src={person.avatar} className="w-full h-full object-cover" />
-                              ) : (
-                                <UserCircle className="w-5 h-5 text-emerald-500" weight="duotone" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h5 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 truncate">{person.name}</h5>
-                              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1.5">
-                                {person.email}
-                                <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                                <span className="text-[10px] uppercase font-bold tracking-tight">Pending</span>
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => setSelectedPeople(prev => prev.filter(x => x.email !== person.email))}
-                                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
-                              >
-                                <X className="w-3.5 h-3.5" weight="bold" />
-                              </button>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
                     </div>
                   </div>
                 </div>
 
-                {/* 4. Footer Link Section */}
-                <div className="p-5 border-t border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 px-4 py-2.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-[12px] text-zinc-400 truncate">
-                      https://hms.hospital/workspace/k373nH
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText("https://hms.hospital/workspace/k373nH");
-                      }}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white text-[13px] font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors shrink-0"
-                    >
-                      <Link className="w-4 h-4" />
-                      Copy link
-                    </button>
-                  </div>
+                {/* 3. Footer (Actions) */}
+                <div className="p-5 border-t border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30 flex items-center justify-between gap-4">
+                  <button
+                    onClick={() => setShowFormModal(false)}
+                    className="flex-1 h-12 rounded-2xl text-[14px] font-bold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (taskName.trim()) {
+                        setTasks(prev => [{
+                          id: Date.now(),
+                          title: taskName,
+                          status: "Not Started",
+                          assignee: "You",
+                          priority: priority || "Medium",
+                          due: "Today"
+                        }, ...prev]);
+                        
+                        // Clear Everything as requested
+                        setTaskName("");
+                        setPriority(null);
+                        setInviteEmail("");
+                        setPeopleWithAccess(INITIAL_PEOPLE);
+                        setShowFormModal(false);
+                        setShowSuccessModal(true);
+                      }
+                    }}
+                    disabled={!taskName.trim()}
+                    className={cn(
+                      "flex-[2] h-12 rounded-2xl font-bold text-[14px] shadow-xl transition-all active:scale-[0.98]",
+                      taskName.trim()
+                        ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-black/10 hover:opacity-90"
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed shadow-none"
+                    )}
+                  >
+                    Create Task
+                  </button>
                 </div>
               </motion.div>
             </div>

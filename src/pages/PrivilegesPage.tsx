@@ -58,16 +58,16 @@ const DEPARTMENTS = [
     "Pathology", "Emergency", "Pharmacy", "Radiology", "Pediatrics", "Orthopedics",
 ]
 
-const ROLE_META: Record<UserRole, { label: string; shortLabel: string; icon: any; bg: string; text: string; border: string }> = {
-    [UserRole.ADMIN]: { label: "Admin", shortLabel: "Admin", icon: ShieldCheck, bg: "#fef2f2", text: "#dc2626", border: "#fecaca" },
-    [UserRole.DOCTOR]: { label: "Doctor", shortLabel: "Doctor", icon: Stethoscope, bg: "#eff6ff", text: "#2563eb", border: "#bfdbfe" },
-    [UserRole.PATIENT]: { label: "Patient", shortLabel: "Patient", icon: Heartbeat, bg: "#f0f9ff", text: "#0284c7", border: "#bae6fd" },
-    [UserRole.RECEPTIONIST]: { label: "Receptionist", shortLabel: "Reception", icon: Buildings, bg: "#f0fdf4", text: "#16a34a", border: "#bbf7d0" },
-    [UserRole.PHARMACIST]: { label: "Pharmacist", shortLabel: "Pharmacy", icon: Pill, bg: "#faf5ff", text: "#9333ea", border: "#e9d5ff" },
-    [UserRole.AMBULANCE_DRIVER]: { label: "Ambulance Driver", shortLabel: "Ambulance", icon: Ambulance, bg: "#fff7ed", text: "#ea580c", border: "#fed7aa" },
-    [UserRole.MANAGER]: { label: "Manager", shortLabel: "Manager", icon: UserGear, bg: "#fffbeb", text: "#d97706", border: "#fde68a" },
-    [UserRole.STAFF]: { label: "Lab Technician", shortLabel: "Lab Tech", icon: Flask, bg: "#f0fdfa", text: "#0d9488", border: "#99f6e4" },
-    [UserRole.USER]: { label: "New User", shortLabel: "New User", icon: UserCirclePlus, bg: "#f9fafb", text: "#6b7280", border: "#e5e7eb" },
+const ROLE_META: Record<UserRole, { label: string; shortLabel: string; icon: any; cls: string; iconCls: string; dot: string; bg: string; text: string }> = {
+    [UserRole.ADMIN]: { label: "Admin", shortLabel: "Admin", icon: ShieldCheck, cls: "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/50", iconCls: "text-rose-500", dot: "bg-rose-500", bg: "bg-rose-50 dark:bg-rose-950/30", text: "text-rose-700 dark:text-rose-400" },
+    [UserRole.DOCTOR]: { label: "Doctor", shortLabel: "Doctor", icon: Stethoscope, cls: "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50", iconCls: "text-blue-500", dot: "bg-blue-500", bg: "bg-blue-50 dark:bg-blue-950/30", text: "text-blue-700 dark:text-blue-400" },
+    [UserRole.PATIENT]: { label: "Patient", shortLabel: "Patient", icon: Heartbeat, cls: "bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-200 dark:border-sky-800/50", iconCls: "text-sky-500", dot: "bg-sky-500", bg: "bg-sky-50 dark:bg-sky-950/30", text: "text-sky-700 dark:text-sky-400" },
+    [UserRole.RECEPTIONIST]: { label: "Receptionist", shortLabel: "Reception", icon: Buildings, cls: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50", iconCls: "text-emerald-500", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/30", text: "text-emerald-700 dark:text-emerald-400" },
+    [UserRole.PHARMACIST]: { label: "Pharmacist", shortLabel: "Pharmacy", icon: Pill, cls: "bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800/50", iconCls: "text-purple-500", dot: "bg-purple-500", bg: "bg-purple-50 dark:bg-purple-950/30", text: "text-purple-700 dark:text-purple-400" },
+    [UserRole.AMBULANCE_DRIVER]: { label: "Ambulance Driver", shortLabel: "Ambulance", icon: Ambulance, cls: "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/50", iconCls: "text-orange-500", dot: "bg-orange-500", bg: "bg-orange-50 dark:bg-orange-950/30", text: "text-orange-700 dark:text-orange-400" },
+    [UserRole.MANAGER]: { label: "Manager", shortLabel: "Manager", icon: UserGear, cls: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50", iconCls: "text-amber-500", dot: "bg-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30", text: "text-amber-700 dark:text-amber-400" },
+    [UserRole.STAFF]: { label: "Lab Technician", shortLabel: "Lab Tech", icon: Flask, cls: "bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-800/50", iconCls: "text-teal-500", dot: "bg-teal-500", bg: "bg-teal-50 dark:bg-teal-950/30", text: "text-teal-700 dark:text-teal-400" },
+    [UserRole.USER]: { label: "New User", shortLabel: "New User", icon: UserCirclePlus, cls: "bg-zinc-50 dark:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700/50", iconCls: "text-zinc-500", dot: "bg-zinc-400", bg: "bg-zinc-100 dark:bg-zinc-800", text: "text-zinc-600 dark:text-zinc-400" },
 }
 
 // ─── Mock data ────────────────────────────────────────────────
@@ -109,13 +109,13 @@ function credHealth(s: HospitalStaff): "healthy" | "at_risk" | "critical" {
 }
 
 const HEALTH_META = {
-    healthy: { label: "Healthy", icon: CheckCircle, cls: "text-emerald-600 bg-emerald-50 border-emerald-200", dot: "bg-emerald-500" },
-    at_risk: { label: "At Risk", icon: ShieldWarning, cls: "text-amber-600   bg-amber-50   border-amber-200", dot: "bg-amber-400 animate-pulse" },
-    critical: { label: "Critical", icon: XCircle, cls: "text-rose-600    bg-rose-50    border-rose-200", dot: "bg-rose-500" },
+    healthy: { label: "Healthy", icon: CheckCircle, cls: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800/50", dot: "bg-emerald-500" },
+    at_risk: { label: "At Risk", icon: ShieldWarning, cls: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-800/50", dot: "bg-amber-400 animate-pulse" },
+    critical: { label: "Critical", icon: XCircle, cls: "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-800/50", dot: "bg-rose-500" },
 }
 
-// ─── Credential Drawer ────────────────────────────────────────
-function CredentialDrawer({
+// ─── Credential Modal ─────────────────────────────────────────
+function CredentialModal({
     staff, onClose, onUpdate,
 }: {
     staff: HospitalStaff
@@ -128,7 +128,6 @@ function CredentialDrawer({
     const [email, setEmail] = useState(staff.email)
     const [saving, setSaving] = useState(false)
     const rm = ROLE_META[staff.role]
-    const RoleIcon = rm.icon
     const health = credHealth(staff)
     const hm = HEALTH_META[health]
     const ac = avatarColor(`${staff.firstName} ${staff.lastName}`)
@@ -143,11 +142,12 @@ function CredentialDrawer({
 
     return (
         <motion.div
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="fixed inset-y-0 right-0 z-40 w-[420px] bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col"
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="relative w-full max-w-[560px] max-h-[85vh] bg-white dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden"
+            onClick={e => e.stopPropagation()}
         >
             {/* Header */}
             <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
@@ -198,8 +198,8 @@ function CredentialDrawer({
                         <div className="grid grid-cols-2 gap-3">
                             <div className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30">
                                 <p className="text-[10.5px] font-medium text-zinc-400 uppercase tracking-wider mb-2">Role</p>
-                                <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold px-2.5 py-1 rounded-lg" style={{ background: rm.bg, color: rm.text }}>
-                                    <RoleIcon weight="fill" className="w-3.5 h-3.5" />
+                                <span className={cn("inline-flex items-center gap-1.5 text-[12px] font-semibold px-2.5 py-1 rounded-lg border shadow-sm", rm.bg, rm.text, "border-zinc-200/50 dark:border-zinc-700/50")}>
+                                    <span className={cn("size-1.5 rounded-full", rm.dot)} />
                                     {rm.label}
                                 </span>
                             </div>
@@ -544,15 +544,18 @@ const getColumns = (
             filterFn: "arrIncludesSome",
             cell: ({ row }) => {
                 const rm = ROLE_META[row.original.role]
-                const RIcon = rm.icon
                 return (
-                    <span
-                        className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-md"
-                        style={{ background: rm.bg, color: rm.text }}
+                    <button
+                        type="button"
+                        onClick={e => e.stopPropagation()}
+                        className={cn(
+                            "inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 rounded-lg border shadow-sm transition-all hover:brightness-95 active:scale-95 cursor-pointer",
+                            rm.bg, rm.text, "border-zinc-200/50 dark:border-zinc-700/50"
+                        )}
                     >
-                        <RIcon weight="fill" className="w-3.5 h-3.5 shrink-0" />
+                        <span className={cn("size-1.5 rounded-full", rm.dot)} />
                         {rm.shortLabel}
-                    </span>
+                    </button>
                 )
             },
         },
@@ -717,14 +720,14 @@ export function PrivilegesPage() {
     const [itemsPerPage, setItemsPerPage] = useState(10)
 
     const TABLE_COLS: { key: SortField | ""; label: string; width: string; sortable?: boolean }[] = [
-        { key: "name", label: "Personnel", width: "minmax(220px,1fr)", sortable: true },
-        { key: "role", label: "Role", width: "160px", sortable: true },
-        { key: "department", label: "Department", width: "150px", sortable: true },
-        { key: "", label: "Credentials", width: "160px" },
+        { key: "name", label: "Personnel", width: "minmax(200px, 1fr)", sortable: true },
+        { key: "role", label: "Role", width: "130px", sortable: true },
+        { key: "department", label: "Department", width: "130px", sortable: true },
+        { key: "", label: "Credentials", width: "140px" },
         { key: "status", label: "Status", width: "120px", sortable: true },
         { key: "lastLogin", label: "Last Login", width: "120px", sortable: true },
-        { key: "joinDate", label: "Joined", width: "110px", sortable: true },
-        { key: "", label: "", width: "80px" },
+        { key: "joinDate", label: "Joined", width: "100px", sortable: true },
+        { key: "", label: "", width: "40px" },
     ]
     const drawerStaff = drawerStaffId ? staff.find(s => s.id === drawerStaffId) ?? null : null
     const activeFilterCount = [statusFilter !== "all" ? 1 : 0, roleFilter !== "all" ? 1 : 0, deptFilter !== "all" ? 1 : 0].reduce((a, b) => a + b, 0)
@@ -800,14 +803,19 @@ export function PrivilegesPage() {
                             {/* Status Filter */}
                             <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", statusFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                    <button className={cn(
+                                        "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                                        statusFilter !== "all" 
+                                            ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                                            : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    )}>
                                         <FunnelSimple className="w-3.5 h-3.5" weight="bold" />
                                         {statusFilter === "all" ? "Status" : statusFilter.replace("-", " ")}
                                         {statusFilter !== "all" && (
                                             <span
                                                 role="button"
                                                 onClick={(e) => { e.stopPropagation(); setStatusFilter("all"); }}
-                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                                className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                             >
                                                 <X className="w-3 h-3" />
                                             </span>
@@ -826,7 +834,7 @@ export function PrivilegesPage() {
                                             key={s.id}
                                             onClick={() => { setStatusFilter(s.id); setFilterOpen(false); }}
                                             className={cn(
-                                                "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2 capitalize",
+                                                "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors flex items-center gap-2 capitalize",
                                                 statusFilter === s.id
                                                     ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                                                     : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -841,14 +849,19 @@ export function PrivilegesPage() {
                             {/* Role Filter */}
                             <Popover open={roleOpen} onOpenChange={setRoleOpen}>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", roleFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                    <button className={cn(
+                                        "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                                        roleFilter !== "all" 
+                                            ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                                            : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    )}>
                                         <UserGear className="w-3.5 h-3.5" weight="bold" />
                                         {roleFilter === "all" ? "Role" : ROLE_META[roleFilter as UserRole]?.label || roleFilter}
                                         {roleFilter !== "all" && (
                                             <span
                                                 role="button"
                                                 onClick={(e) => { e.stopPropagation(); setRoleFilter("all"); }}
-                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                                className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                             >
                                                 <X className="w-3 h-3" />
                                             </span>
@@ -860,7 +873,7 @@ export function PrivilegesPage() {
                                     <button
                                         onClick={() => { setRoleFilter("all"); setRoleOpen(false); }}
                                         className={cn(
-                                            "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
+                                            "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors",
                                             roleFilter === "all"
                                                 ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                                                 : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -876,7 +889,7 @@ export function PrivilegesPage() {
                                                 key={r}
                                                 onClick={() => { setRoleFilter(r); setRoleOpen(false); }}
                                                 className={cn(
-                                                    "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                                                    "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors flex items-center gap-2",
                                                     roleFilter === r
                                                         ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                                                         : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -893,14 +906,19 @@ export function PrivilegesPage() {
                             {/* Department Filter */}
                             <Popover open={deptOpen} onOpenChange={setDeptOpen}>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", deptFilter !== "all" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                    <button className={cn(
+                                        "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                                        deptFilter !== "all" 
+                                            ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                                            : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    )}>
                                         <Buildings className="w-3.5 h-3.5" weight="bold" />
                                         {deptFilter === "all" ? "Department" : deptFilter}
                                         {deptFilter !== "all" && (
                                             <span
                                                 role="button"
                                                 onClick={(e) => { e.stopPropagation(); setDeptFilter("all"); }}
-                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                                className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                             >
                                                 <X className="w-3 h-3" />
                                             </span>
@@ -912,7 +930,7 @@ export function PrivilegesPage() {
                                     <button
                                         onClick={() => { setDeptFilter("all"); setDeptOpen(false); }}
                                         className={cn(
-                                            "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
+                                            "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors",
                                             deptFilter === "all"
                                                 ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                                                 : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -926,7 +944,7 @@ export function PrivilegesPage() {
                                             key={dept}
                                             onClick={() => { setDeptFilter(dept); setDeptOpen(false); }}
                                             className={cn(
-                                                "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors",
+                                                "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors",
                                                 deptFilter === dept
                                                     ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                                                     : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -941,14 +959,19 @@ export function PrivilegesPage() {
                             {/* Sort */}
                             <Popover open={sortOpen} onOpenChange={setSortOpen}>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", sort.field !== "name" || sort.dir !== "asc" ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}>
+                                    <button className={cn(
+                                        "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                                        (sort.field !== "name" || sort.dir !== "asc") 
+                                            ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                                            : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    )}>
                                         <ArrowsDownUp className="w-3.5 h-3.5" weight="bold" />
                                         Sort
                                         {(sort.field !== "name" || sort.dir !== "asc") && (
                                             <span
                                                 role="button"
                                                 onClick={(e) => { e.stopPropagation(); setSort({ field: "name", dir: "asc" }); }}
-                                                className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                                className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                             >
                                                 <X className="w-3 h-3" />
                                             </span>
@@ -967,7 +990,7 @@ export function PrivilegesPage() {
                                             key={opt.field + opt.dir}
                                             onClick={() => { setSort({ field: opt.field as SortField, dir: opt.dir as SortDir }); setSortOpen(false); }}
                                             className={cn(
-                                                "w-full text-left px-2 py-1.5 rounded-sm text-[13px] transition-colors flex items-center gap-2",
+                                                "w-full text-left px-2 py-1.5 rounded-sm text-[12px] transition-colors flex items-center gap-2",
                                                 sort.field === opt.field && sort.dir === opt.dir
                                                     ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium"
                                                     : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -984,14 +1007,19 @@ export function PrivilegesPage() {
                             {!showSearch ? (
                                 <button
                                     onClick={() => setShowSearch(true)}
-                                    className={cn("flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors", search ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50")}
+                                    className={cn(
+                                        "flex items-center gap-1.5 h-8 px-3 rounded-lg border transition-all shadow-sm active:scale-95 text-[12px] font-medium",
+                                        search 
+                                            ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-white" 
+                                            : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                    )}
                                 >
                                     <MagnifyingGlass className="w-3.5 h-3.5" weight="bold" /> Search
                                     {search && (
                                         <span
                                             role="button"
                                             onClick={(e) => { e.stopPropagation(); setSearch(""); }}
-                                            className="ml-0.5 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                                            className="ml-1 p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                                         >
                                             <X className="w-3 h-3" />
                                         </span>
@@ -1011,7 +1039,7 @@ export function PrivilegesPage() {
                                         autoFocus
                                         onBlur={() => { if (!search) setShowSearch(false); }}
                                         onKeyDown={(e) => { if (e.key === "Escape") { setShowSearch(false); setSearch(""); } }}
-                                        className="pl-8 pr-8 h-[30px] bg-zinc-100 dark:bg-zinc-800 border-transparent focus-visible:border-zinc-300 dark:focus-visible:border-zinc-600 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-[13px] rounded-md w-full shadow-none focus-visible:ring-0"
+                                        className="pl-8 pr-8 h-[30px] bg-zinc-100 dark:bg-zinc-800 border-transparent focus-visible:border-zinc-300 dark:focus-visible:border-zinc-600 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 text-[12px] rounded-md w-full shadow-none focus-visible:ring-0"
                                     />
                                     <button
                                         onMouseDown={(e) => { e.preventDefault(); setSearch(""); setShowSearch(false); }}
@@ -1034,13 +1062,13 @@ export function PrivilegesPage() {
             </div>
 
             {/* ── TABLE ── */}
-            <div className="flex-1 overflow-auto mt-4 px-8 pb-8 flex flex-col">
-                <Frame className="flex-1 flex flex-col overflow-hidden">
-                    <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden flex flex-col flex-1 min-w-[1100px]">
+            <div className="flex-1 overflow-auto mt-4 px-8 pb-8">
+                <Frame className="w-full">
+                    <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden min-w-[1050px]">
                         {/* Header */}
                         <div
                             className="grid items-center bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800 px-4 shrink-0"
-                            style={{ gridTemplateColumns: "minmax(220px, 1fr) 160px 150px 160px 120px 120px 110px 80px" }}
+                            style={{ gridTemplateColumns: TABLE_COLS.map(c => c.width).join(" ") }}
                         >
                             {TABLE_COLS.map((col, idx) => (
                                 <div
@@ -1050,13 +1078,15 @@ export function PrivilegesPage() {
                                         col.label === "" ? "text-right" : ""
                                     )}
                                 >
-                                    {col.label}
+                                    <span className={cn("inline-flex items-center gap-1", col.label === "" && "justify-end w-full")}>
+                                        {col.label}
+                                    </span>
                                 </div>
                             ))}
                         </div>
 
                         {/* Body */}
-                        <div className="flex-1 overflow-y-auto">
+                        <div>
                             {filtered.length === 0 ? (
                                 <div className="py-20 text-center">
                                     <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
@@ -1065,7 +1095,6 @@ export function PrivilegesPage() {
                                 </div>
                             ) : paginatedStaff.map((s, i) => {
                                 const rm = ROLE_META[s.role]
-                                const RIcon = rm.icon
                                 const ac = avatarColor(`${s.firstName} ${s.lastName}`)
                                 const isSelected = drawerStaffId === s.id
                                 const isPending = s.status === "pending"
@@ -1079,10 +1108,10 @@ export function PrivilegesPage() {
                                         className={cn(
                                             "group grid items-center border-b border-zinc-100 dark:border-zinc-800 last:border-0 transition-colors px-4 cursor-pointer",
                                             isSelected ? "bg-blue-50/60 dark:bg-blue-950/20" :
-                                                isPending ? "bg-amber-50/30 dark:bg-amber-950/10 hover:bg-amber-50/60" :
-                                                    "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
+                                            isPending ? "bg-amber-50/30 dark:bg-amber-950/10 hover:bg-amber-50/60" :
+                                                "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
                                         )}
-                                        style={{ gridTemplateColumns: "minmax(220px, 1fr) 160px 150px 160px 120px 120px 110px 80px" }}
+                                        style={{ gridTemplateColumns: TABLE_COLS.map(c => c.width).join(" ") }}
                                         onClick={() => setDrawerId(isSelected ? null : s.id)}
                                     >
                                         {/* Personnel */}
@@ -1115,13 +1144,17 @@ export function PrivilegesPage() {
 
                                         {/* Role */}
                                         <div className="py-3">
-                                            <span
-                                                className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold px-2.5 py-1 rounded-md"
-                                                style={{ background: rm.bg, color: rm.text }}
+                                            <button
+                                                type="button"
+                                                onClick={e => e.stopPropagation()}
+                                                className={cn(
+                                                    "inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 rounded-lg border shadow-sm transition-all hover:brightness-95 active:scale-95 cursor-pointer",
+                                                    rm.bg, rm.text, "border-zinc-200/50 dark:border-zinc-700/50"
+                                                )}
                                             >
-                                                <RIcon weight="fill" className="w-3.5 h-3.5 shrink-0" />
+                                                <span className={cn("size-1.5 rounded-full", rm.dot)} />
                                                 {rm.shortLabel}
-                                            </span>
+                                            </button>
                                         </div>
 
                                         {/* Department */}
@@ -1175,7 +1208,7 @@ export function PrivilegesPage() {
                                         </div>
 
                                         {/* Actions */}
-                                        <div className="py-3 flex justify-end pr-2">
+                                        <div className="py-3 flex items-center justify-end">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <button
@@ -1288,23 +1321,23 @@ export function PrivilegesPage() {
                 )}
             </div>
 
-            {/* ── CREDENTIAL DRAWER BACKDROP ── */}
+            {/* ── CREDENTIAL MODAL BACKDROP ── */}
             <AnimatePresence>
                 {drawerStaff && (
-                    <>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setDrawerId(null)}
-                            className="fixed inset-0 z-30 bg-zinc-900/20 dark:bg-zinc-950/50 backdrop-blur-[2px]"
+                            className="absolute inset-0 bg-zinc-900/20 dark:bg-zinc-950/50 backdrop-blur-[2px]"
                         />
-                        <CredentialDrawer
+                        <CredentialModal
                             staff={drawerStaff}
                             onClose={() => setDrawerId(null)}
                             onUpdate={updateStaff}
                         />
-                    </>
+                    </div>
                 )}
             </AnimatePresence>
         </div>

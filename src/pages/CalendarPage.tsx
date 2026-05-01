@@ -37,9 +37,9 @@ const MOCK_STAFF = [
 ];
 
 const PRIORITY_CONFIG = {
-    High: { label: "High", icon: ShieldCheck, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-950/50", border: "border-rose-200 dark:border-rose-800/50" },
-    Medium: { label: "Medium", icon: Warning, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/50", border: "border-amber-200 dark:border-amber-800/50" },
-    Low: { label: "Low", icon: Info, color: "text-sky-500", bg: "bg-sky-50 dark:bg-sky-950/50", border: "border-sky-200 dark:border-sky-800/50" },
+    High: { label: "High", icon: ShieldCheck, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-500/10", border: "border-rose-200 dark:border-rose-800/50" },
+    Medium: { label: "Medium", icon: Warning, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10", border: "border-amber-200 dark:border-amber-800/50" },
+    Low: { label: "Low", icon: Info, color: "text-sky-500", bg: "bg-sky-50 dark:bg-sky-500/10", border: "border-sky-200 dark:border-sky-800/50" },
 };
 
 const EVENTS_BY_DAY: DayEvents = {
@@ -335,8 +335,8 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
                     <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                            <CalendarIcon className="w-4 h-4 text-blue-600" />
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+                            <CalendarIcon className="w-4 h-4 text-zinc-900 dark:text-blue-400" />
                         </div>
                         <h2 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100"> Add New Event</h2>
                     </div>
@@ -533,7 +533,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             type="submit"
-                            className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm shadow-blue-200 dark:shadow-none transition-colors flex items-center justify-center gap-1.5"
+                            className="flex-1 py-2 rounded-lg bg-black dark:bg-white dark:text-black text-white text-sm font-semibold shadow-sm shadow-blue-200 dark:shadow-none transition-colors flex items-center justify-center gap-1.5"
                         >
                             <Plus className="w-4 h-4" />
                             Add Event
