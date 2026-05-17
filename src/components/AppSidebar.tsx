@@ -51,11 +51,11 @@ const mainNavigation: NavItemConfig[] = [
         pageId: "dashboard",
         subItems: [
             { title: "Overview", pageId: "dashboard", icon: Scales },
-            { title: "Patient", pageId: "patients", icon: User, roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
             { title: "Revenue", pageId: "revenue", icon: CurrencyEur, roles: [UserRole.ADMIN, UserRole.MANAGER] },
         ]
     },
     { icon: MessengerLogoIcon, title: "Messages", pageId: "messages", badge: "12" },
+    { icon: UserFocus, title: "Patients", pageId: "patients", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
     { icon: ToothIcon, title: "Orthodontics", pageId: "orthodontics" },
     { icon: Hammer, title: "Orthopedics", pageId: "orthopedics" },
     { icon: CalendarCheck, title: "Calender", pageId: "calender" },
