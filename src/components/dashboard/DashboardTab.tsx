@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Dashboard Tab - Notion-Style Hospital Workspace
  * Content-first, document-like layout with database views
  */
@@ -54,7 +54,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import doctorAvatar from "@/assets/doctor-avatar.png";
 
-import pdfIcon from "@/assets/pdf-icon.png";
+import pdfIcon from "@/assets/pdf.png";
 
 // ── Data ──
 

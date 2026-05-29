@@ -1,6 +1,6 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import {
     CaretLeft, CaretRight, Plus, Clock, Users,
     X, Calendar as CalendarIcon, MapPin, TextAlignLeft,
@@ -16,12 +16,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type CalendarEvent = {
     id: string;
     title: string;
+    patientName?: string;
+    nurse?: string;
+    report?: string;
     time: string;
     endTime?: string;
     color: string;
     attendees?: number;
     location?: string;
+    notes?: string;
     priority?: "Low" | "Medium" | "High";
+    category?: "Shared" | "Public" | "Archived";
     assignees?: { name: string; avatar?: string; role: string }[];
 };
 
@@ -42,72 +47,76 @@ const PRIORITY_CONFIG = {
     Low: { label: "Low", icon: Info, color: "text-sky-500", bg: "bg-sky-50 dark:bg-sky-500/10", border: "border-sky-200 dark:border-sky-800/50" },
 };
 
+function getEventCategory(event: CalendarEvent) {
+    return event.category ?? (event.priority === "Low" ? "Archived" : event.priority === "Medium" ? "Public" : "Shared");
+}
+
 const EVENTS_BY_DAY: DayEvents = {
-    1: [{ id: "e1", title: "Monday standup", time: "9:00 AM", color: "blue" }],
+    1: [{ id: "e1", title: "ER triage briefing", time: "9:00 AM", color: "blue", category: "Shared" }],
     2: [
-        { id: "e2", title: "One-on-one w/...", time: "10:00 AM", color: "green", attendees: 2, priority: "High", assignees: [MOCK_STAFF[0], MOCK_STAFF[2]] },
-        { id: "e3", title: "All-hands meeti...", time: "4:00 PM", color: "purple", attendees: 12, priority: "Medium", assignees: [MOCK_STAFF[1]] },
-        { id: "e4", title: "Dinner with C...", time: "7:00 PM", color: "red", priority: "Low" },
+        { id: "e2", title: "Patient consultation", patientName: "John Doe", nurse: "Nurse Elena", report: "Review CT results and discharge plan.", time: "10:00 AM", color: "green", attendees: 2, priority: "High", category: "Public", assignees: [MOCK_STAFF[0], MOCK_STAFF[2]] },
+        { id: "e3", title: "Surgery planning meeting", patientName: "Maria Santos", nurse: "Nurse Elena", report: "Finalize OR schedule for Tuesday.", time: "4:00 PM", color: "purple", attendees: 12, priority: "Medium", category: "Shared", assignees: [MOCK_STAFF[1]] },
+        { id: "e4", title: "Night shift handover", time: "7:00 PM", color: "red", priority: "Low", category: "Archived" },
     ],
-    3: [{ id: "e5", title: "Monday standup", time: "9:00 AM", color: "blue" }],
-    5: [{ id: "e6", title: "Friday standup", time: "9:00 AM", color: "blue" }],
+    3: [{ id: "e5", title: "Ward rounds", time: "9:00 AM", color: "blue", category: "Shared" }],
+    5: [{ id: "e6", title: "Pediatric checkup", patientName: "Amelia Hayes", nurse: "Nurse Elena", report: "Vaccination follow-up and growth assessment.", time: "9:00 AM", color: "blue", category: "Public" }],
     6: [
-        { id: "e7", title: "House inspe...", time: "10:30 AM", color: "orange" },
-        { id: "e8", title: "Marketing site...", time: "2:30 PM", color: "green" },
+        { id: "e7", title: "Pre-op briefing", time: "10:30 AM", color: "orange", category: "Shared" },
+        { id: "e8", title: "Radiology review", time: "2:30 PM", color: "green", category: "Public" },
     ],
-    7: [{ id: "e9", title: "Monday standup", time: "9:00 AM", color: "blue" }],
+    7: [{ id: "e9", title: "Post-op assessment", patientName: "Samuel Kim", nurse: "Nurse Elena", report: "Check wound healing and pain control.", time: "9:00 AM", color: "blue", category: "Public" }],
     8: [
-        { id: "e10", title: "One-on-one w/...", time: "11:00 AM", color: "green" },
-        { id: "e11", title: "Content planni...", time: "11:00 AM", color: "purple" },
+        { id: "e10", title: "Cardiology consult", time: "11:00 AM", color: "green", category: "Public" },
+        { id: "e11", title: "Clinical case review", time: "11:00 AM", color: "purple", category: "Shared" },
     ],
     9: [
-        { id: "e12", title: "Deep work", time: "9:00 AM", color: "slate" },
-        { id: "e13", title: "SEO planning", time: "1:30 PM", color: "teal" },
+        { id: "e12", title: "Lab sample analysis", time: "9:00 AM", color: "slate", category: "Archived" },
+        { id: "e13", title: "Vaccination clinic", time: "1:30 PM", color: "teal", category: "Public" },
     ],
     10: [
-        { id: "e14", title: "Lunch with...", time: "10:00 PM", color: "green", attendees: 3, priority: "Low" },
-        { id: "e15", title: "Olivia x Riley", time: "10:00 AM", color: "pink", priority: "Medium", assignees: [MOCK_STAFF[0]] },
-        { id: "e16", title: "Product demo", time: "1:30 PM", color: "blue", priority: "High", assignees: [MOCK_STAFF[1], MOCK_STAFF[3]] },
+        { id: "e14", title: "Patient discharge review", time: "10:00 AM", color: "green", attendees: 3, priority: "Low", category: "Archived" },
+        { id: "e15", title: "Orthopedic follow-up", time: "10:00 AM", color: "pink", priority: "Medium", category: "Public", assignees: [MOCK_STAFF[0]] },
+        { id: "e16", title: "Emergency surgery prep", time: "1:30 PM", color: "blue", priority: "High", category: "Shared", assignees: [MOCK_STAFF[1], MOCK_STAFF[3]] },
     ],
     11: [
-        { id: "e17", title: "House inspe...", time: "10:30 AM", color: "orange" },
-        { id: "e18", title: "Ava's engage...", time: "1:00 PM", color: "pink" },
+        { id: "e17", title: "ICU check-in", time: "10:30 AM", color: "orange", category: "Shared" },
+        { id: "e18", title: "Patient family update", time: "1:00 PM", color: "pink", category: "Public" },
     ],
     14: [
-        { id: "e19", title: "Product planni...", time: "3:30 PM", color: "purple" },
+        { id: "e19", title: "Surgical briefing", time: "3:30 PM", color: "purple", category: "Shared" },
     ],
     15: [
-        { id: "e20", title: "Amelie's first...", time: "10:30 AM", color: "green" },
-        { id: "e21", title: "All-hands meeti...", time: "4:00 PM", color: "purple" },
+        { id: "e20", title: "Nurse triage review", time: "10:30 AM", color: "green", category: "Shared" },
+        { id: "e21", title: "Provider check-in", time: "4:00 PM", color: "purple", category: "Shared" },
     ],
     16: [
-        { id: "e22", title: "Half-marathon...", time: "7:00 AM", color: "red" },
-        { id: "e23", title: "Coffees w/ Amelie", time: "9:30 AM", color: "green" },
-        { id: "e24", title: "Design feedback...", time: "3:30 PM", color: "blue" },
+        { id: "e22", title: "Outpatient consult", time: "7:00 AM", color: "red", category: "Public" },
+        { id: "e23", title: "Case conference", time: "9:30 AM", color: "green", category: "Shared" },
+        { id: "e24", title: "Medication review", time: "3:30 PM", color: "blue", category: "Public" },
     ],
     21: [
-        { id: "e25", title: "Quarterly review", time: "9:00 AM", color: "purple" },
-        { id: "e26", title: "Lunch with Zahra", time: "1:00 PM", color: "green" },
-        { id: "e27", title: "Dinner with G...", time: "7:00 PM", color: "red" },
+        { id: "e25", title: "Clinical audit", time: "9:00 AM", color: "purple", category: "Archived" },
+        { id: "e26", title: "Nutrition consult", time: "1:00 PM", color: "green", category: "Public" },
+        { id: "e27", title: "Trauma team briefing", time: "7:00 PM", color: "red", category: "Shared" },
     ],
     22: [
-        { id: "e28", title: "Deep work", time: "9:00 AM", color: "slate" },
-        { id: "e29", title: "Design sync", time: "2:30 PM", color: "blue" },
+        { id: "e28", title: "Pharmacy inventory", time: "9:00 AM", color: "slate", category: "Archived" },
+        { id: "e29", title: "Therapy session", time: "2:30 PM", color: "blue", category: "Public" },
     ],
     23: [
-        { id: "e30", title: "Amillie coffee", time: "10:00 AM", color: "green" },
-        { id: "e31", title: "All-hands meeti...", time: "4:00 PM", color: "purple" },
+        { id: "e30", title: "Patient transportation", time: "10:00 AM", color: "green", category: "Shared" },
+        { id: "e31", title: "Facility safety review", time: "4:00 PM", color: "purple", category: "Shared" },
     ],
     28: [
-        { id: "e32", title: "Content planni...", time: "11:00 AM", color: "purple" },
-        { id: "e33", title: "Lunch with Alixa", time: "12:45 PM", color: "green" },
+        { id: "e32", title: "Surgery follow-up", time: "11:00 AM", color: "purple", category: "Public" },
+        { id: "e33", title: "Immunization clinic", time: "12:45 PM", color: "green", category: "Public" },
     ],
     29: [
-        { id: "e34", title: "Product planni...", time: "3:30 PM", color: "purple" },
+        { id: "e34", title: "Wound care visit", time: "3:30 PM", color: "purple", category: "Public" },
     ],
     30: [
-        { id: "e35", title: "All-hands meeti...", time: "4:00 PM", color: "purple" },
-        { id: "e36", title: "Team dinner", time: "6:30 PM", color: "red" },
+        { id: "e35", title: "Weekend triage", time: "4:00 PM", color: "purple", category: "Shared" },
+        { id: "e36", title: "Medical education session", time: "6:30 PM", color: "red", category: "Archived" },
     ],
 };
 
@@ -130,6 +139,10 @@ function getDaysInMonth(year: number, month: number) {
 function getFirstDayOfMonth(year: number, month: number) {
     // 0 = Sun, 1 = Mon … shift so Mon = 0
     return (new Date(year, month, 1).getDay() + 6) % 7;
+}
+function getWeekStartDate(date: Date) {
+    const offset = (date.getDay() + 6) % 7;
+    return addDays(date, -offset);
 }
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -285,8 +298,12 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
     const [endTime, setEnd] = React.useState("10:00");
     const [color, setColor] = React.useState("blue");
     const [location, setLocation] = React.useState("");
+    const [patientName, setPatientName] = React.useState("");
+    const [nurseName, setNurseName] = React.useState("");
+    const [report, setReport] = React.useState("");
     const [notes, setNotes] = React.useState("");
     const [priority, setPriority] = React.useState<CalendarEvent["priority"]>("Medium");
+    const [category, setCategory] = React.useState<CalendarEvent["category"]>("Shared");
     const [selectedStaff, setSelectedStaff] = React.useState<string[]>([]);
 
     function handleSubmit(e: React.FormEvent) {
@@ -302,17 +319,22 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
         onAdd(day, {
             id: `ev-${Date.now()}`,
             title,
+            patientName: patientName.trim() || undefined,
+            nurse: nurseName.trim() || undefined,
+            report: report.trim() || undefined,
             time: fmt(startTime),
             endTime: fmt(endTime),
             color,
             location: location || undefined,
+            notes: notes.trim() || undefined,
             priority,
+            category,
             assignees: MOCK_STAFF.filter(s => selectedStaff.includes(s.name)),
         });
         onClose();
     }
 
-    const inputCls = "w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-zinc-400";
+    const inputCls = "w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black transition-all placeholder:text-zinc-400";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -357,10 +379,41 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                             autoFocus
                             value={title}
                             onChange={e => setTitle(e.target.value)}
-                            placeholder="e.g. Team standup"
+                            placeholder="e.g. Patient checkup"
                             className={inputCls}
                             required
                         />
+                    </div>
+
+                    <div className="grid gap-4">
+                        <div>
+                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Patient name</label>
+                            <input
+                                value={patientName}
+                                onChange={e => setPatientName(e.target.value)}
+                                placeholder="e.g. John Doe"
+                                className={inputCls}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Nurse</label>
+                            <input
+                                value={nurseName}
+                                onChange={e => setNurseName(e.target.value)}
+                                placeholder="e.g. Nurse Elena"
+                                className={inputCls}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Report</label>
+                            <textarea
+                                value={report}
+                                onChange={e => setReport(e.target.value)}
+                                placeholder="e.g. Patient requires follow-up"
+                                rows={2}
+                                className={cn(inputCls, "resize-none")}
+                            />
+                        </div>
                     </div>
 
                     {/* Date + Times */}
@@ -458,6 +511,21 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                             </Select>
                         </div>
                         <div>
+                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Category</label>
+                            <Select value={category} onValueChange={(v: string) => setCategory(v as CalendarEvent["category"])}>
+                                <SelectTrigger className="h-9 text-xs rounded-lg bg-zinc-50 dark:bg-zinc-900">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl">
+                                    {(["Shared", "Public", "Archived"] as const).map(cat => (
+                                        <SelectItem key={cat} value={cat} className="text-xs">
+                                            {cat}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="col-span-2">
                             <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Assign Staff</label>
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -498,6 +566,18 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                         </div>
                     </div>
 
+                    {/* Notes */}
+                    <div>
+                        <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Notes</label>
+                        <textarea
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Add notes (optional)"
+                            rows={3}
+                            className={cn(inputCls, "resize-none")}
+                        />
+                    </div>
+
                     {/* Color */}
                     <div>
                         <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Color</label>
@@ -533,7 +613,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             type="submit"
-                            className="flex-1 py-2 rounded-lg bg-black dark:bg-white dark:text-black text-white text-sm font-semibold shadow-sm shadow-blue-200 dark:shadow-none transition-colors flex items-center justify-center gap-1.5"
+                            className="flex-1 py-2 rounded-lg bg-black text-white text-sm font-semibold shadow-sm shadow-black/20 transition-colors flex items-center justify-center gap-1.5"
                         >
                             <Plus className="w-4 h-4" />
                             Add Event
@@ -553,6 +633,7 @@ export function CalendarPage() {
     const [activeFilter, setActiveFilter] = React.useState("All events");
     const [selectedDay, setSelectedDay] = React.useState<number | null>(today.getDate());
     const [showModal, setShowModal] = React.useState(false);
+    const [detailModalDay, setDetailModalDay] = React.useState<number | null>(null);
     const [eventMap, setEventMap] = React.useState<DayEvents>({ ...EVENTS_BY_DAY });
 
     function handleAddEvent(day: number, event: CalendarEvent) {
@@ -562,25 +643,62 @@ export function CalendarPage() {
         }));
     }
 
+    const selectedDate = React.useMemo(() => new Date(year, month, selectedDay ?? 1), [year, month, selectedDay]);
+    const weekStart = React.useMemo(() => getWeekStartDate(selectedDate), [selectedDate]);
+    const weekDates = React.useMemo(() => Array.from({ length: 7 }, (_, idx) => addDays(weekStart, idx)), [weekStart]);
+
+    const eventMatchesFilter = React.useCallback((event: CalendarEvent) => {
+        return activeFilter === "All events" || getEventCategory(event) === activeFilter;
+    }, [activeFilter]);
+
     const daysInMonth = getDaysInMonth(year, month);
     const firstDayIdx = getFirstDayOfMonth(year, month);   // 0 = Mon
     const totalCells = Math.ceil((firstDayIdx + daysInMonth) / 7) * 7;
 
-    function prevMonth() {
-        if (month === 0) { setYear(y => y - 1); setMonth(11); }
-        else setMonth(m => m - 1);
-    }
-    function nextMonth() {
-        if (month === 11) { setYear(y => y + 1); setMonth(0); }
-        else setMonth(m => m + 1);
-    }
-    function goToday() {
-        setYear(today.getFullYear());
-        setMonth(today.getMonth());
-        setSelectedDay(today.getDate());
+    function updateSelectedDate(date: Date) {
+        setYear(date.getFullYear());
+        setMonth(date.getMonth());
+        setSelectedDay(date.getDate());
     }
 
+    function prevPeriod() {
+        if (viewMode === "month") {
+            const targetMonth = month === 0 ? 11 : month - 1;
+            const targetYear = month === 0 ? year - 1 : year;
+            setYear(targetYear);
+            setMonth(targetMonth);
+            setSelectedDay(prev => Math.min(prev ?? 1, getDaysInMonth(targetYear, targetMonth)));
+            return;
+        }
+        const offset = viewMode === "week" ? -7 : -1;
+        updateSelectedDate(addDays(selectedDate, offset));
+    }
+
+    function nextPeriod() {
+        if (viewMode === "month") {
+            const targetMonth = month === 11 ? 0 : month + 1;
+            const targetYear = month === 11 ? year + 1 : year;
+            setYear(targetYear);
+            setMonth(targetMonth);
+            setSelectedDay(prev => Math.min(prev ?? 1, getDaysInMonth(targetYear, targetMonth)));
+            return;
+        }
+        const offset = viewMode === "week" ? 7 : 1;
+        updateSelectedDate(addDays(selectedDate, offset));
+    }
+
+    function goToday() {
+        updateSelectedDate(today);
+    }
+
+    const headerLabel = viewMode === "month"
+        ? `${MONTHS[month]} ${year}`
+        : viewMode === "week"
+            ? `${format(weekDates[0], "MMM d")} - ${format(weekDates[6], "MMM d, yyyy")}`
+            : format(selectedDate, "MMMM d, yyyy");
+
     const filters = ["All events", "Shared", "Public", "Archived"];
+    const selectedEvents = selectedDay != null ? (eventMap[selectedDay] || []).filter(eventMatchesFilter) : [];
 
     return (
         <div className="flex flex-col gap-5 py-6">
@@ -610,13 +728,13 @@ export function CalendarPage() {
 
                 {/* Right: search + nav + today + view toggle + add */}
                 <div className="flex items-center gap-2">
-                    {/* Month navigation */}
+                    {/* Period navigation */}
                     <div className="flex items-center gap-0.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5">
-                        <button onClick={prevMonth} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
+                        <button onClick={prevPeriod} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
                             <CaretLeft className="w-4 h-4" />
                         </button>
-                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 px-2">{MONTHS[month]} {year}</span>
-                        <button onClick={nextMonth} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
+                        <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 px-2">{headerLabel}</span>
+                        <button onClick={nextPeriod} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
                             <CaretRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -660,87 +778,170 @@ export function CalendarPage() {
                 </div>
             </div>
 
-            {/* ── Calendar Grid ────────────────────────────────────── */}
+            {/* ── Calendar View ────────────────────────────────────── */}
             <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/60 overflow-hidden">
-                {/* Day-of-week header */}
-                <div className="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/80 dark:bg-zinc-900">
-                    {WEEK_DAYS.map(day => (
-                        <div key={day} className="py-3 text-center text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider border-r border-zinc-100 dark:border-zinc-800/60 last:border-r-0">
-                            {day}
+                {viewMode === "month" && (
+                    <>
+                        {/* Day-of-week header */}
+                        <div className="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/80 dark:bg-zinc-900">
+                            {WEEK_DAYS.map(day => (
+                                <div key={day} className="py-3 text-center text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider border-r border-zinc-100 dark:border-zinc-800/60 last:border-r-0">
+                                    {day}
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
 
-                {/* Cells */}
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={`${year}-${month}`}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.18 }}
-                        className="grid grid-cols-7"
-                    >
-                        {Array.from({ length: totalCells }).map((_, idx) => {
-                            const dayNum = idx - firstDayIdx + 1;
-                            const isCurrentMonth = dayNum >= 1 && dayNum <= daysInMonth;
-                            const isToday = isCurrentMonth && dayNum === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-                            const isPast = isCurrentMonth && !isToday && (
-                                year < today.getFullYear() ||
-                                (year === today.getFullYear() && month < today.getMonth()) ||
-                                (year === today.getFullYear() && month === today.getMonth() && dayNum < today.getDate())
-                            );
-                            const isSelected = isCurrentMonth && dayNum === selectedDay;
-                            const events = (isCurrentMonth && eventMap[dayNum]) || [];
-                            const MAX_VISIBLE = 2;
-                            const extra = events.length - MAX_VISIBLE;
+                        {/* Month cells */}
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={`${year}-${month}`}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.18 }}
+                                className="grid grid-cols-7"
+                            >
+                                {Array.from({ length: totalCells }).map((_, idx) => {
+                                    const dayNum = idx - firstDayIdx + 1;
+                                    const isCurrentMonth = dayNum >= 1 && dayNum <= daysInMonth;
+                                    const isToday = isCurrentMonth && dayNum === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                                    const isPast = isCurrentMonth && !isToday && (
+                                        year < today.getFullYear() ||
+                                        (year === today.getFullYear() && month < today.getMonth()) ||
+                                        (year === today.getFullYear() && month === today.getMonth() && dayNum < today.getDate())
+                                    );
+                                    const isSelected = isCurrentMonth && dayNum === selectedDay;
+                                    const events = (isCurrentMonth && eventMap[dayNum]?.filter(eventMatchesFilter)) || [];
+                                    const MAX_VISIBLE = 2;
+                                    const extra = events.length - MAX_VISIBLE;
 
-                            return (
-                                <div
-                                    key={idx}
-                                    onClick={() => isCurrentMonth && setSelectedDay(dayNum)}
-                                    className={cn(
-                                        "min-h-[90px] border-b border-r border-zinc-100 dark:border-zinc-800/60 last:border-r-0 p-2 group cursor-pointer transition-colors",
-                                        !isCurrentMonth && "bg-zinc-50/60 dark:bg-zinc-900/30",
-                                        isCurrentMonth && "hover:bg-zinc-50 dark:hover:bg-zinc-900/30",
-                                        isSelected && !isToday && "bg-blue-50/40 dark:bg-blue-900/10",
-                                    )}
-                                >
-                                    {/* Day number */}
-                                    <div className="flex items-center justify-end mb-1.5">
-                                        <span className={cn(
-                                            "w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold transition-colors",
-                                            !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
-                                            isCurrentMonth && !isToday && "text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100",
-                                            isToday && "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900",
-                                        )}>
-                                            {dayNum > 0 && dayNum <= daysInMonth ? dayNum : (dayNum <= 0 ? getDaysInMonth(year, month - 1) + dayNum : dayNum - daysInMonth)}
-                                        </span>
-                                    </div>
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onClick={() => isCurrentMonth && (setSelectedDay(dayNum), setDetailModalDay(dayNum))}
+                                            className={cn(
+                                                "min-h-[90px] border-b border-r border-zinc-100 dark:border-zinc-800/60 last:border-r-0 p-2 group cursor-pointer transition-colors",
+                                                !isCurrentMonth && "bg-zinc-50/60 dark:bg-zinc-900/30",
+                                                isCurrentMonth && "hover:bg-zinc-50 dark:hover:bg-zinc-900/30",
+                                                isSelected && !isToday && "bg-blue-50/40 dark:bg-blue-900/10",
+                                            )}
+                                        >
+                                            <div className="flex items-center justify-end mb-1.5">
+                                                <span className={cn(
+                                                    "w-6 h-6 flex items-center justify-center rounded-full text-xs font-semibold transition-colors",
+                                                    !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
+                                                    isCurrentMonth && !isToday && "text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100",
+                                                    isToday && "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900",
+                                                )}>
+                                                    {dayNum > 0 && dayNum <= daysInMonth ? dayNum : (dayNum <= 0 ? getDaysInMonth(year, month - 1) + dayNum : dayNum - daysInMonth)}
+                                                </span>
+                                            </div>
 
-                                    {/* Events */}
-                                    {isCurrentMonth && (
-                                        <div className="flex flex-col gap-0.5">
-                                            {events.slice(0, MAX_VISIBLE).map(ev => (
-                                                <EventPill key={ev.id} event={ev} isPast={isPast} />
-                                            ))}
-                                            {extra > 0 && (
-                                                <div className="text-[10px] font-semibold text-zinc-400 pl-1.5 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300">
-                                                    {extra} more...
+                                            {isCurrentMonth && (
+                                                <div className="flex flex-col gap-0.5">
+                                                    {events.slice(0, MAX_VISIBLE).map(ev => (
+                                                        <EventPill key={ev.id} event={ev} isPast={isPast} />
+                                                    ))}
+                                                    {extra > 0 && (
+                                                        <div className="text-[10px] font-semibold text-zinc-400 pl-1.5 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300">
+                                                            {extra} more...
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
-                                    )}
+                                    );
+                                })}
+                            </motion.div>
+                        </AnimatePresence>
+                    </>
+                )}
+
+                {viewMode === "week" && (
+                    <div>
+                        <div className="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/80 dark:bg-zinc-900">
+                            {weekDates.map(date => (
+                                <div key={date.toISOString()} className="py-3 text-center text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider border-r border-zinc-100 dark:border-zinc-800/60 last:border-r-0">
+                                    <div>{WEEK_DAYS[(date.getDay() + 6) % 7]}</div>
+                                    <div className="mt-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">{date.getDate()}</div>
                                 </div>
-                            );
-                        })}
-                    </motion.div>
-                </AnimatePresence>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-7">
+                            {weekDates.map(date => {
+                                const dayNum = date.getDate();
+                                const isCurrentMonth = date.getMonth() === month;
+                                const isToday = date.toDateString() === today.toDateString();
+                                const isSelected = date.toDateString() === selectedDate.toDateString();
+                                const events = (isCurrentMonth && eventMap[dayNum]?.filter(eventMatchesFilter)) || [];
+                                return (
+                                    <div
+                                        key={date.toISOString()}
+                                        onClick={() => {
+                                            updateSelectedDate(date);
+                                            setDetailModalDay(dayNum);
+                                        }}
+                                        className={cn(
+                                            "min-h-[160px] border-b border-r border-zinc-100 dark:border-zinc-800/60 p-3 cursor-pointer transition-colors",
+                                            !isCurrentMonth && "bg-zinc-50/60 dark:bg-zinc-900/30",
+                                            isSelected && "bg-blue-50/40 dark:bg-blue-900/10",
+                                            "hover:bg-zinc-50 dark:hover:bg-zinc-900/30"
+                                        )}
+                                    >
+                                        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">{format(date, "MMM d")}</div>
+                                        <div className="space-y-1">
+                                            {events.length > 0 ? (
+                                                events.map(ev => <EventPill key={ev.id} event={ev} isPast={date.toDateString() !== today.toDateString() && date < today} />)
+                                            ) : (
+                                                <div className="text-xs text-zinc-400">No events</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {viewMode === "day" && (
+                    <div className="p-6">
+                        <div className="mb-4 border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+                            <div className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">{format(selectedDate, "EEEE")}</div>
+                            <div className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{format(selectedDate, "MMMM d, yyyy")}</div>
+                        </div>
+                        <div className="space-y-3">
+                            {((eventMap[selectedDate.getDate()] || []).filter(eventMatchesFilter)).length > 0 ? (
+                                ((eventMap[selectedDate.getDate()] || []).filter(eventMatchesFilter)).map(ev => {
+                                    const c = COLOR_MAP[ev.color] ?? COLOR_MAP.blue;
+                                    const prio = ev.priority ? PRIORITY_CONFIG[ev.priority] : null;
+                                    return (
+                                        <div key={ev.id} className={cn("rounded-3xl border p-4", c.bg, c.text, "border-transparent")}> 
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="text-sm font-semibold">{ev.title}</div>
+                                                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">{ev.time}</div>
+                                            </div>
+                                            {ev.location && <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-300">{ev.location}</div>}
+                                            {prio && (
+                                                <div className={cn("mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold", prio.bg, prio.color)}>
+                                                    <prio.icon className="w-3 h-3" /> {prio.label}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800 p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                                    No events scheduled for this day.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* ── Selected Day Panel (mini bottom bar) ─────────────── */}
             <AnimatePresence>
-                {selectedDay && EVENTS_BY_DAY[selectedDay] && (
+                {selectedDay != null && selectedEvents.length > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -753,7 +954,7 @@ export function CalendarPage() {
                                 {MONTHS[month].slice(0, 3)} {selectedDay}
                             </span>
                         </div>
-                        {(eventMap[selectedDay] || []).map(ev => {
+                        {selectedEvents.map(ev => {
                             const c = COLOR_MAP[ev.color] ?? COLOR_MAP.blue;
                             const prio = ev.priority ? PRIORITY_CONFIG[ev.priority] : null;
                             return (
@@ -799,7 +1000,185 @@ export function CalendarPage() {
                         defaultYear={year}
                     />
                 )}
+                {detailModalDay != null && (
+                    <DayDetailModal
+                        day={detailModalDay}
+                        month={month}
+                        year={year}
+                        events={(eventMap[detailModalDay] || []).filter(eventMatchesFilter)}
+                        onClose={() => setDetailModalDay(null)}
+                    />
+                )}
             </AnimatePresence>
+        </div>
+    );
+}
+
+function DayDetailModal({ day, month, year, events, onClose }: {
+    day: number;
+    month: number;
+    year: number;
+    events: CalendarEvent[];
+    onClose: () => void;
+}) {
+    const [showAllEvents, setShowAllEvents] = React.useState(false);
+    const selectedDate = new Date(year, month, day);
+    const primaryEvent = events[0];
+    const extraEvents = events.slice(1);
+
+    const renderEventCard = (ev: CalendarEvent) => {
+        const c = COLOR_MAP[ev.color] ?? COLOR_MAP.blue;
+        const prio = ev.priority ? PRIORITY_CONFIG[ev.priority] : null;
+        const badgeColor = ev.category === "Shared"
+            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+            : ev.category === "Public"
+                ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+
+        return (
+            <div key={ev.id} className={cn("rounded-3xl border p-5 shadow-sm", c.bg, c.text, "border-transparent")}> 
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                                <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 truncate">{ev.title}</p>
+                                <div className="mt-2 grid gap-2 text-sm text-zinc-600 dark:text-zinc-300 sm:grid-cols-2">
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                        <Clock className="w-3.5 h-3.5" /> {ev.time}{ev.endTime ? ` - ${ev.endTime}` : ""}
+                                    </span>
+                                    {ev.location && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                            <MapPin className="w-3.5 h-3.5" /> {ev.location}
+                                        </span>
+                                    )}
+                                    {ev.patientName && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                            Patient: {ev.patientName}
+                                        </span>
+                                    )}
+                                    {ev.nurse && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                            Nurse: {ev.nurse}
+                                        </span>
+                                    )}
+                                    {ev.attendees != null && (
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                            <Users className="w-3.5 h-3.5" /> {ev.attendees} attendee{ev.attendees === 1 ? "" : "s"}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]", badgeColor)}>{ev.category ?? "Shared"}</span>
+                                {prio && (
+                                    <span className={cn("inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold", prio.bg, prio.color)}>
+                                        <prio.icon className="w-3 h-3" /> {prio.label}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            {ev.report && (
+                                <div className="rounded-3xl bg-white/80 dark:bg-zinc-950/80 p-4 border border-zinc-100 dark:border-zinc-800">
+                                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">Report</p>
+                                    <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">{ev.report}</p>
+                                </div>
+                            )}
+                            {ev.notes && (
+                                <div className="rounded-3xl bg-white/80 dark:bg-zinc-950/80 p-4 border border-zinc-100 dark:border-zinc-800">
+                                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">Notes</p>
+                                    <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">{ev.notes}</p>
+                                </div>
+                            )}
+                            {ev.assignees && ev.assignees.length > 0 && (
+                                <div className="rounded-3xl bg-white/80 dark:bg-zinc-950/80 p-4 border border-zinc-100 dark:border-zinc-800">
+                                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">Assigned staff</p>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {ev.assignees.map((s, i) => (
+                                            <div key={i} className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-3 py-2 text-xs text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+                                                <Avatar className="size-6 border-2 border-white dark:border-zinc-950 ring-1 ring-zinc-200/50 dark:ring-zinc-800/50">
+                                                    <AvatarImage src={s.avatar} alt={s.name} />
+                                                    <AvatarFallback className="text-[8px]">{s.name[0]}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold truncate">{s.name}</p>
+                                                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{s.role}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            />
+            <motion.div
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                className="relative z-10 w-full max-w-2xl rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 shadow-2xl overflow-hidden"
+            >
+                <div className="flex items-start justify-between gap-4 p-6 border-b border-zinc-100 dark:border-zinc-800">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-400">Day details</p>
+                        <h2 className="mt-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">{format(selectedDate, "EEEE, MMMM d, yyyy")}</h2>
+                        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{events.length} event{events.length === 1 ? "" : "s"}</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-300 transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+                <div className="p-6 space-y-4">
+                    {events.length === 0 ? (
+                        <div className="rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800 p-10 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                            No events scheduled for this day.
+                        </div>
+                    ) : (
+                        <>
+                            {events.length > 1 && (
+                                <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-4">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{events.length} events scheduled</p>
+                                            <p className="text-sm text-zinc-500 dark:text-zinc-400">Tap the button to expand the full event list.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAllEvents(prev => !prev)}
+                                            className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                                        >
+                                            {showAllEvents ? `Hide ${events.length} events` : `View all ${events.length} events`}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {primaryEvent && renderEventCard(primaryEvent)}
+
+                            {showAllEvents && extraEvents.length > 0 && (
+                                <div className="space-y-4">
+                                    {extraEvents.map(ev => renderEventCard(ev))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </motion.div>
         </div>
     );
 }
