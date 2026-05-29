@@ -1112,6 +1112,7 @@ function DayDetailModal({ day, month, year, events, onClose }: {
                         </div>
                     </div>
                 </div>
+            </div>
             );
         };
 
