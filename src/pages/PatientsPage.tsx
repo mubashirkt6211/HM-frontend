@@ -25,6 +25,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog"
 
+import pdfIcon from "@/assets/pdf.png"
+
 // ─── Types ────────────────────────────────────────────────────
 export interface Patient {
   id: number
@@ -41,18 +43,20 @@ export interface Patient {
   room: string
   admissionDate: string
   diagnosis: string
+  reportName?: string
+  reportSize?: string
 }
 
 // ─── Data ────────────────────────────────────────────────────
 const PATIENTS: Patient[] = [
-  { id: 1, name: "Eleanor Pena", age: 45, gender: "Female", bloodGroup: "O+", contact: "+1 (555) 123-4567", email: "eleanor@example.com", avatar: "https://i.pravatar.cc/200?img=1", status: "admitted", department: "Cardiology", doctor: "Dr. Alexandra Reed", room: "Ward A - 102", admissionDate: "May 15, 2024", diagnosis: "Hypertension" },
-  { id: 2, name: "Jacob Jones", age: 32, gender: "Male", bloodGroup: "A-", contact: "+1 (555) 234-5678", email: "jacob@example.com", avatar: "https://i.pravatar.cc/200?img=11", status: "observation", department: "Neurology", doctor: "Dr. Marcus Thompson", room: "Obs - 05", admissionDate: "May 16, 2024", diagnosis: "Migraine" },
-  { id: 3, name: "Kathryn Murphy", age: 28, gender: "Female", bloodGroup: "B+", contact: "+1 (555) 345-6789", email: "kathryn@example.com", avatar: "https://i.pravatar.cc/200?img=5", status: "discharged", department: "Orthopedics", doctor: "Dr. James Okafor", room: "—", admissionDate: "May 10, 2024", diagnosis: "Fracture" },
-  { id: 4, name: "Cameron Williamson", age: 54, gender: "Male", bloodGroup: "AB+", contact: "+1 (555) 456-7890", email: "cameron@example.com", avatar: "https://i.pravatar.cc/200?img=13", status: "critical", department: "ICU", doctor: "Dr. Alexandra Reed", room: "ICU - 02", admissionDate: "May 14, 2024", diagnosis: "Heart Failure" },
-  { id: 5, name: "Cody Fisher", age: 19, gender: "Male", bloodGroup: "O-", contact: "+1 (555) 567-8901", email: "cody@example.com", avatar: "https://i.pravatar.cc/200?img=14", status: "admitted", department: "Pediatrics", doctor: "Dr. Priya Sharma", room: "Ward B - 204", admissionDate: "May 17, 2024", diagnosis: "Asthma" },
-  { id: 6, name: "Jane Cooper", age: 41, gender: "Female", bloodGroup: "A+", contact: "+1 (555) 678-9012", email: "jane@example.com", avatar: "https://i.pravatar.cc/200?img=9", status: "observation", department: "Dermatology", doctor: "Dr. Chen Wei", room: "Obs - 01", admissionDate: "May 17, 2024", diagnosis: "Allergic Reaction" },
-  { id: 7, name: "Robert Fox", age: 62, gender: "Male", bloodGroup: "B-", contact: "+1 (555) 789-0123", email: "robert@example.com", avatar: "https://i.pravatar.cc/200?img=15", status: "admitted", department: "Oncology", doctor: "Dr. Sarah Mitchell", room: "Ward C - 305", admissionDate: "May 12, 2024", diagnosis: "Chemotherapy" },
-  { id: 8, name: "Esther Howard", age: 29, gender: "Female", bloodGroup: "O+", contact: "+1 (555) 890-1234", email: "esther@example.com", avatar: "https://i.pravatar.cc/200?img=20", status: "discharged", department: "Radiology", doctor: "Dr. Elena Vasquez", room: "—", admissionDate: "May 13, 2024", diagnosis: "MRI Scan" },
+  { id: 1, name: "Eleanor Pena", age: 45, gender: "Female", bloodGroup: "O+", contact: "+1 (555) 123-4567", email: "eleanor@example.com", avatar: "https://i.pravatar.cc/200?img=1", status: "admitted", department: "Cardiology", doctor: "Dr. Alexandra Reed", room: "Ward A - 102", admissionDate: "May 15, 2024", diagnosis: "Hypertension", reportName: "Blood Test Results.pdf", reportSize: "1.2 MB" },
+  { id: 2, name: "Jacob Jones", age: 32, gender: "Male", bloodGroup: "A-", contact: "+1 (555) 234-5678", email: "jacob@example.com", avatar: "https://i.pravatar.cc/200?img=11", status: "observation", department: "Neurology", doctor: "Dr. Marcus Thompson", room: "Obs - 05", admissionDate: "May 16, 2024", diagnosis: "Migraine", reportName: "MRI Scan Summary.pdf", reportSize: "3.8 MB" },
+  { id: 3, name: "Kathryn Murphy", age: 28, gender: "Female", bloodGroup: "B+", contact: "+1 (555) 345-6789", email: "kathryn@example.com", avatar: "https://i.pravatar.cc/200?img=5", status: "discharged", department: "Orthopedics", doctor: "Dr. James Okafor", room: "—", admissionDate: "May 10, 2024", diagnosis: "Fracture", reportName: "Discharge Summary.pdf", reportSize: "0.9 MB" },
+  { id: 4, name: "Cameron Williamson", age: 54, gender: "Male", bloodGroup: "AB+", contact: "+1 (555) 456-7890", email: "cameron@example.com", avatar: "https://i.pravatar.cc/200?img=13", status: "critical", department: "ICU", doctor: "Dr. Alexandra Reed", room: "ICU - 02", admissionDate: "May 14, 2024", diagnosis: "Heart Failure", reportName: "ICU Care Notes.pdf", reportSize: "2.6 MB" },
+  { id: 5, name: "Cody Fisher", age: 19, gender: "Male", bloodGroup: "O-", contact: "+1 (555) 567-8901", email: "cody@example.com", avatar: "https://i.pravatar.cc/200?img=14", status: "admitted", department: "Pediatrics", doctor: "Dr. Priya Sharma", room: "Ward B - 204", admissionDate: "May 17, 2024", diagnosis: "Asthma", reportName: "Pediatric Consultation.pdf", reportSize: "1.4 MB" },
+  { id: 6, name: "Jane Cooper", age: 41, gender: "Female", bloodGroup: "A+", contact: "+1 (555) 678-9012", email: "jane@example.com", avatar: "https://i.pravatar.cc/200?img=9", status: "observation", department: "Dermatology", doctor: "Dr. Chen Wei", room: "Obs - 01", admissionDate: "May 17, 2024", diagnosis: "Allergic Reaction", reportName: "Skin Allergy Report.pdf", reportSize: "1.1 MB" },
+  { id: 7, name: "Robert Fox", age: 62, gender: "Male", bloodGroup: "B-", contact: "+1 (555) 789-0123", email: "robert@example.com", avatar: "https://i.pravatar.cc/200?img=15", status: "admitted", department: "Oncology", doctor: "Dr. Sarah Mitchell", room: "Ward C - 305", admissionDate: "May 12, 2024", diagnosis: "Chemotherapy", reportName: "Oncology Treatment Plan.pdf", reportSize: "2.9 MB" },
+  { id: 8, name: "Esther Howard", age: 29, gender: "Female", bloodGroup: "O+", contact: "+1 (555) 890-1234", email: "esther@example.com", avatar: "https://i.pravatar.cc/200?img=20", status: "discharged", department: "Radiology", doctor: "Dr. Elena Vasquez", room: "—", admissionDate: "May 13, 2024", diagnosis: "MRI Scan", reportName: "MRI Report.pdf", reportSize: "2.2 MB" },
 ]
 
 export const PATIENT_STATUS_CONFIG = {
@@ -78,6 +82,7 @@ const COLS = [
   { key: "status", label: "Status", width: "110px", sortable: true },
   { key: "department", label: "Department", width: "120px", sortable: true },
   { key: "doctor", label: "Doctor", width: "140px", sortable: true },
+  { key: "report", label: "Report", width: "70px", sortable: false },
   { key: "diagnosis", label: "Diagnosis", width: "130px", sortable: true },
   { key: "room", label: "Room", width: "90px", sortable: true },
   { key: "admissionDate", label: "Admitted", width: "90px", sortable: true },
@@ -380,7 +385,7 @@ function PatientProfileSidePanel({ patient, onClose }: { patient: Patient; onClo
               <h4 className="text-[13px] font-bold text-zinc-900 dark:text-white">Active Treatment</h4>
               <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 cursor-pointer hover:underline">View More Treatment</span>
             </div>
-            
+
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[14px] font-bold text-zinc-900 dark:text-zinc-100">#TR-196 <span className="font-medium ml-1 text-zinc-600 dark:text-zinc-300">{patient.diagnosis} Treatment Plan</span></p>
@@ -643,7 +648,7 @@ export function PatientsPage() {
       </div>
 
       {/* ── TABLE ── */}
-      <div className="flex-1 overflow-auto mt-4 px-8 pb-8">
+      <div className="flex-1 mt-4 px-8 pb-8">
         <Frame className="w-full">
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden min-w-[880px]">
             {/* Header */}
@@ -667,7 +672,7 @@ export function PatientsPage() {
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1">
               {filtered.length === 0 ? (
                 <div className="py-20 text-center">
                   <MagnifyingGlass className="w-8 h-8 text-zinc-200 dark:text-zinc-800 mx-auto mb-2" />
@@ -735,9 +740,23 @@ export function PatientsPage() {
                       </span>
                     </div>
 
+                    {/* Report */}
+                    <div className="py-3 flex items-center justify-center">
+                      <div className="relative group">
+                        <img
+                          src={pdfIcon}
+                          alt={patient.reportName ? `Report: ${patient.reportName}` : "Report icon"}
+                          className="w-11 h-11 object-contain"
+                        />
+                        <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-full bg-zinc-900 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 whitespace-nowrap">
+                          {patient.reportName ?? "No report"}
+                        </span>
+                      </div>
+                    </div>
+
                     {/* Diagnosis */}
                     <div className="py-3">
-                       <span className="text-[13px] text-zinc-600 dark:text-zinc-400 truncate pr-2 block">
+                      <span className="text-[13px] text-zinc-600 dark:text-zinc-400 truncate pr-2 block">
                         {patient.diagnosis}
                       </span>
                     </div>
@@ -838,14 +857,14 @@ export function PatientsPage() {
               <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                   <button
-                     key={p}
-                     onClick={() => setPage(p)}
-                     className={cn(
-                       "w-7 h-7 rounded-md text-[13px] font-medium flex items-center justify-center transition-colors",
-                       page === p
-                         ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                         : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                     )}
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={cn(
+                      "w-7 h-7 rounded-md text-[13px] font-medium flex items-center justify-center transition-colors",
+                      page === p
+                        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    )}
                   >
                     {p}
                   </button>
