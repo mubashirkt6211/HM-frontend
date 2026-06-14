@@ -235,12 +235,13 @@ export function SiteHeader({
         {/* Notification Bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="relative w-9 h-9 flex items-center justify-center rounded-full text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-300 group outline-none">
-              <BellRing className="w-4 h-4 transition-transform group-hover:rotate-12" />
+            <button className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-[0_2px_12px_-3px_rgba(79,70,229,0.15)] transition-all duration-300 group outline-none cursor-pointer">
+              <div className="absolute -inset-px rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 blur-[2px] transition-opacity duration-300" />
+              <BellRing className="w-[18px] h-[18px] relative transition-transform group-hover:rotate-[15deg] duration-300" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 text-white">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 text-[9px] font-black items-center justify-center border border-white dark:border-zinc-950 leading-none">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 text-white">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-indigo-600 text-[9px] font-black items-center justify-center border border-white dark:border-zinc-950 leading-none">
                     {unreadCount}
                   </span>
                 </span>

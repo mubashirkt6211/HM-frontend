@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { addDays, format } from "date-fns";
 import {
     CaretLeft, CaretRight, Plus, Clock, Users,
-    X, Calendar as CalendarIcon, MapPin, TextAlignLeft,
-    ShieldCheck, Warning, Info, CheckCircle
+    X, Calendar as CalendarIcon, MapPin,
+    ShieldCheck, Warning, Info, Check,
+    File, Trash, CloudArrowUp, Flag, ArrowRight, ArrowLeft
 } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,8 @@ type CalendarEvent = {
     title: string;
     patientName?: string;
     nurse?: string;
+    doctor?: string;
+    attachments?: { name: string; size: string; type: string }[];
     report?: string;
     time: string;
     endTime?: string;
@@ -278,8 +281,19 @@ const EVENT_COLORS = [
     { id: "purple", label: "Purple", dot: "bg-purple-500" },
     { id: "red", label: "Red", dot: "bg-red-500" },
     { id: "orange", label: "Orange", dot: "bg-orange-500" },
-    { id: "teal", label: "Teal", dot: "bg-teal-500" },
-    { id: "pink", label: "Pink", dot: "bg-pink-500" },
+];
+const DOCTOR_OPTIONS = [
+    { name: "Dr. Sarah Mitchell", avatar: "https://i.pravatar.cc/200?img=45", role: "Oncology" },
+    { name: "Dr. Marcus Thompson", avatar: "https://i.pravatar.cc/200?img=52", role: "Neurology" },
+    { name: "Dr. Alexandra Reed", avatar: "https://i.pravatar.cc/200?img=47", role: "Cardiology" },
+    { name: "Dr. Priya Sharma", avatar: "https://i.pravatar.cc/200?img=44", role: "Pediatrics" },
+];
+
+const NURSE_OPTIONS = [
+    { name: "Nurse Elena Gilbert", avatar: "https://i.pravatar.cc/200?img=49", role: "Critical Care" },
+    { name: "Nurse David Miller", avatar: "https://i.pravatar.cc/200?img=12", role: "Emergency" },
+    { name: "Nurse Sophia Williams", avatar: "https://i.pravatar.cc/200?img=32", role: "Pediatrics" },
+    { name: "Nurse Michael Chen", avatar: "https://i.pravatar.cc/200?img=11", role: "Surgery" },
 ];
 
 function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }: {
@@ -289,25 +303,32 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
     defaultMonth: number;
     defaultYear: number;
 }) {
+    const [step, setStep] = React.useState<1 | 2>(1);
+    const [direction, setDirection] = React.useState<-1 | 1>(1);
+
     const [title, setTitle] = React.useState("");
-    const [date, setDate] = React.useState<Date | undefined>(
-        new Date(defaultYear, defaultMonth, defaultDay)
-    );
+    const [date, setDate] = React.useState<Date | undefined>(new Date(defaultYear, defaultMonth, defaultDay));
     const [dateOpen, setDateOpen] = React.useState(false);
     const [startTime, setStart] = React.useState("09:00");
     const [endTime, setEnd] = React.useState("10:00");
     const [color, setColor] = React.useState("blue");
     const [location, setLocation] = React.useState("");
     const [patientName, setPatientName] = React.useState("");
-    const [nurseName, setNurseName] = React.useState("");
-    const [report, setReport] = React.useState("");
+    const [doctor, setDoctor] = React.useState("");
+    const [nurse, setNurse] = React.useState("");
     const [notes, setNotes] = React.useState("");
     const [priority, setPriority] = React.useState<CalendarEvent["priority"]>("Medium");
     const [category, setCategory] = React.useState<CalendarEvent["category"]>("Shared");
-    const [selectedStaff, setSelectedStaff] = React.useState<string[]>([]);
+    const [attachments, setAttachments] = React.useState<{ name: string; size: string; type: string }[]>([]);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const isNextDisabled = !title.trim() || !date;
+    const handleNext = () => { if (!isNextDisabled) { setDirection(1); setStep(2); } };
+    const handleBack = () => { setDirection(-1); setStep(1); };
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (step === 1) { handleNext(); return; }
         if (!title.trim() || !date) return;
         const day = date.getDate();
         const fmt = (t: string) => {
@@ -320,8 +341,9 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
             id: `ev-${Date.now()}`,
             title,
             patientName: patientName.trim() || undefined,
-            nurse: nurseName.trim() || undefined,
-            report: report.trim() || undefined,
+            doctor: doctor || undefined,
+            nurse: nurse || undefined,
+            attachments: attachments.length > 0 ? attachments : undefined,
             time: fmt(startTime),
             endTime: fmt(endTime),
             color,
@@ -329,296 +351,273 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
             notes: notes.trim() || undefined,
             priority,
             category,
-            assignees: MOCK_STAFF.filter(s => selectedStaff.includes(s.name)),
         });
         onClose();
     }
 
-    const inputCls = "w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black transition-all placeholder:text-zinc-400";
+    const slideVariants = {
+        enter: (dir: number) => ({ x: dir > 0 ? 200 : -200, opacity: 0 }),
+        center: { x: 0, opacity: 1 },
+        exit: (dir: number) => ({ x: dir > 0 ? -200 : 200, opacity: 0 }),
+    };
+
+    const inputCls = "w-full h-[38px] border border-zinc-200 rounded-lg px-3 text-[13px] font-medium bg-white text-zinc-800 focus:outline-none focus:ring-2 focus:ring-violet-400/30 hover:border-zinc-300 transition-all placeholder:text-zinc-400";
+    const blackButtonCls = "inline-flex items-center justify-center gap-2 rounded-xl bg-black px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-zinc-800";
+    const blackButtonMutedCls = "inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-black";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/40 backdrop-blur-md"
             />
-            {/* Modal */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 12 }}
+                initial={{ opacity: 0, scale: 0.96, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="relative z-10 bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl border border-zinc-100 dark:border-zinc-800 w-full max-w-md mx-4"
+                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                className="relative z-10 w-full max-w-[640px] mx-4 bg-white flex flex-col max-h-[92vh] overflow-hidden"
+                style={{ borderRadius: 18, boxShadow: "0 24px 64px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.06)" }}
             >
+                {/* Progress bar */}
+                <div style={{ height: 3, background: "#f0eff8" }}>
+                    <motion.div
+                        style={{ height: 3, background: "linear-gradient(90deg,#7c73f1,#5048e5)", borderRadius: 2 }}
+                        animate={{ width: step === 1 ? "50%" : "100%" }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                    />
+                </div>
+
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                            <CalendarIcon className="w-4 h-4 text-zinc-900 dark:text-blue-400" />
-                        </div>
-                        <h2 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100"> Add New Event</h2>
+                <div className="flex items-start gap-3 px-6 pt-5 pb-4">
+                    <div className="flex items-center justify-center shrink-0 rounded-xl" style={{ width: 40, height: 40, background: "#f0eeff" }}>
+                        <Flag className="w-4 h-4" style={{ color: "#6c63ff" }} />
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 transition-colors"
-                    >
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-[15px] font-bold text-zinc-900" style={{ letterSpacing: "-0.01em" }}>
+                            {step === 1 ? "Add New Event" : "Assign Staff & Documents"}
+                        </h2>
+                        <p className="text-xs mt-0.5" style={{ color: "#9896b8" }}>
+                            {step === 1 ? "Fill in the event details below" : "Assign team members and attach medical files"}
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center border border-zinc-200 text-zinc-700 transition-colors hover:bg-black hover:text-white shrink-0">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-                    {/* Title */}
-                    <div>
-                        <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Event title *</label>
-                        <input
-                            autoFocus
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            placeholder="e.g. Patient checkup"
-                            className={inputCls}
-                            required
-                        />
-                    </div>
+                <div style={{ height: 1, background: "#f2f1f8", margin: "0 24px" }} />
 
-                    <div className="grid gap-4">
-                        <div>
-                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Patient name</label>
-                            <input
-                                value={patientName}
-                                onChange={e => setPatientName(e.target.value)}
-                                placeholder="e.g. John Doe"
-                                className={inputCls}
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Nurse</label>
-                            <input
-                                value={nurseName}
-                                onChange={e => setNurseName(e.target.value)}
-                                placeholder="e.g. Nurse Elena"
-                                className={inputCls}
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Report</label>
-                            <textarea
-                                value={report}
-                                onChange={e => setReport(e.target.value)}
-                                placeholder="e.g. Patient requires follow-up"
-                                rows={2}
-                                className={cn(inputCls, "resize-none")}
-                            />
-                        </div>
-                    </div>
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+                    <AnimatePresence mode="wait" initial={false} custom={direction}>
+                        {step === 1 ? (
+                            <motion.div key="step1" custom={direction} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2, ease: "easeInOut" }} className="px-6 py-5 flex flex-col gap-4">
+                                {/* Event Title */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Event Title</label>
+                                    <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Patient Consultation" className={inputCls} required />
+                                </div>
 
-                    {/* Date + Times */}
-                    <div className="grid grid-cols-2 gap-3">
-                        {/* Date Picker */}
-                        <div className="col-span-1">
-                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block flex items-center gap-1">
-                                <CalendarIcon className="w-3 h-3" /> Date
-                            </label>
-                            <Popover open={dateOpen} onOpenChange={setDateOpen}>
-                                <PopoverTrigger asChild>
-                                    <button
-                                        type="button"
-                                        className={cn(
-                                            "w-full flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm text-left font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400",
-                                            !date && "text-zinc-400"
-                                        )}
-                                    >
-                                        {date ? format(date, "MMM d, yyyy") : <span>Pick a date</span>}
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={(newDate) => {
-                                            if (newDate) {
-                                                setDate(newDate);
-                                                setDateOpen(false);
-                                            }
-                                        }}
-                                        initialFocus
-                                        className="p-3"
-                                        classNames={{
-                                            day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white",
-                                            day_today: "bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100",
-                                        }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                                {/* Date + Location */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Start Date</label>
+                                        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                                            <PopoverTrigger asChild>
+                                                <button type="button" className="w-full h-[38px] flex items-center gap-2 border border-zinc-200 rounded-lg px-3 text-[13px] font-medium bg-white hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-violet-400/30 transition-all">
+                                                    <CalendarIcon className="w-3.5 h-3.5 shrink-0" style={{ color: "#6c63ff" }} />
+                                                    <span className={date ? "text-zinc-800" : "text-zinc-400"}>{date ? format(date, "d MMM yyyy") : "Pick date"}</span>
+                                                </button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0 rounded-xl border border-zinc-200 bg-white shadow-xl" align="start">
+                                                <Calendar mode="single" selected={date} onSelect={d => { if (d) { setDate(d); setDateOpen(false); } }} initialFocus className="p-3" classNames={{ day_selected: "bg-violet-600 text-white hover:bg-violet-600", day_today: "bg-violet-50 text-violet-700" }} />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Location</label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: "#6c63ff" }} />
+                                            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Ward / Room No." className={cn(inputCls, "pl-9")} />
+                                        </div>
+                                    </div>
+                                </div>
 
-                        {/* Times */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <TimePicker value={startTime} onChange={setStart} label="Start" icon={Clock} />
-                            <TimePicker value={endTime} onChange={setEnd} label="End" />
-                        </div>
-                    </div>
+                                {/* Times */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <TimePicker value={startTime} onChange={setStart} label="Start Time" icon={Clock} />
+                                    <TimePicker value={endTime} onChange={setEnd} label="End Time" icon={Clock} />
+                                </div>
 
-                    {/* Location */}
-                    <div>
-                        <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> Location
-                        </label>
-                        <input
-                            value={location}
-                            onChange={e => setLocation(e.target.value)}
-                            placeholder="Add location (optional)"
-                            className={inputCls}
-                        />
-                    </div>
-
-                    {/* Notes */}
-                    <div>
-                        <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block flex items-center gap-1">
-                            <TextAlignLeft className="w-3 h-3" /> Notes
-                        </label>
-                        <textarea
-                            value={notes}
-                            onChange={e => setNotes(e.target.value)}
-                            placeholder="Add notes (optional)"
-                            rows={2}
-                            className={cn(inputCls, "resize-none")}
-                        />
-                    </div>
-
-                    {/* Priority + Staff Selection */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Priority</label>
-                            <Select value={priority} onValueChange={(v: string) => setPriority(v as any)}>
-                                <SelectTrigger className="h-9 text-xs rounded-lg bg-zinc-50 dark:bg-zinc-900">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl">
-                                    {(["High", "Medium", "Low"] as const).map(p => (
-                                        <SelectItem key={p} value={p} className="text-xs">
-                                            <div className="flex items-center gap-2">
-                                                <span className={cn("w-2 h-2 rounded-full", PRIORITY_CONFIG[p].color.replace("text-", "bg-"))} />
-                                                {p}
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Category</label>
-                            <Select value={category} onValueChange={(v: string) => setCategory(v as CalendarEvent["category"])}>
-                                <SelectTrigger className="h-9 text-xs rounded-lg bg-zinc-50 dark:bg-zinc-900">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl">
-                                    {(["Shared", "Public", "Archived"] as const).map(cat => (
-                                        <SelectItem key={cat} value={cat} className="text-xs">
-                                            {cat}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="col-span-2">
-                            <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Assign Staff</label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <button
-                                        type="button"
-                                        className="w-full h-9 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-xs font-medium"
-                                    >
-                                        <span className="truncate">{selectedStaff.length > 0 ? `${selectedStaff.length} selected` : "Select staff"}</span>
-                                        <Users className="w-3.5 h-3.5 text-zinc-400" />
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-56 p-2 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl" align="end">
-                                    <div className="flex flex-col gap-1">
-                                        {MOCK_STAFF.map(s => (
-                                            <button
-                                                key={s.name}
-                                                type="button"
-                                                onClick={() => setSelectedStaff(prev => prev.includes(s.name) ? prev.filter(x => x !== s.name) : [...prev, s.name])}
-                                                className={cn(
-                                                    "flex items-center gap-2 w-full p-1.5 rounded-lg text-xs font-bold transition-all",
-                                                    selectedStaff.includes(s.name) ? "bg-zinc-100 dark:bg-zinc-800" : "hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                                                )}
-                                            >
-                                                <Avatar className="size-5 shrink-0">
-                                                    <AvatarImage src={s.avatar} />
-                                                    <AvatarFallback>{s.name[0]}</AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 text-left min-w-0">
-                                                    <p className="truncate text-zinc-900 dark:text-zinc-100">{s.name}</p>
-                                                    <p className="text-[9px] text-zinc-400 font-medium">{s.role}</p>
-                                                </div>
-                                                {selectedStaff.includes(s.name) && <CheckCircle className="w-3.5 h-3.5 text-blue-500" weight="fill" />}
-                                            </button>
+                                {/* Color tag */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-zinc-700 mb-2">Color Tag</label>
+                                    <div className="flex items-center gap-2">
+                                        {EVENT_COLORS.map(c => (
+                                            <button key={c.id} type="button" onClick={() => setColor(c.id)} className={cn("w-6 h-6 rounded-full transition-all", c.dot, color === c.id ? "ring-2 ring-offset-2 ring-zinc-400 scale-110" : "opacity-45 hover:opacity-90 hover:scale-105")} title={c.label} />
                                         ))}
                                     </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                    </div>
+                                </div>
 
-                    {/* Notes */}
-                    <div>
-                        <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Notes</label>
-                        <textarea
-                            value={notes}
-                            onChange={e => setNotes(e.target.value)}
-                            placeholder="Add notes (optional)"
-                            rows={3}
-                            className={cn(inputCls, "resize-none")}
-                        />
-                    </div>
+                                <div style={{ height: 1, background: "#f2f1f8" }} className="mt-1" />
+                                <div className="flex items-center gap-2">
+                                    <button type="button" onClick={onClose} className={blackButtonMutedCls}>Cancel</button>
+                                    <div className="flex-1" />
+                                    <motion.button
+                                        whileHover={{ scale: isNextDisabled ? 1 : 1.02 }} whileTap={{ scale: isNextDisabled ? 1 : 0.97 }}
+                                        type="button" onClick={handleNext} disabled={isNextDisabled}
+                                        className={cn(blackButtonCls, isNextDisabled && "cursor-not-allowed bg-zinc-300 text-zinc-500 hover:bg-zinc-300")}
+                                    >
+                                        Next Step <ArrowRight className="w-4 h-4" />
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div key="step2" custom={direction} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2, ease: "easeInOut" }} className="px-6 py-5 flex flex-col gap-4">
+                                {/* Doctor + Nurse */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Assign Doctor</label>
+                                        <Select value={doctor} onValueChange={(value) => setDoctor(value ?? "")}>
+                                            <SelectTrigger className="h-[38px] text-[13px] rounded-lg bg-white border border-zinc-200 hover:border-zinc-300">
+                                                {doctor ? <div className="flex items-center gap-2"><Avatar className="size-5 shrink-0"><AvatarImage src={DOCTOR_OPTIONS.find(d => d.name === doctor)?.avatar} /><AvatarFallback>{doctor[0]}</AvatarFallback></Avatar><span className="text-[12px] font-medium truncate">{doctor.replace("Dr. ", "")}</span></div> : <SelectValue placeholder="Select doctor" />}
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl bg-white border border-zinc-200 shadow-xl">
+                                                {DOCTOR_OPTIONS.map(doc => (
+                                                    <SelectItem key={doc.name} value={doc.name} className="py-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="size-6 shrink-0"><AvatarImage src={doc.avatar} /><AvatarFallback>{doc.name[0]}</AvatarFallback></Avatar>
+                                                            <div className="text-left leading-tight"><p className="text-[12px] font-semibold text-zinc-900">{doc.name}</p><p className="text-[10px] text-zinc-400">{doc.role}</p></div>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Assign Nurse</label>
+                                        <Select value={nurse} onValueChange={(value) => setNurse(value ?? "")}>
+                                            <SelectTrigger className="h-[38px] text-[13px] rounded-lg bg-white border border-zinc-200 hover:border-zinc-300">
+                                                {nurse ? <div className="flex items-center gap-2"><Avatar className="size-5 shrink-0"><AvatarImage src={NURSE_OPTIONS.find(n => n.name === nurse)?.avatar} /><AvatarFallback>{nurse[0]}</AvatarFallback></Avatar><span className="text-[12px] font-medium truncate">{nurse.replace("Nurse ", "")}</span></div> : <SelectValue placeholder="Select nurse" />}
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl bg-white border border-zinc-200 shadow-xl">
+                                                {NURSE_OPTIONS.map(ns => (
+                                                    <SelectItem key={ns.name} value={ns.name} className="py-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="size-6 shrink-0"><AvatarImage src={ns.avatar} /><AvatarFallback>{ns.name[0]}</AvatarFallback></Avatar>
+                                                            <div className="text-left leading-tight"><p className="text-[12px] font-semibold text-zinc-900">{ns.name}</p><p className="text-[10px] text-zinc-400">{ns.role}</p></div>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
 
-                    {/* Color */}
-                    <div>
-                        <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block">Color</label>
-                        <div className="flex items-center gap-2">
-                            {EVENT_COLORS.map(c => (
-                                <button
-                                    key={c.id}
-                                    type="button"
-                                    onClick={() => setColor(c.id)}
-                                    className={cn(
-                                        "w-6 h-6 rounded-full transition-all",
-                                        c.dot,
-                                        color === c.id
-                                            ? "ring-2 ring-offset-2 ring-zinc-400 dark:ring-offset-zinc-950 scale-110"
-                                            : "opacity-60 hover:opacity-100 hover:scale-105"
+                                {/* Patient Name + Priority */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Patient Name</label>
+                                        <input value={patientName} onChange={e => setPatientName(e.target.value)} placeholder="e.g. John Doe" className={inputCls} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Priority</label>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {(["High", "Medium", "Low"] as const).map(p => {
+                                                const isActive = priority === p;
+                                                return (
+                                                    <button key={p} type="button" onClick={() => setPriority(p)} className={cn("flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all", isActive ? "border-black bg-black text-white" : "border-zinc-300 bg-zinc-100 text-zinc-700 hover:border-black hover:bg-zinc-200")}>
+                                                        {isActive && <Check className="w-2.5 h-2.5" weight="bold" />}{p}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Category tags */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Category</label>
+                                    <div className="flex items-center gap-2">
+                                        {(["Shared", "Public", "Archived"] as const).map(cat => {
+                                            const isActive = category === cat;
+                                            return (
+                                                <button key={cat} type="button" onClick={() => setCategory(cat)} className={cn("flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold border transition-all", isActive ? "border-black bg-black text-white" : "border-zinc-300 bg-zinc-100 text-zinc-700 hover:border-black hover:bg-zinc-200")}>
+                                                    {isActive && <Check className="w-2.5 h-2.5" weight="bold" />}{cat}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Upload Document */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-zinc-700 mb-0.5">Upload Document</label>
+                                    <p className="text-[11px] mb-2" style={{ color: "#9896b8" }}>Drag and drop to upload medical reports</p>
+                                    <div
+                                        onClick={() => fileInputRef.current?.click()}
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={e => {
+                                            e.preventDefault();
+                                            const files = Array.from(e.dataTransfer.files).map(f => ({ name: f.name, size: f.size > 1024 * 1024 ? `${(f.size / (1024 * 1024)).toFixed(1)} MB` : `${(f.size / 1024).toFixed(0)} KB`, type: f.type }));
+                                            setAttachments(prev => [...prev, ...files]);
+                                        }}
+                                        className="flex flex-col items-center justify-center gap-2 py-7 px-4 cursor-pointer rounded-xl transition-all group"
+                                        style={{ border: "2px dashed #d4d0f7", background: "#faf9ff" }}
+                                    >
+                                        <input type="file" ref={fileInputRef} className="hidden" multiple onChange={e => { if (e.target.files) { const newFiles = Array.from(e.target.files).map(f => ({ name: f.name, size: f.size > 1024 * 1024 ? `${(f.size / (1024 * 1024)).toFixed(1)} MB` : `${(f.size / 1024).toFixed(0)} KB`, type: f.type })); setAttachments(prev => [...prev, ...newFiles]); } }} />
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform" style={{ background: "#ede9ff" }}>
+                                            <CloudArrowUp className="w-6 h-6" style={{ color: "#6c63ff" }} />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-[13px] font-semibold text-zinc-700">Choose a file or drag &amp; drop it here.</p>
+                                            <p className="text-[11px] mt-0.5" style={{ color: "#9896b8" }}>PDF, DOCX, PNG, JPEG, XLSX – Up to 50MB</p>
+                                        </div>
+                                        <button type="button" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }} className="mt-1 rounded-lg bg-black px-4 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-zinc-800">
+                                            Browse files
+                                        </button>
+                                    </div>
+                                    {attachments.length > 0 && (
+                                        <div className="mt-2 space-y-1.5 max-h-28 overflow-y-auto">
+                                            {attachments.map((file, idx) => (
+                                                <div key={idx} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: "#f5f3ff", border: "1px solid #e6e3ff" }}>
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <File className="w-3.5 h-3.5 shrink-0" style={{ color: "#6c63ff" }} />
+                                                        <span className="truncate text-[12px] text-zinc-700 font-medium">{file.name}</span>
+                                                        <span className="text-[10px] shrink-0" style={{ color: "#9896b8" }}>({file.size})</span>
+                                                    </div>
+                                                    <button type="button" onClick={e => { e.stopPropagation(); setAttachments(prev => prev.filter((_, i) => i !== idx)); }} className="ml-2 p-0.5 rounded text-zinc-300 hover:text-red-400 transition-colors">
+                                                        <Trash className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
-                                    title={c.label}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                                </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            type="submit"
-                            className="flex-1 py-2 rounded-lg bg-black text-white text-sm font-semibold shadow-sm shadow-black/20 transition-colors flex items-center justify-center gap-1.5"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Event
-                        </motion.button>
-                    </div>
+                                {/* Description */}
+                                <div>
+                                    <label className="block text-[12px] font-semibold text-zinc-700 mb-1.5">Description</label>
+                                    <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe the event or add clinical notes here!" rows={3} className="w-full border border-zinc-200 rounded-lg px-3 py-2.5 text-[13px] bg-white text-zinc-800 focus:outline-none focus:ring-2 focus:ring-violet-400/30 hover:border-zinc-300 transition-all placeholder:text-zinc-400 resize-none" />
+                                </div>
+
+                                {/* 3-button footer */}
+                                <div style={{ height: 1, background: "#f2f1f8" }} className="mt-1" />
+                                <div className="flex items-center gap-2">
+                                    <button type="button" onClick={onClose} className={blackButtonMutedCls}>Cancel</button>
+                                    <button type="button" onClick={() => { setPatientName(""); setDoctor(""); setNurse(""); setNotes(""); setAttachments([]); setPriority("Medium"); setCategory("Shared"); }} className={blackButtonMutedCls}>Reset Data</button>
+                                    <div className="flex-1" />
+                                    <button type="button" onClick={handleBack} className={blackButtonMutedCls}>
+                                        <ArrowLeft className="w-3.5 h-3.5" /> Back
+                                    </button>
+                                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} type="submit" className={blackButtonCls}>
+                                        <Plus className="w-4 h-4" /> Save Event
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </form>
             </motion.div>
         </div>
@@ -871,7 +870,6 @@ export function CalendarPage() {
                             {weekDates.map(date => {
                                 const dayNum = date.getDate();
                                 const isCurrentMonth = date.getMonth() === month;
-                                const isToday = date.toDateString() === today.toDateString();
                                 const isSelected = date.toDateString() === selectedDate.toDateString();
                                 const events = (isCurrentMonth && eventMap[dayNum]?.filter(eventMatchesFilter)) || [];
                                 return (

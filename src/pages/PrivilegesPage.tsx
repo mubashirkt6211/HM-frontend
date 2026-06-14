@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
@@ -8,10 +8,10 @@ import {
     CheckCircle, Warning, XCircle, Stethoscope, Heartbeat,
     Flask, Ambulance, Pill, UserGear, Buildings, ShieldCheck,
     UserCirclePlus, EnvelopeSimple, LockKey, Trash, ArrowsClockwise,
-    Funnel, SortDescending, CaretUp, CaretDown, CaretUpDown,
+    CaretDown,
     IdentificationCard, DeviceMobile, Clock, CalendarBlank,
-    ArrowSquareOut, Copy, ShieldWarning, LockLaminated,
-    SignIn, UserMinus, UserCheck, Key, Sliders, FunnelSimple, ArrowsDownUp, ListDashes,
+    ShieldWarning,
+    SignIn, UserMinus, UserCheck, Key, FunnelSimple, ArrowsDownUp, ListDashes,
 } from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -126,8 +126,10 @@ function CredentialModal({
     const [showPwd, setShowPwd] = useState(false)
     const [newPwd, setNewPwd] = useState("")
     const [email, setEmail] = useState(staff.email)
+    const [role, setRole] = useState<UserRole>(staff.role)
+    const [department, setDepartment] = useState<string>(staff.department)
     const [saving, setSaving] = useState(false)
-    const rm = ROLE_META[staff.role]
+    const rm = ROLE_META[role]
     const health = credHealth(staff)
     const hm = HEALTH_META[health]
     const ac = avatarColor(`${staff.firstName} ${staff.lastName}`)
@@ -135,7 +137,12 @@ function CredentialModal({
     const handleSave = async () => {
         setSaving(true)
         await new Promise(r => setTimeout(r, 600))
-        onUpdate(staff.id, { email, ...(newPwd ? { passwordSet: true } : {}) })
+        onUpdate(staff.id, { 
+            email, 
+            role, 
+            department, 
+            ...(newPwd ? { passwordSet: true } : {}) 
+        })
         setSaving(false)
         setNewPwd("")
     }
@@ -337,28 +344,75 @@ function CredentialModal({
                         {/* Role */}
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Role</label>
-                            <select
-                                defaultValue={staff.role}
-                                onChange={e => onUpdate(staff.id, { role: e.target.value as UserRole })}
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-[13.5px] font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-zinc-400 transition-all"
-                            >
-                                {Object.entries(ROLE_META)
-                                    .filter(([r]) => r !== UserRole.USER && r !== UserRole.PATIENT)
-                                    .map(([r, m]) => <option key={r} value={r}>{m.label}</option>)
-                                }
-                            </select>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button type="button" className="w-full px-3.5 py-2 h-[38px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-[13px] font-medium text-zinc-900 dark:text-zinc-100 transition-all hover:border-zinc-300 dark:hover:border-zinc-700 outline-none flex items-center justify-between">
+                                        {role ? (
+                                            <div className="flex items-center gap-2">
+                                                {(() => {
+                                                    const m = ROLE_META[role];
+                                                    const Icon = m.icon;
+                                                    return (
+                                                        <>
+                                                            <Icon className={cn("w-4 h-4", m.iconCls)} />
+                                                            <span>{m.label}</span>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+                                        ) : (
+                                            <span className="text-zinc-400">Select role</span>
+                                        )}
+                                        <CaretDown className="w-3.5 h-3.5 text-zinc-400" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-[300px] max-h-[220px] overflow-y-auto p-1 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-xl z-50" align="start">
+                                    {Object.entries(ROLE_META)
+                                        .filter(([r]) => r !== UserRole.USER && r !== UserRole.PATIENT)
+                                        .map(([r, m]) => {
+                                            const Icon = m.icon;
+                                            return (
+                                                <DropdownMenuItem 
+                                                    key={r} 
+                                                    onClick={() => setRole(r as UserRole)}
+                                                    className="rounded-lg py-2 px-2.5 cursor-pointer text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center gap-2"
+                                                >
+                                                    <Icon className={cn("w-4 h-4 shrink-0", m.iconCls)} />
+                                                    <span className="text-[13px] font-medium">{m.label}</span>
+                                                </DropdownMenuItem>
+                                            );
+                                        })
+                                    }
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
                         {/* Department */}
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Department</label>
-                            <select
-                                defaultValue={staff.department}
-                                onChange={e => onUpdate(staff.id, { department: e.target.value })}
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-[13.5px] font-medium text-zinc-900 dark:text-zinc-100 outline-none focus:border-zinc-400 transition-all"
-                            >
-                                {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                            </select>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button type="button" className="w-full px-3.5 py-2 h-[38px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-[13px] font-medium text-zinc-900 dark:text-zinc-100 transition-all hover:border-zinc-300 dark:hover:border-zinc-700 outline-none flex items-center justify-between">
+                                        {department ? (
+                                            <span>{department}</span>
+                                        ) : (
+                                            <span className="text-zinc-400">Select department</span>
+                                        )}
+                                        <CaretDown className="w-3.5 h-3.5 text-zinc-400" />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-[300px] max-h-[220px] overflow-y-auto p-1 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-xl z-50" align="start">
+                                    {DEPARTMENTS.map(d => (
+                                        <DropdownMenuItem 
+                                            key={d} 
+                                            onClick={() => setDepartment(d)}
+                                            className="rounded-lg py-2 px-2.5 cursor-pointer text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center gap-2"
+                                        >
+                                            <span className="text-[13px] font-medium">{d}</span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
                         {/* Password */}
@@ -472,235 +526,7 @@ function CredentialModal({
 
 
 
-// ─── Table ────────────────────────────────────────────────────
-const TABLE_COLS: { key: SortField | ""; label: string; width: string; sortable?: boolean }[] = [
-    { key: "name", label: "Personnel", width: "minmax(220px,1fr)", sortable: true },
-    { key: "role", label: "Role", width: "160px", sortable: true },
-    { key: "department", label: "Department", width: "150px", sortable: true },
-    { key: "", label: "Credentials", width: "160px" },
-    { key: "status", label: "Status", width: "120px", sortable: true },
-    { key: "lastLogin", label: "Last Login", width: "120px", sortable: true },
-    { key: "joinDate", label: "Joined", width: "110px", sortable: true },
-    { key: "", label: "", width: "80px" },
-]
 
-function SortIcon({ isSorted }: { isSorted: false | "asc" | "desc" }) {
-    if (!isSorted) return <CaretUpDown className="w-3 h-3 text-zinc-300 dark:text-zinc-700" />
-    return isSorted === "asc"
-        ? <CaretUp weight="fill" className="w-3 h-3 text-zinc-700 dark:text-zinc-200" />
-        : <CaretDown weight="fill" className="w-3 h-3 text-zinc-700 dark:text-zinc-200" />
-}
-
-const getColumns = (
-    onUpdate: (id: string, patch: Partial<HospitalStaff>) => void,
-    onViewCredentials: (id: string) => void,
-    onOnboard: (id: string) => void
-): ColumnDef<HospitalStaff>[] => [
-        {
-            accessorKey: "name",
-            header: "Personnel",
-            filterFn: (row, id, value) => {
-                const s = row.original
-                const q = value.toLowerCase()
-                return `${s.firstName} ${s.lastName} ${s.email} ${s.employeeId}`.toLowerCase().includes(q)
-            },
-            cell: ({ row }) => {
-                const s = row.original
-                const ac = avatarColor(`${s.firstName} ${s.lastName}`)
-                const isPending = s.status === "pending"
-                return (
-                    <div className="flex items-center gap-3">
-                        <div className="relative shrink-0">
-                            <Avatar className="size-8">
-                                <AvatarImage src={s.avatar} />
-                                <AvatarFallback className="text-[11px] font-semibold" style={{ background: ac.bg, color: ac.tx }}>
-                                    {initials(s)}
-                                </AvatarFallback>
-                            </Avatar>
-                            {isPending && <span className="absolute -top-0.5 -right-0.5 size-2 bg-amber-400 rounded-full border-2 border-white dark:border-zinc-950 animate-pulse" />}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">
-                                    {s.firstName} {s.lastName}
-                                </span>
-                                {isPending && (
-                                    <span className="text-[9px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50 uppercase tracking-wider shrink-0">
-                                        New
-                                    </span>
-                                )}
-                            </div>
-                            <span className="text-[11px] text-zinc-400 truncate">
-                                {isPending ? "Provisioning required" : s.email}
-                            </span>
-                        </div>
-                    </div>
-                )
-            },
-        },
-        {
-            accessorKey: "role",
-            header: "Role",
-            filterFn: "arrIncludesSome",
-            cell: ({ row }) => {
-                const rm = ROLE_META[row.original.role]
-                return (
-                    <button
-                        type="button"
-                        onClick={e => e.stopPropagation()}
-                        className={cn(
-                            "inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 rounded-lg border shadow-sm transition-all hover:brightness-95 active:scale-95 cursor-pointer",
-                            rm.bg, rm.text, "border-zinc-200/50 dark:border-zinc-700/50"
-                        )}
-                    >
-                        <span className={cn("size-1.5 rounded-full", rm.dot)} />
-                        {rm.shortLabel}
-                    </button>
-                )
-            },
-        },
-        {
-            accessorKey: "department",
-            header: "Department",
-            filterFn: "arrIncludesSome",
-            cell: ({ row }) => <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{row.original.department}</span>,
-        },
-        {
-            id: "credentials",
-            header: "Credentials",
-            cell: ({ row }) => {
-                const s = row.original
-                return (
-                    <div className="flex items-center gap-1.5">
-                        <span title={s.passwordSet ? "Password set" : "No password"} className={cn(
-                            "inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded",
-                            s.passwordSet
-                                ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30"
-                                : "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30"
-                        )}>
-                            {s.passwordSet ? <span className="text-emerald-500">✓</span> : <span className="text-rose-500">✕</span>}
-                            Pwd
-                        </span>
-                        <span title={s.twoFactorEnabled ? "2FA enabled" : "No 2FA"} className={cn(
-                            "inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded",
-                            s.twoFactorEnabled
-                                ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30"
-                                : "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800"
-                        )}>
-                            {s.twoFactorEnabled ? <span className="text-emerald-500">✓</span> : <span className="text-zinc-400">✕</span>}
-                            2FA
-                        </span>
-                    </div>
-                )
-            },
-        },
-        {
-            accessorKey: "status",
-            header: "Status",
-            filterFn: "arrIncludesSome",
-            cell: ({ row }) => {
-                const s = row.original
-                return (
-                    <span className={cn(
-                        "inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded",
-                        s.status === "active" && "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
-                        s.status === "pending" && "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
-                        s.status === "suspended" && "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
-                    )}>
-                        {s.status === "active" && <span className="text-emerald-500">✓</span>}
-                        {s.status === "pending" && <span className="text-amber-500">•</span>}
-                        {s.status === "suspended" && <span className="text-zinc-400">✕</span>}
-                        {s.status.charAt(0).toUpperCase() + s.status.slice(1)}
-                    </span>
-                )
-            },
-        },
-        {
-            accessorKey: "lastLogin",
-            header: "Last Login",
-            cell: ({ row }) => {
-                const s = row.original
-                return (
-                    <div className="flex flex-col">
-                        <span className="text-[13px] text-zinc-700 dark:text-zinc-300">{s.lastLogin}</span>
-                        {s.sessionActive && (
-                            <span className="text-[11px] text-emerald-600 flex items-center gap-1 mt-0.5">
-                                <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />Online
-                            </span>
-                        )}
-                    </div>
-                )
-            },
-        },
-        {
-            accessorKey: "joinDate",
-            header: "Joined",
-            cell: ({ row }) => <span className="text-[13px] text-zinc-500 dark:text-zinc-400">{row.original.joinDate}</span>,
-        },
-        {
-            id: "actions",
-            cell: ({ row }) => {
-                const s = row.original
-                const isPending = s.status === "pending"
-                return (
-                    <div className="text-right">
-                        {isPending ? (
-                            <button
-                                onClick={e => { e.stopPropagation(); onOnboard(s.id) }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 rounded-lg text-[12px] font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-95"
-                            >
-                                <UserCirclePlus weight="fill" className="w-3.5 h-3.5" />
-                                Onboard
-                            </button>
-                        ) : (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <button
-                                        onClick={e => e.stopPropagation()}
-                                        className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all opacity-0 group-hover:opacity-100"
-                                    >
-                                        <DotsThree className="w-4 h-4" weight="bold" />
-                                    </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-lg">
-                                    <DropdownMenuItem
-                                        onClick={e => { e.stopPropagation(); onViewCredentials(s.id) }}
-                                        className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer"
-                                    >
-                                        <IdentificationCard weight="duotone" className="w-4 h-4 text-zinc-400" />
-                                        View Credentials
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={e => { e.stopPropagation(); onViewCredentials(s.id) }}
-                                        className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer"
-                                    >
-                                        <LockLaminated weight="duotone" className="w-4 h-4 text-zinc-400" />
-                                        Reset Password
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer">
-                                        <ShieldCheck weight="duotone" className="w-4 h-4 text-zinc-400" />
-                                        Audit Logs
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator className="my-0.5" />
-                                    <DropdownMenuItem
-                                        onClick={e => { e.stopPropagation(); onUpdate(s.id, { status: s.status === "suspended" ? "active" : "suspended" }) }}
-                                        className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-amber-600 focus:text-amber-600 focus:bg-amber-50 dark:focus:bg-amber-950/20"
-                                    >
-                                        {s.status === "suspended" ? <UserCheck weight="duotone" className="w-4 h-4" /> : <UserMinus weight="duotone" className="w-4 h-4" />}
-                                        {s.status === "suspended" ? "Reinstate" : "Suspend"}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-[12px] font-medium rounded-lg gap-2 px-2.5 py-2 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20">
-                                        <Trash weight="duotone" className="w-4 h-4" />
-                                        Terminate Access
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                    </div>
-                )
-            },
-        },
-    ]
 
 // ─── Page ─────────────────────────────────────────────────────
 export function PrivilegesPage() {
@@ -730,7 +556,7 @@ export function PrivilegesPage() {
         { key: "", label: "", width: "40px" },
     ]
     const drawerStaff = drawerStaffId ? staff.find(s => s.id === drawerStaffId) ?? null : null
-    const activeFilterCount = [statusFilter !== "all" ? 1 : 0, roleFilter !== "all" ? 1 : 0, deptFilter !== "all" ? 1 : 0].reduce((a, b) => a + b, 0)
+
 
     // Reset to page 1 on filter or items per page change
     useEffect(() => {
@@ -777,9 +603,7 @@ export function PrivilegesPage() {
         setStaff(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
     }
 
-    const handleOnboard = (id: string) => {
-        setDrawerId(id)
-    }
+
 
 
 
@@ -1333,6 +1157,7 @@ export function PrivilegesPage() {
                             className="absolute inset-0 bg-zinc-900/20 dark:bg-zinc-950/50 backdrop-blur-[2px]"
                         />
                         <CredentialModal
+                            key={drawerStaff.id}
                             staff={drawerStaff}
                             onClose={() => setDrawerId(null)}
                             onUpdate={updateStaff}
