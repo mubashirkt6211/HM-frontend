@@ -13,23 +13,17 @@ import {
   ArrowUDownLeft,
   ArrowUDownRight,
   Asterisk,
-  CaretDown,
-  Check,
   DotsThree,
   EnvelopeOpen,
   Funnel,
-  Inbox,
   MagnifyingGlass,
   PaperPlaneRight,
   Pencil,
-  Plus,
   Star,
   Trash,
   Warning,
   X,
   FilePlus,
-  TagSimple,
-  ClockCounterClockwise,
   Paperclip,
   At,
   Smiley,
@@ -40,11 +34,9 @@ import {
   ListNumbers,
   Link,
   ImageSquare,
-  ArrowRight,
   Eye,
   FileText,
   Bell,
-  ChatsCircle,
 } from "@phosphor-icons/react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -375,16 +367,16 @@ function getInitials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
 }
 
-const LABEL_CONFIG: Record<EmailLabel, { label: string; color: string; bg: string }> = {
-  work: { label: "Work", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/30" },
-  personal: { label: "Personal", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/30" },
-  finance: { label: "Finance", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/30" },
-  health: { label: "Health", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-900/30" },
-  urgent: { label: "Urgent", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/30" },
+const LABEL_CONFIG: Record<EmailLabel, { label: string; color: string; bg: string; dot: string }> = {
+  work:     { label: "Work",     color: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-900/30",     dot: "bg-blue-500" },
+  personal: { label: "Personal", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/30", dot: "bg-purple-500" },
+  finance:  { label: "Finance",  color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/30", dot: "bg-emerald-500" },
+  health:   { label: "Health",   color: "text-rose-600 dark:text-rose-400",    bg: "bg-rose-50 dark:bg-rose-900/30",     dot: "bg-rose-500" },
+  urgent:   { label: "Urgent",   color: "text-amber-600 dark:text-amber-400",  bg: "bg-amber-50 dark:bg-amber-900/30",   dot: "bg-amber-500" },
 };
 
 const FOLDER_CONFIG: Record<EmailFolder, { label: string; icon: React.ElementType }> = {
-  inbox: { label: "Inbox", icon: Inbox },
+  inbox: { label: "Inbox", icon: Bell },
   starred: { label: "Starred", icon: Star },
   sent: { label: "Sent", icon: PaperPlaneRight },
   drafts: { label: "Drafts", icon: FilePlus },
@@ -559,8 +551,8 @@ function EmailListItem({ email, isSelected, onClick, onStar }: EmailListItemProp
         isSelected
           ? "bg-blue-50/80 dark:bg-blue-950/30"
           : email.isRead
-          ? "bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
-          : "bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+            ? "bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+            : "bg-blue-50/30 dark:bg-blue-950/10 hover:bg-blue-50/50 dark:hover:bg-blue-950/20"
       )}
     >
       {/* Unread indicator */}
@@ -569,9 +561,7 @@ function EmailListItem({ email, isSelected, onClick, onStar }: EmailListItemProp
       )}
 
       <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-        {email.from.avatar && <AvatarFallback style={{ background: "transparent" }}>
-          <img src={email.from.avatar} alt={email.from.name} className="w-full h-full object-cover rounded-full" />
-        </AvatarFallback>}
+        <AvatarImage src={email.from.avatar} alt={email.from.name} />
         <AvatarFallback className="text-[12px] font-bold bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
           {getInitials(email.from.name)}
         </AvatarFallback>
@@ -665,7 +655,7 @@ function EmailDetail({ email, onClose, onReply, onForward, onDelete, onArchive, 
           <ActionButton icon={Archive} label="Archive" onClick={onArchive} />
           <ActionButton icon={Trash} label="Delete" onClick={onDelete} destructive />
           <ActionButton icon={Star} label="Star" onClick={onStar} active={email.isStarred} activeColor="text-amber-400" />
-          <ActionButton icon={DotsThree} label="More" onClick={() => {}} />
+          <ActionButton icon={DotsThree} label="More" onClick={() => { }} />
         </div>
       </div>
 
@@ -698,11 +688,7 @@ function EmailDetail({ email, onClose, onReply, onForward, onDelete, onArchive, 
         {/* Sender info */}
         <div className="flex items-start gap-4 mb-6">
           <Avatar className="h-11 w-11 shrink-0">
-            {email.from.avatar && (
-              <AvatarFallback style={{ background: "transparent" }}>
-                <img src={email.from.avatar} alt={email.from.name} className="w-full h-full object-cover rounded-full" />
-              </AvatarFallback>
-            )}
+            <AvatarImage src={email.from.avatar} alt={email.from.name} />
             <AvatarFallback className="text-[13px] font-bold bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
               {getInitials(email.from.name)}
             </AvatarFallback>
@@ -800,8 +786,8 @@ function ActionButton({
         destructive
           ? "text-zinc-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/30"
           : active
-          ? cn(activeColor || "text-blue-600", "bg-blue-50 dark:bg-blue-900/30")
-          : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200"
+            ? cn(activeColor || "text-blue-600", "bg-blue-50 dark:bg-blue-900/30")
+            : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200"
       )}
     >
       <Icon className="w-4.5 h-4.5" weight={active ? "fill" : "regular"} />
@@ -818,7 +804,7 @@ export function EmailPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isComposeOpen, setIsComposeOpen] = React.useState(false);
   const [replyToEmail, setReplyToEmail] = React.useState<Email | null>(null);
-  const [isForwardOpen, setIsForwardOpen] = React.useState(false);
+
 
   const selectedEmail = React.useMemo(
     () => emails.find((e) => e.id === selectedEmailId) ?? null,
@@ -961,7 +947,7 @@ export function EmailPage() {
                     key={labelId}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
                   >
-                    <span className={cn("w-2 h-2 rounded-full shrink-0", bg, "border-2", color.replace("text-", "border-"))} />
+                    <span className={cn("w-2 h-2 rounded-full shrink-0", LABEL_CONFIG[labelId].dot)} />
                     <span>{label}</span>
                   </button>
                 )
