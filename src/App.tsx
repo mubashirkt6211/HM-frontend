@@ -17,7 +17,7 @@ import { UserRole } from "@/models/user";
 
 
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | "reports" | "orthopedics" | "orthodontics" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "analytics" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | "reports" | "orthopedics" | "orthodontics" | string;
 
 
 function App() {
@@ -40,6 +40,7 @@ function App() {
     >
 
       {isCalendar && <CalendarPage />}
+      {currentPage === "analytics" && <AnalyticsPage />}
       {currentPage === "messages" && <MessagesPage />}
       {currentPage === "patients" && <PatientsPage />}
       {currentPage === "tasks" && <TasksPage />}

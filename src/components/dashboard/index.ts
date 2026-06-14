@@ -9,6 +9,8 @@ export { ReviewsTab } from "./ReviewsTab";
 export {
   Card,
   VisualChart,
+  MiniBarChart,
+  DonutChart,
   FilterBtn,
   TabItem,
   InfoRow,
@@ -18,3 +20,4 @@ export {
   HeroBanner,
   CategoryCard,
 } from "./components";
+export { CustomGauge } from "./CustomGauge";

@@ -25,7 +25,11 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
+  /* Premium HSL color palette */
+  --primary-hue: 220;
+  --primary-sat: 80%;
+  --primary-light: 60%;
+  --primary-color: hsl(var(--primary-hue) var(--primary-sat) var(--primary-light));
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

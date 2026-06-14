@@ -1,3 +1,4 @@
+import React, { useRef, useState } from "react";
 import { motion } from "motion/react";
 import { ArrowSquareOut, Circle, SquaresFour, TrendUp, ShieldCheck, Files, FileText, DownloadSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,19 @@ interface PatientProfileProps {
 
 export function PatientProfile({ patient: p, onBack }: PatientProfileProps) {
   const cfg = STATUS_CONFIG[p.status];
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setSelectedFiles(Array.from(files));
+    }
+  };
 
   return (
     <motion.div
@@ -115,7 +129,7 @@ export function PatientProfile({ patient: p, onBack }: PatientProfileProps) {
 
               <div>
                 <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Clinical Notes</h4>
-                <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl p-6 min-h-[100px]">
+                <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl p-6 min-h-25">
                   <p className="text-[13px] text-zinc-400 italic leading-relaxed">
                     Patient reported slight fatigue during morning hours. Prescribed routine checkup and blood work for further analysis.
                   </p>
@@ -127,12 +141,27 @@ export function PatientProfile({ patient: p, onBack }: PatientProfileProps) {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-[11px] font-medium text-zinc-400 uppercase tracking-[0.2em]">Documents & Reports</h4>
-                <button className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
-                  <TrendUp className="w-3.5 h-3.5" /> Upload New
-                </button>
+                <div className="flex flex-col items-end gap-2">
+                  <button
+                    type="button"
+                    onClick={handleUploadClick}
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+                  >
+                    <TrendUp className="w-3.5 h-3.5" /> Upload New
+                  </button>
+                  <p className="text-[11px] text-zinc-400">Select image files to attach to the report.</p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFilesChange}
+                />
               </div>
 
-              {p.documents.length > 0 ? (
+              {p.documents.length > 0 || selectedFiles.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {p.documents.map(doc => (
                     <div key={doc.id} className="group/doc flex items-center gap-3 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all">
@@ -158,6 +187,21 @@ export function PatientProfile({ patient: p, onBack }: PatientProfileProps) {
                         <button title="Download" className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition text-zinc-500 dark:text-zinc-400">
                           <DownloadSimple className="w-4 h-4" />
                         </button>
+                      </div>
+                    </div>
+                  ))}
+                  {selectedFiles.map((file, index) => (
+                    <div key={`selected-${index}`} className="flex items-center gap-3 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                        <Files weight="light" className="w-5 h-5 text-violet-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-zinc-900 dark:text-zinc-100 truncate">{file.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] font-medium text-zinc-400">Image</span>
+                          <span className="w-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+                          <span className="text-[10px] font-medium text-zinc-400">{(file.size / 1024).toFixed(1)} KB</span>
+                        </div>
                       </div>
                     </div>
                   ))}

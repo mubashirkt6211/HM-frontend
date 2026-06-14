@@ -2,8 +2,26 @@
  * Shared Dashboard Components
  * Reusable components used across dashboard tabs
  */
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Area } from "recharts";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+
+// Helper function to calculate a smooth bezier curve path for SVG
+function getBezierPath(points: { x: number; y: number }[]): string {
+  if (points.length === 0) return "";
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const cpX1 = p0.x + (p1.x - p0.x) / 3;
+    const cpY1 = p0.y;
+    const cpX2 = p0.x + 2 * (p1.x - p0.x) / 3;
+    const cpY2 = p1.y;
+    d += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p1.x} ${p1.y}`;
+  }
+  return d;
+}
 
 /**
  * Card Component - Reusable card container
@@ -37,95 +55,126 @@ export function Card({
 }
 
 /**
- * Visual Chart Component - SVG-based line chart
+ * Visual Chart Component - Recharts implementation for smooth line chart with area gradient.
  */
-export function VisualChart() {
-  const data = [45, 52, 48, 70, 65, 85, 78, 92, 88, 100];
-  const height = 100;
-  const width = 400;
-  const max = 100;
-  const stepX = width / (data.length - 1);
+export function VisualChart({
+  data = [45, 52, 48, 70, 65, 85, 78, 92, 88, 100],
+  labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"],
+  color = "#3b82f6",
+  gradientColors = ["#3b82f6", "#1d4ed8"],
+  height = 180,
+  valueSuffix = "",
+}: {
+  data?: number[] | { label: string; value: number }[];
+  labels?: string[];
+  color?: string;
+  gradientColors?: string[];
+  height?: number;
+  valueSuffix?: string;
+}) {
+  // Standardize data format for Recharts
+  const chartData = (Array.isArray(data) ? data : []).map((d, i) => {
+    const val = typeof d === "number" ? d : d.value;
+    const label = typeof d === "object" && d.label ? d.label : labels[i] || `Point ${i + 1}`;
+    return { label, value: val };
+  });
 
-  const points = data.map((d, i) => ({
-    x: i * stepX,
-    y: height - (d / max) * height,
-  }));
-
-  const pathData = points.reduce((acc, point, i) => {
-    return i === 0 ? `M ${point.x},${point.y}` : `${acc} L ${point.x},${point.y}`;
-  }, "");
-
-  const areaData = `${pathData} L ${points[points.length - 1].x},${height} L 0,${height} Z`;
+  // Gradient definition (id unique per component instance)
+  const gradientId = `gradient-${Math.random().toString(36).substring(2, 9)}`;
 
   return (
-    <div className="relative w-full h-48 mt-8 group">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-full overflow-visible"
-        preserveAspectRatio="none"
-      >
+    <ResponsiveContainer width="100%" height={height} className="mt-4">
+      <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
         <defs>
-          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={gradientColors[0]} stopOpacity={0.4} />
+            <stop offset="95%" stopColor={gradientColors[1] || gradientColors[0]} stopOpacity={0} />
           </linearGradient>
         </defs>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+        <XAxis dataKey="label" tickLine={false} axisLine={false} stroke="#9ca3af" />
+        <YAxis hide={true} domain={['dataMin', 'dataMax']} />
+        <Tooltip
+  contentStyle={{ background: "rgba(0,0,0,0.6)", border: "none", borderRadius: 4, color: "#fff", padding: "4px 8px", fontSize: "11px", backdropFilter: "blur(8px)" }}
+  formatter={(value: any) => `${value}${valueSuffix}`}
+/>
+        <Area type="monotone" dataKey="value" stroke={color} fillOpacity={1} fill={`url(#${gradientId})`} />
+        <Line type="monotone" dataKey="value" stroke={color} dot={false} strokeWidth={2} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
 
-        {/* Grid Lines */}
-        {[0, 25, 50, 75, 100].map((tick) => (
-          <line
-            key={tick}
-            x1="0"
-            y1={height - (tick / max) * height}
-            x2={width}
-            y2={height - (tick / max) * height}
-            stroke="currentColor"
-            className="text-zinc-100 dark:text-zinc-800/50"
-            strokeWidth="1"
-          />
-        ))}
+/**
+ * Shared Mini Bar Chart Component - Interactive SVG-style columns
+ */
+export function MiniBarChart({
+  data,
+  color = "from-zinc-900 to-zinc-500 dark:from-zinc-100 dark:to-zinc-400",
+  hoverColor = "from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300",
+  valueSuffix = "",
+}: {
+  data: { label: string; value: number }[];
+  color?: string;
+  hoverColor?: string;
+  valueSuffix?: string;
+}) {
+  const max = Math.max(...data.map((item) => item.value), 1);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-        <motion.path
-          d={areaData}
-          fill="url(#chartGradient)"
-          className="text-zinc-400 dark:text-zinc-600"
-          initial={{ opacity: 0, scaleY: 0 }}
-          animate={{ opacity: 1, scaleY: 1 }}
-          style={{ transformOrigin: "bottom" }}
-          transition={{ duration: 1, delay: 0.2 }}
-        />
+  return (
+    <div className="relative flex items-end gap-3 w-full pt-6">
+      {data.map((item, i) => {
+        const isHovered = hoveredIndex === i;
+        return (
+          <div
+            key={item.label}
+            className="flex min-w-0 flex-1 flex-col items-center gap-2 cursor-pointer group"
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            <div className="relative flex h-36 w-full items-end justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/40 px-2 shadow-inner transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-900/80">
+              {/* Popover Tooltip */}
+              <AnimatePresence>
+                {isHovered && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: -4, scale: 1 }}
+                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                    className="absolute -top-10 z-30 pointer-events-none bg-zinc-950/95 dark:bg-zinc-900/95 text-white rounded-lg px-2.5 py-1 text-[11px] font-bold shadow-xl border border-zinc-850 dark:border-zinc-800 backdrop-blur-md whitespace-nowrap"
+                  >
+                    {item.value}
+                    {valueSuffix}
+                    <div className="absolute bottom-[-4px] left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-zinc-950 dark:bg-zinc-900 border-r border-b border-zinc-850 dark:border-zinc-800" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        <motion.path
-          d={pathData}
-          fill="none"
-          stroke="currentColor"
-          className="text-zinc-900 dark:text-white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
-        />
-
-        {points.map((p, i) => (
-          <motion.g key={i}>
-            <motion.circle
-              cx={p.x}
-              cy={p.y}
-              r="3"
-              fill="currentColor"
-              className="text-zinc-900 dark:text-white"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1 + i * 0.05 }}
-            />
-          </motion.g>
-        ))}
-      </svg>
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: `${(item.value / max) * 100}%` }}
+                transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                className={cn(
+                  "w-full max-w-10 rounded-t-xl bg-gradient-to-t shadow-[0_-2px_10px_rgba(0,0,0,0.05)] transition-all duration-300",
+                  isHovered ? hoverColor : color
+                )}
+              />
+            </div>
+            <div className="text-center transition-colors">
+              <p className={cn("text-[11px] font-semibold text-zinc-400 dark:text-zinc-500", isHovered && "text-zinc-600 dark:text-zinc-350")}>
+                {item.label}
+              </p>
+              <p className={cn("text-[12px] font-black text-zinc-900 dark:text-zinc-100", isHovered && "text-blue-600 dark:text-blue-400")}>
+                {item.value}
+              </p>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
+
 
 /**
  * Filter Button Component
@@ -389,5 +438,135 @@ export function CategoryCard({
         {label}
       </span>
     </motion.div>
+  );
+}
+
+/**
+ * Shared Interactive Donut Chart Component
+ */
+export function DonutChart({
+  data,
+  totalLabel = "Total",
+  totalValue = "",
+}: {
+  data: { label: string; value: number; color: string; stroke: string }[];
+  totalLabel?: string;
+  totalValue?: string;
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const radius = 42;
+  const strokeWidth = 12;
+  const circumference = 2 * Math.PI * radius;
+  let currentOffset = 0;
+
+  return (
+    <div className="flex flex-col gap-6 pt-4">
+      <div className="flex justify-center mb-2">
+        <div className="relative w-[190px] h-[190px]">
+          <svg
+            viewBox="0 0 100 100"
+            className="w-full h-full -rotate-90"
+          >
+            {/* Background Ring */}
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              fill="transparent"
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              className="text-zinc-100 dark:text-zinc-900/40"
+            />
+
+            {data.map((d, i) => {
+              const percentage = d.value / 100;
+              const segmentLength = percentage * circumference;
+              const offset = currentOffset;
+              currentOffset += segmentLength;
+
+              const isHovered = hoveredIndex === i;
+
+              return (
+                <motion.circle
+                  key={d.label}
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  fill="transparent"
+                  stroke={d.stroke}
+                  strokeWidth={isHovered ? strokeWidth + 3 : strokeWidth}
+                  strokeDasharray={`${segmentLength - 1.5} ${circumference - (segmentLength - 1.5)}`}
+                  strokeDashoffset={-offset}
+                  strokeLinecap="round"
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  initial={{ strokeDashoffset: -offset, opacity: 0, scale: 0.95 }}
+                  animate={{
+                    strokeDashoffset: -offset,
+                    opacity: 1,
+                    scale: isHovered ? 1.04 : 1,
+                  }}
+                  transition={{
+                    opacity: { duration: 1, delay: i * 0.08 },
+                    scale: { type: "spring", stiffness: 300, damping: 15 },
+                    strokeWidth: { duration: 0.15 },
+                  }}
+                  className="cursor-pointer transition-all duration-300"
+                  style={{ transformOrigin: "center" }}
+                />
+              );
+            })}
+          </svg>
+
+          {/* Center Info */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <motion.span
+              key={hoveredIndex ?? "total"}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-1.5"
+            >
+              {hoveredIndex !== null ? data[hoveredIndex].label : totalLabel}
+            </motion.span>
+            <motion.span
+              key={hoveredIndex !== null ? "val-" + hoveredIndex : "val-total"}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-xl font-black text-zinc-900 dark:text-zinc-100 leading-none tracking-tighter"
+            >
+              {hoveredIndex !== null ? `${data[hoveredIndex].value}%` : totalValue}
+            </motion.span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 px-2">
+        {data.map((d, i) => (
+          <motion.div
+            key={d.label}
+            className={cn(
+              "flex items-center justify-between p-2 rounded-xl transition-all border border-transparent",
+              hoveredIndex === i ? "bg-zinc-50 dark:bg-zinc-900/60 border-zinc-200/50 dark:border-zinc-800/40 shadow-sm" : ""
+            )}
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <div
+                className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm", d.color)}
+                style={{ backgroundColor: d.stroke }}
+              />
+              <span className="text-[12px] font-bold text-zinc-600 dark:text-zinc-350 truncate">
+                {d.label}
+              </span>
+            </div>
+            <span className="text-[12px] font-black text-zinc-900 dark:text-zinc-100 pl-1">
+              {d.value}%
+            </span>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 }
