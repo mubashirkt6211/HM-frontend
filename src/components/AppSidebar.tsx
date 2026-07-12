@@ -68,7 +68,7 @@ const mainNavigation: NavItemConfig[] = [
             { title: "Revenue", pageId: "revenue", icon: Wallet, roles: [UserRole.ADMIN, UserRole.MANAGER] },
         ]
     },
-    { icon: Target, title: "Leads", pageId: "patients", badge: "24", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
+    { icon: Target, title: "Leads", pageId: "leads", badge: "24", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
     { icon: Briefcase, title: "Accounts", pageId: "privillage", badge: "4" },
     { icon: UserList, title: "Contacts", pageId: "team" },
     {

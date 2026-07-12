@@ -4,6 +4,7 @@ import { Dashboard } from "@/pages/Dashboard"
 import { CalendarPage } from "@/pages/CalendarPage"
 import { MessagesPage } from "@/pages/MessagesPage"
 import { PatientsPage } from "@/pages/PatientsPage"
+import { LeadsPage } from "@/pages/LeadsPage"
 import { TasksPage } from "@/pages/TasksPage"
 import { DoctorsPage } from "@/pages/DoctorsPage"
 import { RevenuePage } from "@/pages/RevenuePage"
@@ -43,6 +44,7 @@ function App() {
       {isCalendar && <CalendarPage />}
       {currentPage === "messages" && <MessagesPage />}
       {currentPage === "patients" && <PatientsPage />}
+      {currentPage === "leads" && <LeadsPage />}
       {currentPage === "tasks" && <TasksPage />}
       {currentPage === "doctors" && <DoctorsPage />}
       {currentPage === "nurse" && <NursePage />}
