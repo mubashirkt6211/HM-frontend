@@ -1,17 +1,31 @@
 import { motion } from "motion/react";
 import * as React from "react";
 import {
-    House, FileText, Envelope, ChartBar,
-    Sparkle, TreeStructure, Users, UserFocus, MagnifyingGlass, Command,
-    CaretDown, User, CalendarCheck, Chats, ListChecks, CurrencyEur, Scales, UsersThree,
-    StethoscopeIcon,
-    CashRegisterIcon,
+    MagnifyingGlass,
+    Command,
+    CaretDown,
+    CalendarCheck,
+    Users,
     Star,
     ChartLineUp,
-    MessengerLogoIcon,
-    AddressBookTabsIcon,
-    ToothIcon,
-    Hammer
+    Envelope,
+    Sparkle,
+    TreeStructure,
+    Buildings,
+    Handshake,
+    Target,
+    Briefcase,
+    UserList,
+    ChatCenteredDots,
+    PhoneCall,
+    Funnel,
+    Wallet,
+    TrendUp,
+    ShieldCheck,
+    Megaphone,
+    ClipboardText,
+    ClockClockwise,
+    UserPlus,
 } from "@phosphor-icons/react";
 
 import {
@@ -28,10 +42,9 @@ import {
 
 import { cn } from "@/lib/utils"
 import logog from "@/assets/logog.png"
-import { BoneIcon, LayoutGrid, Syringe } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 
 import { UserRole } from "@/models/user";
-import { ListChecksIcon, NotepadIcon } from "@phosphor-icons/react/dist/ssr";
 
 interface NavItemConfig {
     icon?: React.ElementType;
@@ -47,31 +60,30 @@ interface NavItemConfig {
 const mainNavigation: NavItemConfig[] = [
     {
         icon: LayoutGrid,
-        title: "Dashboard",
+        title: "Overview",
         pageId: "dashboard",
         subItems: [
-            { title: "Overview", pageId: "dashboard", icon: Scales },
-            { title: "Analytics", pageId: "analytics", icon: ChartLineUp },
-            { title: "Revenue", pageId: "revenue", icon: CurrencyEur, roles: [UserRole.ADMIN, UserRole.MANAGER] },
+            { title: "Pipeline", pageId: "dashboard", icon: Funnel },
+            { title: "Forecast", pageId: "analytics", icon: TrendUp },
+            { title: "Revenue", pageId: "revenue", icon: Wallet, roles: [UserRole.ADMIN, UserRole.MANAGER] },
         ]
     },
-    { icon: MessengerLogoIcon, title: "Messages", pageId: "messages", badge: "12" },
-    { icon: UserFocus, title: "Patients", pageId: "patients", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
-    // { icon: ToothIcon, title: "Orthodontics", pageId: "orthodontics" },
-    // { icon: Hammer, title: "Orthopedics", pageId: "orthopedics" },
-    { icon: CalendarCheck, title: "Calender", pageId: "calender" },
-    { icon: AddressBookTabsIcon, title: "Privileges", pageId: "privillage", badge: "4" },
-    { icon: ListChecksIcon, title: "Tasks", pageId: "tasks" },
+    { icon: Target, title: "Leads", pageId: "patients", badge: "24", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
+    { icon: Briefcase, title: "Accounts", pageId: "privillage", badge: "4" },
+    { icon: UserList, title: "Contacts", pageId: "team" },
     {
-        icon: UsersThree, title: "Team", pageId: "team",
+        icon: Handshake, title: "Deals", pageId: "team",
         roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR, UserRole.RECEPTIONIST],
         subItems: [
-            { title: "Doctors", pageId: "doctors", icon: StethoscopeIcon },
-            { title: "Nurse", pageId: "nurse", icon: Syringe, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
-            { title: "Receptionist", pageId: "receptionist", icon: CashRegisterIcon, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
+            { title: "Open Deals", pageId: "doctors", icon: ChartLineUp },
+            { title: "Won Deals", pageId: "nurse", icon: ShieldCheck, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
+            { title: "Lost Deals", pageId: "receptionist", icon: ClockClockwise, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
         ]
     },
-    { icon: NotepadIcon, title: "Notes", pageId: "notes" },
+    { icon: UserPlus, title: "Prospects", pageId: "notes" },
+    { icon: ChatCenteredDots, title: "Conversations", pageId: "messages", badge: "12" },
+    { icon: PhoneCall, title: "Follow-ups", pageId: "tasks" },
+    { icon: CalendarCheck, title: "Calendar", pageId: "calender" },
     { icon: Envelope, title: "Emails", pageId: "emails", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
     { icon: ChartLineUp, title: "Reports", pageId: "reports", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
     { icon: Sparkle, title: "Automations", pageId: "automations", roles: [UserRole.ADMIN] },
@@ -79,20 +91,20 @@ const mainNavigation: NavItemConfig[] = [
 ];
 
 const favoritesNavigation: NavItemConfig[] = [
-    { icon: Star, title: "UK & EU Companies", pageId: "uk-eu-companies", iconColor: "text-orange-400" },
-    { icon: Star, title: "B2B Relationship Building", pageId: "b2b-building", iconColor: "text-orange-400" },
-    { icon: Star, title: "Potential Partnership", pageId: "partnership", iconColor: "text-orange-400" },
-    { icon: Star, title: "CRM Meeting Template", pageId: "crm-template", iconColor: "text-orange-400" },
+    { icon: Star, title: "Hot Leads", pageId: "uk-eu-companies", iconColor: "text-orange-400" },
+    { icon: Star, title: "Priority Accounts", pageId: "b2b-building", iconColor: "text-orange-400" },
+    { icon: Star, title: "Partnerships", pageId: "partnership", iconColor: "text-orange-400" },
+    { icon: Star, title: "Meeting Template", pageId: "crm-template", iconColor: "text-orange-400" },
 ];
 
 const recordsNavigation: NavItemConfig[] = [
-    { icon: Users, title: "Clients", pageId: "clients", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { icon: UserFocus, title: "Contacts", pageId: "contacts", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { icon: Buildings, title: "Companies", pageId: "clients", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { icon: Users, title: "People", pageId: "contacts", roles: [UserRole.ADMIN, UserRole.MANAGER] },
 ];
 
 const listNavigation: NavItemConfig[] = [
-    { icon: Star, title: "sales-navigator", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true },
-    { icon: Star, title: "emails-marketing-agency", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true },
+    { icon: Megaphone, title: "Campaigns", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true },
+    { icon: ClipboardText, title: "Sequences", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true },
 ];
 
 export function AppSidebar({
@@ -140,9 +152,9 @@ export function AppSidebar({
                             className="flex items-center gap-2.5 group cursor-pointer"
                             onClick={() => onPageChange?.("dashboard")}
                         >
-                            <img src={logog} alt="HMS Logo" className="w-12 h-12 object-contain shrink-0" />
+                            <img src={logog} alt="CRM Logo" className="w-12 h-12 object-contain shrink-0" />
                             {!isCollapsed && (
-                                <span className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Leadwave</span>
+                                <span className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Leadwave CRM</span>
                             )}
                         </motion.div>
                     </div>
