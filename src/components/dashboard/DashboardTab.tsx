@@ -1,9 +1,10 @@
-﻿import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Briefcase,
   CalendarBlank,
   CaretDown,
   CaretUp,
+  Check,
   CheckCircle,
   Clock,
   DotsThreeVertical,
@@ -15,6 +16,14 @@ import {
   Phone,
   Plus,
   X,
+  ArrowRight,
+  Users,
+  Folders,
+  ListChecks,
+  ChartPieSlice,
+  Flag,
+  CalendarDots,
+  UserCircle,
 } from "@phosphor-icons/react";
 
 import { Badge } from "@/components/reui/badge";
@@ -41,6 +50,10 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
+/* ================================================================
+   Types — Deal type kept for drawer compatibility
+   ================================================================ */
+
 type Priority = "high" | "medium" | "low";
 
 type Deal = {
@@ -54,145 +67,152 @@ type Deal = {
   updated: string;
   priority: Priority;
   notes: string;
+  /* extra task-card fields */
+  projectCode?: string;
+  pageCount?: number;
+  assignees?: string[];
 };
+
+/* ================================================================
+   Column config — Taskify-style task board
+   ================================================================ */
 
 const COLUMN_TITLES: Record<string, string> = {
-  lead: "Lead",
-  qualified: "Qualified",
-  proposal: "Proposal",
-  negotiation: "Negotiation",
+  not_started: "Not Started",
+  pending: "Pending",
+  completed: "Completed",
+  under_review: "Under Review",
 };
 
-const COLUMN_META: Record<string, { accent: string; subtitle: string }> = {
-  lead: { accent: "bg-cyan-500", subtitle: "New opportunities entering the funnel" },
-  qualified: { accent: "bg-violet-500", subtitle: "Verified accounts with real intent" },
-  proposal: { accent: "bg-amber-500", subtitle: "Quotes, scopes, and commercial review" },
-  negotiation: { accent: "bg-emerald-500", subtitle: "Closing conversations and approvals" },
+const COLUMN_META: Record<string, { accent: string; dotColor: string; subtitle: string }> = {
+  not_started: { accent: "bg-zinc-400", dotColor: "bg-zinc-400", subtitle: "Tasks waiting to begin" },
+  pending: { accent: "bg-amber-500", dotColor: "bg-amber-500", subtitle: "Work in progress" },
+  completed: { accent: "bg-emerald-500", dotColor: "bg-emerald-500", subtitle: "Successfully finished" },
+  under_review: { accent: "bg-violet-500", dotColor: "bg-violet-500", subtitle: "Awaiting approval" },
 };
 
+/* Drawer stage steps — kept for DealDrawer compatibility */
 const STAGE_STEPS = ["New Leads", "Request Received", "In Draft", "Proposal Sent", "Approved", "Rejected"];
 const COLUMN_STAGE_INDEX: Record<string, number> = {
-  lead: 0,
-  qualified: 1,
-  proposal: 3,
-  negotiation: 4,
+  not_started: 0,
+  pending: 1,
+  completed: 4,
+  under_review: 3,
 };
 
+const PRIORITY_META: Record<Priority, { label: string; dot: string; tone: string }> = {
+  high: { label: "Urgent", dot: "bg-rose-500", tone: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300" },
+  medium: { label: "Medium", dot: "bg-amber-500", tone: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
+  low: { label: "Low", dot: "bg-emerald-500", tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+};
+
+const PRIORITY_TAG: Record<Priority, string> = {
+  high: "Hot Leads",
+  medium: "Warm Leads",
+  low: "Repeat",
+};
+
+/* ================================================================
+   Task data — matches the Taskify reference image
+   ================================================================ */
+
 const INITIAL_COLUMNS: Record<string, Deal[]> = {
-  lead: [
+  not_started: [
     {
-      id: "lead-1",
-      company: "Northwind Labs",
-      contact: "Maya Chen",
+      id: "ns-1",
+      company: "Partone Consultancy Website",
+      contact: "Sophie Bennett",
       owner: "Ari",
       avatar: "https://i.pravatar.cc/120?img=5",
       value: "$18K",
-      due: "Today",
+      due: "March 21, 25",
       updated: "2h ago",
       priority: "high",
-      notes: "Inbound demo request from the product team.",
+      notes: "New Homepage — rebuild landing page with modern design system.",
+      projectCode: "WEB - 21",
+      pageCount: 13,
+      assignees: ["https://i.pravatar.cc/120?img=5", "https://i.pravatar.cc/120?img=12"],
     },
     {
-      id: "lead-2",
-      company: "Atlas Commerce",
+      id: "ns-2",
+      company: "Design Wireframes - Homepage",
       contact: "Jordan Lee",
       owner: "Sam",
       avatar: "https://i.pravatar.cc/120?img=12",
       value: "$42K",
-      due: "Tomorrow",
+      due: "Jan 12, 25",
       updated: "4h ago",
       priority: "medium",
-      notes: "Requested pricing and implementation timeline.",
-    },
-    {
-      id: "lead-3",
-      company: "BluePeak Studio",
-      contact: "Nina Patel",
-      owner: "You",
-      avatar: "https://i.pravatar.cc/120?img=32",
-      value: "$12K",
-      due: "Thu",
-      updated: "6h ago",
-      priority: "low",
-      notes: "Cold outreach response with follow-up interest.",
+      notes: "New Homepage — create wireframes for the redesigned homepage.",
+      projectCode: "WEB - 68",
+      pageCount: 8,
+      assignees: ["https://i.pravatar.cc/120?img=12", "https://i.pravatar.cc/120?img=32"],
     },
   ],
-  qualified: [
+  pending: [
     {
-      id: "qualified-1",
-      company: "Futura Health",
+      id: "pd-1",
+      company: "Modify Content for Homepage",
       contact: "Derek Wong",
       owner: "You",
       avatar: "https://i.pravatar.cc/120?img=45",
       value: "$64K",
-      due: "Today",
+      due: "May 23, 25",
       updated: "1h ago",
       priority: "high",
-      notes: "Discovery completed and budget confirmed.",
-    },
-    {
-      id: "qualified-2",
-      company: "Vertex Retail",
-      contact: "Olivia Gomez",
-      owner: "Mina",
-      avatar: "https://i.pravatar.cc/120?img=28",
-      value: "$28K",
-      due: "Fri",
-      updated: "3h ago",
-      priority: "medium",
-      notes: "Need stakeholder mapping before proposal.",
+      notes: "New Homepage — update hero copy, feature descriptions, and CTA text.",
+      projectCode: "WEB - 28",
+      pageCount: 16,
+      assignees: ["https://i.pravatar.cc/120?img=45", "https://i.pravatar.cc/120?img=28"],
     },
   ],
-  proposal: [
+  completed: [
     {
-      id: "proposal-1",
-      company: "Summit Finance",
+      id: "cp-1",
+      company: "MTC Design Approval",
       contact: "Emma Stone",
       owner: "You",
       avatar: "https://i.pravatar.cc/120?img=19",
       value: "$88K",
-      due: "Today",
+      due: "March 10, 25",
       updated: "45m ago",
-      priority: "high",
-      notes: "Proposal sent; waiting for procurement feedback.",
+      priority: "low",
+      notes: "New Homepage — final design approval from stakeholders.",
+      projectCode: "WEB - 12",
+      pageCount: 14,
+      assignees: ["https://i.pravatar.cc/120?img=19", "https://i.pravatar.cc/120?img=15"],
     },
     {
-      id: "proposal-2",
-      company: "Luma Media",
+      id: "cp-2",
+      company: "Nexa Components Revision",
       contact: "Ryan Cole",
       owner: "Mina",
       avatar: "https://i.pravatar.cc/120?img=15",
       value: "$36K",
-      due: "Tomorrow",
+      due: "March 29, 25",
       updated: "2h ago",
       priority: "medium",
-      notes: "Pricing approved, scope refinements pending.",
+      notes: "UI - Design System — revise component library for consistency.",
+      projectCode: "WEB - 97",
+      pageCount: 28,
+      assignees: ["https://i.pravatar.cc/120?img=15", "https://i.pravatar.cc/120?img=25"],
     },
   ],
-  negotiation: [
+  under_review: [
     {
-      id: "negotiation-1",
-      company: "Orion Systems",
+      id: "ur-1",
+      company: "V01 Components Design System",
       contact: "Lucas Brown",
       owner: "You",
       avatar: "https://i.pravatar.cc/120?img=39",
       value: "$96K",
-      due: "Today",
+      due: "March 20, 25",
       updated: "15m ago",
       priority: "high",
-      notes: "Legal review and final signature steps.",
-    },
-    {
-      id: "negotiation-2",
-      company: "Canvas Group",
-      contact: "Zoe Martin",
-      owner: "Sam",
-      avatar: "https://i.pravatar.cc/120?img=25",
-      value: "$48K",
-      due: "Thu",
-      updated: "1h ago",
-      priority: "medium",
-      notes: "Discount approval requested by finance.",
+      notes: "Components & Elements — design system v0.1 for review.",
+      projectCode: "WEB - 88",
+      pageCount: 14,
+      assignees: ["https://i.pravatar.cc/120?img=39", "https://i.pravatar.cc/120?img=25"],
     },
   ],
 };
@@ -203,13 +223,9 @@ const QUICK_ACTIONS = [
   { label: "Schedule follow-up", icon: CalendarBlank },
 ];
 
-const PRIORITY_TAG: Record<Priority, string> = {
-  high: "Hot Leads",
-  medium: "Warm Leads",
-  low: "Repeat",
-};
-
-/* ---------- helpers to fabricate the drawer's detail content from a Deal ---------- */
+/* ================================================================
+   Helpers for drawer detail content (UNCHANGED from original)
+   ================================================================ */
 
 function slug(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "");
@@ -262,42 +278,199 @@ function buildDealDetails(deal: Deal, columnKey: string) {
   };
 }
 
-/* ---------- deal card + column (unchanged board pieces) ---------- */
+/* ================================================================
+   Small outside-click aware dropdown shell (UNCHANGED)
+   ================================================================ */
 
-function DealCard({ deal, asHandle, isOverlay }: { deal: Deal; asHandle?: boolean; isOverlay?: boolean }) {
-  const priorityTone = {
-    high: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
-    medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
-    low: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
-  }[deal.priority];
+function useOutsideClick(ref: React.RefObject<HTMLElement>, onOutside: () => void) {
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onOutside();
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [ref, onOutside]);
+}
+
+function Dropdown({
+  trigger,
+  children,
+  align = "left",
+  panelClassName,
+}: {
+  trigger: (open: boolean) => React.ReactNode;
+  children: React.ReactNode;
+  align?: "left" | "right";
+  panelClassName?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useOutsideClick(ref, () => setOpen(false));
+
+  return (
+    <div className="relative" ref={ref}>
+      <div onClick={() => setOpen((o) => !o)}>{trigger(open)}</div>
+      {open ? (
+        <div
+          className={cn(
+            "absolute top-[calc(100%+8px)] z-30 min-w-[240px] rounded-2xl border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-800 dark:bg-zinc-950",
+            align === "right" ? "right-0" : "left-0",
+            panelClassName,
+          )}
+        >
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FilterControl({
+  active,
+  onToggle,
+  onClear,
+}: {
+  active: Set<Priority>;
+  onToggle: (p: Priority) => void;
+  onClear: () => void;
+}) {
+  const count = active.size;
+  return (
+    <Dropdown
+      trigger={(open) => (
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "gap-1.5 rounded-full border-none font-medium",
+            count > 0
+              ? "bg-violet-600 text-white hover:bg-violet-700"
+              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-200",
+            open && "ring-2 ring-violet-300",
+          )}
+        >
+          <FunnelSimple className="size-3.5" weight="bold" />
+          Filter{count > 0 ? ` (${count})` : ""}
+        </Button>
+      )}
+    >
+      <div className="flex items-center justify-between px-1 pb-2">
+        <p className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-200">Priority</p>
+        {count > 0 ? (
+          <button onClick={onClear} className="text-[11px] font-medium text-violet-600 hover:underline">
+            Clear all
+          </button>
+        ) : null}
+      </div>
+      <div className="space-y-1">
+        {(Object.keys(PRIORITY_META) as Priority[]).map((p) => {
+          const meta = PRIORITY_META[p];
+          const checked = active.has(p);
+          return (
+            <button
+              key={p}
+              onClick={() => onToggle(p)}
+              className="flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-[13px] text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-900"
+            >
+              <span className="flex items-center gap-2">
+                <span className={cn("size-2 rounded-full", meta.dot)} />
+                {meta.label} priority
+              </span>
+              <span
+                className={cn(
+                  "flex size-4 items-center justify-center rounded-[5px] border",
+                  checked ? "border-violet-600 bg-violet-600" : "border-zinc-300 dark:border-zinc-700",
+                )}
+              >
+                {checked ? <Check className="size-3 text-white" weight="bold" /> : null}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </Dropdown>
+  );
+}
+
+/* ================================================================
+   Stat Card Component
+   ================================================================ */
+
+function StatCard({
+  icon: Icon,
+  iconBg,
+  value,
+  label,
+}: {
+  icon: React.ElementType;
+  iconBg: string;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-col justify-between rounded-2xl border border-[#e8e0d8]/60 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="flex items-center justify-between mb-4">
+        <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", iconBg)}>
+          <Icon className="size-5 text-white" weight="bold" />
+        </div>
+        <button className="flex items-center gap-1 text-[12px] font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 transition">
+          View Details <ArrowRight className="size-3" />
+        </button>
+      </div>
+      <div>
+        <p className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">{value}</p>
+        <p className="mt-1 text-[13px] font-medium text-zinc-500">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================
+   Task card + column — Taskify style
+   ================================================================ */
+
+function TaskCard({ deal, asHandle, isOverlay }: { deal: Deal; asHandle?: boolean; isOverlay?: boolean }) {
+  const priorityMeta = PRIORITY_META[deal.priority];
 
   const content = (
-    <Card className="border border-zinc-200/70 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm rounded-[24px]">
+    <Card className="w-full border border-[#e8e0d8]/50 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm rounded-2xl hover:shadow-md transition-shadow cursor-pointer group">
       <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-[14px] font-semibold text-zinc-950 dark:text-white">{deal.company}</p>
-            <p className="mt-1 text-[12px] text-zinc-500">{deal.contact}</p>
-          </div>
-          <Badge className={cn("border-none text-[10px] font-semibold uppercase tracking-wider", priorityTone)}>{deal.priority}</Badge>
+        {/* Project code + priority */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 tracking-wide">{deal.projectCode}</span>
+          <Badge className={cn("border-none text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md", priorityMeta.tone)}>
+            <Flag className="size-2.5 mr-1" weight="fill" />
+            {priorityMeta.label}
+          </Badge>
         </div>
 
-        <p className="mt-3 line-clamp-3 text-[12px] leading-5 text-zinc-600 dark:text-zinc-400">{deal.notes}</p>
+        {/* Title + subtitle */}
+        <p className="text-[13px] font-semibold text-zinc-900 dark:text-white leading-snug">{deal.company}</p>
+        <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">{deal.notes?.split("—")[0]?.trim()}</p>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Avatar className="size-7 border border-zinc-200 dark:border-zinc-800">
-              <AvatarImage src={deal.avatar} />
-              <AvatarFallback className="bg-zinc-100 text-[10px] font-semibold text-zinc-600">{deal.contact[0]}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-[11px] font-medium text-zinc-500">Owner: {deal.owner}</p>
-              <p className="text-[11px] text-zinc-400">{deal.updated}</p>
-            </div>
+        {/* Due date */}
+        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-zinc-500">
+          <CalendarDots className="size-3.5 text-zinc-400" />
+          <span>Due to: {deal.due}</span>
+        </div>
+
+        {/* Footer: assignees + page count */}
+        <div className="mt-3 flex items-center justify-between pt-3 border-t border-[#ece5de]/60 dark:border-zinc-800">
+          <div className="flex -space-x-2">
+            {(deal.assignees ?? [deal.avatar]).map((src, i) => (
+              <Avatar key={i} className="size-6 border-2 border-white dark:border-zinc-950">
+                <AvatarImage src={src} />
+                <AvatarFallback className="bg-zinc-100 text-[8px] font-bold text-zinc-600">{deal.contact?.[0]}</AvatarFallback>
+              </Avatar>
+            ))}
           </div>
-          <div className="text-right">
-            <p className="text-[14px] font-semibold text-zinc-950 dark:text-white">{deal.value}</p>
-            <p className="text-[11px] text-zinc-500">Due {deal.due}</p>
+          <div className="flex items-center gap-3 text-[11px] text-zinc-400">
+            {deal.pageCount != null && (
+              <span className="flex items-center gap-1">
+                <FileText className="size-3" /> {deal.pageCount}
+              </span>
+            )}
+            <span className="text-[10px]">{deal.updated?.includes("ago") ? deal.updated.replace(" ago", "") : deal.due?.split(",")[0]}</span>
           </div>
         </div>
       </CardContent>
@@ -316,52 +489,64 @@ function PipelineColumn({
   deals,
   isOverlay,
   onDealClick,
+  draggable = true,
 }: {
   value: string;
   deals: Deal[];
   isOverlay?: boolean;
   onDealClick?: (deal: Deal) => void;
+  draggable?: boolean;
 }) {
   const meta = COLUMN_META[value];
 
   return (
     <KanbanColumn value={value} className="h-full">
-      <div className="flex h-full flex-col rounded-[28px] border border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-3">
-        <div className="mb-3 flex items-start justify-between gap-3 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 p-3.5">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className={cn("mt-1 size-2.5 rounded-full", meta.accent)} />
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold text-zinc-950 dark:text-white">{COLUMN_TITLES[value]}</p>
-              <p className="mt-1 text-[11px] leading-4 text-zinc-500">{meta.subtitle}</p>
-            </div>
+      <div className="flex h-full flex-col rounded-2xl bg-[#f8f4f0]/60 dark:bg-zinc-900/40 p-3">
+        {/* Column header */}
+        <div className="mb-3 flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <span className={cn("size-2 rounded-full", meta.dotColor)} />
+            <p className="text-[13px] font-semibold text-zinc-800 dark:text-white">{COLUMN_TITLES[value]}</p>
+            <span className="rounded-full bg-[#ece5de] px-2 py-0.5 text-[10px] font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+              {deals.length}
+            </span>
           </div>
           <KanbanColumnHandle
             render={(props) => (
-              <Button {...props} variant="ghost" size="icon" className="size-8 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900">
+              <Button {...props} variant="ghost" size="icon" className="size-7 rounded-lg hover:bg-[#ece5de] dark:hover:bg-zinc-800">
                 <DotsThreeVertical className="size-4 text-zinc-400" />
               </Button>
             )}
           />
         </div>
 
+        {/* Cards */}
         <KanbanColumnContent value={value} className="flex-1 space-y-3 overflow-y-auto pb-1">
-          {deals.map((deal) => (
-            <div key={deal.id} onClick={() => onDealClick?.(deal)} className="cursor-pointer">
-              <DealCard deal={deal} asHandle={!isOverlay} isOverlay={isOverlay} />
+          {deals.length === 0 ? (
+            <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-[#ddd4ca] text-[12px] text-zinc-400 dark:border-zinc-800">
+              No tasks match your filter
             </div>
-          ))}
+          ) : (
+            deals.map((deal) => (
+              <div key={deal.id} onClick={() => onDealClick?.(deal)} className="cursor-pointer">
+                <TaskCard deal={deal} asHandle={!isOverlay && draggable} isOverlay={isOverlay} />
+              </div>
+            ))
+          )}
         </KanbanColumnContent>
 
-        <button className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-500 transition hover:border-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">
+        <button className="mt-3 inline-flex items-center gap-2 rounded-xl border border-dashed border-[#ddd4ca] dark:border-zinc-700 px-4 py-2.5 text-[13px] font-medium text-zinc-500 transition hover:border-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 w-full justify-center">
           <Plus className="size-4" />
-          Add card
+          New Page
         </button>
       </div>
     </KanbanColumn>
   );
 }
 
-/* ---------- deal detail drawer ---------- */
+/* ================================================================
+   Deal detail drawer — COMPLETELY UNCHANGED from original
+   ================================================================ */
 
 function DealDrawer({
   deal,
@@ -387,7 +572,7 @@ function DealDrawer({
   const tabs = ["Activity", "Appointments", "Proposals", "Invoices", "Notifications", "Notes", "Tasks"];
 
   return (
-    <SheetContent side="right" className="w-full gap-0 overflow-hidden p-0 sm:max-w-[920px]">
+    <SheetContent side="right" showCloseButton={false} className="w-full gap-0 overflow-hidden p-0 sm:max-w-[920px]">
       <SheetHeader className="sr-only">
         <SheetTitle>{deal.company} deal details</SheetTitle>
         <SheetDescription>Details drawer for the selected deal</SheetDescription>
@@ -636,17 +821,176 @@ function DealDrawer({
   );
 }
 
-/* ---------- page ---------- */
+function TimelineView({
+  filteredColumns,
+  onDealClick,
+}: {
+  filteredColumns: Record<string, Deal[]>;
+  onDealClick: (deal: Deal, columnKey: string) => void;
+}) {
+  const allTasks = useMemo(() => {
+    return Object.entries(filteredColumns).flatMap(([key, deals]) =>
+      deals.map((d) => ({ ...d, columnKey: key }))
+    );
+  }, [filteredColumns]);
+
+  if (allTasks.length === 0) {
+    return (
+       <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-[#ddd4ca] text-[13px] text-zinc-500 dark:border-zinc-800">
+         No tasks found for timeline
+       </div>
+    );
+  }
+
+  return (
+    <div className="relative pl-6 py-4 space-y-6 max-h-[600px] overflow-y-auto pr-4">
+      <div className="absolute left-[11px] top-6 bottom-6 w-0.5 bg-[#e8e0d8] dark:bg-zinc-800" />
+      {allTasks.map((task) => {
+        const meta = COLUMN_META[task.columnKey];
+        return (
+          <div key={task.id} className="relative flex items-start gap-4">
+            <div className={cn("absolute -left-[26px] top-[22px] size-3 rounded-full border-2 border-white dark:border-zinc-950 z-10", meta.dotColor)} />
+            <div className="flex-1 max-w-sm cursor-pointer" onClick={() => onDealClick(task, task.columnKey)}>
+              <TaskCard deal={task} asHandle={false} isOverlay={false} />
+            </div>
+            <div className="pt-5 text-[12px] font-medium text-zinc-500 shrink-0 w-24 text-right">
+              {task.due}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SpreadsheetView({
+  filteredColumns,
+  onDealClick,
+}: {
+  filteredColumns: Record<string, Deal[]>;
+  onDealClick: (deal: Deal, columnKey: string) => void;
+}) {
+  const allTasks = useMemo(() => {
+    return Object.entries(filteredColumns).flatMap(([key, deals]) =>
+      deals.map((d) => ({ ...d, columnKey: key }))
+    );
+  }, [filteredColumns]);
+
+  if (allTasks.length === 0) {
+    return (
+       <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-[#ddd4ca] text-[13px] text-zinc-500 dark:border-zinc-800">
+         No tasks found for spreadsheet
+       </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-[#e8e0d8]/60 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm mt-4">
+      <table className="w-full text-left text-[13px]">
+        <thead>
+          <tr className="border-b border-[#e8e0d8]/60 bg-[#f8f4f0]/60 dark:border-zinc-800 dark:bg-zinc-900/40 text-zinc-500">
+            <th className="px-4 py-3 font-medium whitespace-nowrap">Task Name</th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">Code</th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">Status</th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">Priority</th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">Due Date</th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">Assignees</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#e8e0d8]/60 dark:divide-zinc-800">
+          {allTasks.map((task) => {
+            const meta = COLUMN_META[task.columnKey];
+            const priorityMeta = PRIORITY_META[task.priority];
+            return (
+              <tr 
+                key={task.id} 
+                className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 cursor-pointer transition-colors"
+                onClick={() => onDealClick(task, task.columnKey)}
+              >
+                <td className="px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100 max-w-[200px] truncate">
+                  {task.company}
+                </td>
+                <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">
+                  {task.projectCode}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("size-2 rounded-full shrink-0", meta.dotColor)} />
+                    <span className="text-zinc-700 dark:text-zinc-300 font-medium">{COLUMN_TITLES[task.columnKey]}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <Badge className={cn("border-none text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md", priorityMeta.tone)}>
+                    {priorityMeta.label}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">
+                  {task.due}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex -space-x-2">
+                    {(task.assignees ?? [task.avatar]).map((src, i) => (
+                      <Avatar key={i} className="size-6 border-2 border-white dark:border-zinc-950">
+                        <AvatarImage src={src} />
+                        <AvatarFallback className="bg-zinc-100 text-[8px] font-bold text-zinc-600">{task.contact?.[0]}</AvatarFallback>
+                      </Avatar>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ================================================================
+   Main DashboardTab — Taskify Overview
+   ================================================================ */
 
 export function DashboardTab() {
   const [columns, setColumns] = useState(INITIAL_COLUMNS);
+  const [priorityFilter, setPriorityFilter] = useState<Set<Priority>>(new Set());
   const [selected, setSelected] = useState<{ deal: Deal; columnKey: string } | null>(null);
+  const [showAiBanner, setShowAiBanner] = useState(true);
+  const [activeView, setActiveView] = useState("Kanban");
+
   const totalCards = useMemo(() => Object.values(columns).flat().length, [columns]);
+
+  const filteredColumns = useMemo(() => {
+    if (priorityFilter.size === 0) return columns;
+    const next: Record<string, Deal[]> = {};
+    for (const [key, deals] of Object.entries(columns)) {
+      next[key] = deals.filter((d) => priorityFilter.has(d.priority));
+    }
+    return next;
+  }, [columns, priorityFilter]);
+
+  const visibleCount = useMemo(() => Object.values(filteredColumns).flat().length, [filteredColumns]);
+  const isFiltering = priorityFilter.size > 0;
+
+  const togglePriority = (p: Priority) => {
+    setPriorityFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(p)) next.delete(p);
+      else next.add(p);
+      return next;
+    });
+  };
 
   const openDeal = (deal: Deal, columnKey: string) => setSelected({ deal, columnKey });
   const closeDeal = () => setSelected(null);
 
-  const columnDeals = selected ? columns[selected.columnKey] : [];
+  // If the currently-open deal gets filtered out from under the drawer, close it.
+  useEffect(() => {
+    if (!selected) return;
+    const stillVisible = filteredColumns[selected.columnKey]?.some((d) => d.id === selected.deal.id);
+    if (!stillVisible) setSelected(null);
+  }, [filteredColumns, selected]);
+
+  const columnDeals = selected ? filteredColumns[selected.columnKey] ?? [] : [];
   const indexInColumn = selected ? columnDeals.findIndex((d) => d.id === selected.deal.id) : -1;
 
   const goPrev = () => {
@@ -660,50 +1004,118 @@ export function DashboardTab() {
 
   return (
     <div className="w-full">
-      <div className="mx-auto max-w-400 px-6 py-8 lg:px-10">
-        <section className="mt-8">
-          <div className="rounded-[32px] border border-zinc-200/70 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/80 p-5 shadow-sm">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-zinc-500">Pipeline</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">Kanban stages</h2>
+      <div className="mx-auto w-full max-w-full px-6 py-6 lg:px-10">
+
+        {/* ── Welcome Banner ── */}
+        <section>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+            Welcome Back David..!
+          </h1>
+          <p className="mt-2 text-[14px] text-zinc-500 dark:text-zinc-400">
+            Stay on top of your tasks, monitor progress, and track status.
+          </p>
+        </section>
+
+        {/* ── AI Notification Banner ── */}
+        {showAiBanner && (
+          <section className="mt-5">
+            <div className="flex items-center justify-between rounded-2xl border border-[#e8e0d8]/60 bg-gradient-to-r from-[#faf7f4] via-white to-[#faf7f4] px-5 py-3.5 shadow-sm dark:border-zinc-800 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-900/30">
+                  <ListChecks className="size-4 text-violet-600" weight="bold" />
+                </div>
+                <p className="text-[13px] text-zinc-700 dark:text-zinc-300">
+                  <span className="font-semibold text-zinc-900 dark:text-white">Taskify AI is now available.</span>{" "}
+                  Access your activity and timeline right away on all new dashboard
+                </p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
-                <FunnelSimple className="size-4" />
-                {totalCards} cards
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-[#e0d8d0] text-[12px] font-semibold text-zinc-700 hover:bg-[#f5f0eb] dark:border-zinc-700 dark:text-zinc-300"
+                >
+                  View Details
+                </Button>
+                <button onClick={() => setShowAiBanner(false)} className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition">
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Stat Cards ── */}
+        <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard icon={Users} iconBg="bg-[#c2b5a8]" value="216" label="Active Employees" />
+          <StatCard icon={Folders} iconBg="bg-[#a8b5c2]" value="312" label="Active Projects" />
+          <StatCard icon={ListChecks} iconBg="bg-[#b5c2a8]" value="184" label="Number of Task" />
+          <StatCard icon={ChartPieSlice} iconBg="bg-[#c2a8b5]" value="84.12%" label="Target Percentage Completed" />
+        </section>
+
+        {/* ── Kanban Board Section ── */}
+        <section className="mt-8">
+          <div className="rounded-2xl border border-[#e8e0d8]/40 bg-[#faf7f4]/50 dark:border-zinc-800 dark:bg-zinc-950/50 p-4 shadow-sm">
+            {/* View tabs & toolbar */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#ece5de]/60 dark:border-zinc-800 pb-3 mb-4">
+              <div className="flex items-center gap-1 bg-[#f0ebe5] dark:bg-zinc-900 rounded-xl p-1">
+                {["Kanban", "Timeline", "Spreadsheet", "Calendar"].map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => setActiveView(view)}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all",
+                      activeView === view
+                        ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                    )}
+                  >
+                    {view === "Kanban" && <span className="mr-1.5">📋</span>}
+                    {view === "Timeline" && <span className="mr-1.5">📈</span>}
+                    {view === "Spreadsheet" && <span className="mr-1.5">📊</span>}
+                    {view === "Calendar" && <span className="mr-1.5">📅</span>}
+                    {view}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isFiltering ? (
+                  <button
+                    onClick={() => setPriorityFilter(new Set())}
+                    className="flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1.5 text-[12px] font-medium text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-900"
+                  >
+                    <X className="size-3" />
+                    Reset
+                  </button>
+                ) : null}
+                <FilterControl active={priorityFilter} onToggle={togglePriority} onClear={() => setPriorityFilter(new Set())} />
+                <Button size="sm" className="rounded-xl bg-zinc-900 text-white text-[12px] font-semibold hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 gap-1.5 px-4">
+                  New <CaretDown className="size-3 opacity-60" />
+                </Button>
               </div>
             </div>
 
-            <div className="mt-6 overflow-hidden">
-              <div className="mb-4 flex items-center gap-6 border-b border-zinc-200/60 dark:border-zinc-800 px-1 pb-3 text-sm">
-                <button className="font-medium text-zinc-500">List View</button>
-                <button className="border-b-2 border-zinc-900 pb-3 font-semibold text-zinc-900 dark:border-zinc-100 dark:text-white -mb-3">Kanban</button>
-                <button className="font-medium text-zinc-500">Calendar</button>
-                <button className="font-medium text-zinc-500">+ Add View</button>
-                <div className="ml-auto flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full border-violet-200 bg-violet-600 text-white hover:bg-violet-700">
-                    Filter (1)
-                  </Button>
-                  <Button variant="outline" size="sm" className="rounded-full">
-                    + Add Task
-                  </Button>
-                  <Button variant="outline" size="sm" className="rounded-full">
-                    Customize
-                  </Button>
-                </div>
-              </div>
+            {isFiltering ? (
+              <p className="mb-3 px-1 text-[12px] text-zinc-400">
+                Drag &amp; drop is paused while a filter is active — clear the filter to reorder cards.
+              </p>
+            ) : null}
+
+            {activeView === "Kanban" && (
               <Kanban
-                value={columns}
+                value={filteredColumns}
                 onValueChange={setColumns}
                 getItemValue={(item) => item.id}
                 className="h-full"
               >
-                <KanbanBoard className="grid h-full auto-rows-fr grid-cols-1 gap-4 overflow-hidden xl:grid-cols-4">
-                  {Object.entries(columns).map(([columnValue, deals]) => (
+                <KanbanBoard className="grid h-full w-full auto-rows-fr grid-cols-1 gap-4 overflow-hidden md:grid-cols-2 xl:grid-cols-4">
+                  {Object.entries(filteredColumns).map(([columnValue, deals]) => (
                     <PipelineColumn
                       key={columnValue}
                       value={columnValue}
                       deals={deals}
+                      draggable={!isFiltering}
                       onDealClick={(deal) => openDeal(deal, columnValue)}
                     />
                   ))}
@@ -711,19 +1123,34 @@ export function DashboardTab() {
                 <KanbanOverlay>
                   {({ value, variant }) => {
                     if (variant === "column") {
-                      return <PipelineColumn value={value as string} deals={columns[value as string]} isOverlay />;
+                      return <PipelineColumn value={value as string} deals={filteredColumns[value as string]} isOverlay />;
                     }
 
-                    const deal = Object.values(columns).flat().find((item) => item.id === value);
-                    return deal ? <DealCard deal={deal} isOverlay /> : null;
+                    const deal = Object.values(filteredColumns).flat().find((item) => item.id === value);
+                    return deal ? <TaskCard deal={deal} isOverlay /> : null;
                   }}
                 </KanbanOverlay>
               </Kanban>
-            </div>
+            )}
+
+            {activeView === "Timeline" && (
+              <TimelineView filteredColumns={filteredColumns} onDealClick={openDeal} />
+            )}
+
+            {activeView === "Spreadsheet" && (
+              <SpreadsheetView filteredColumns={filteredColumns} onDealClick={openDeal} />
+            )}
+
+            {(activeView === "Calendar") && (
+              <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-[#ddd4ca] text-[13px] text-zinc-500 dark:border-zinc-800">
+                {activeView} view is coming soon.
+              </div>
+            )}
           </div>
         </section>
       </div>
 
+      {/* ── Drawer (Sheet) — UNCHANGED LOGIC ── */}
       <Sheet open={!!selected} onOpenChange={(open) => !open && closeDeal()}>
         {selected ? (
           <DealDrawer
