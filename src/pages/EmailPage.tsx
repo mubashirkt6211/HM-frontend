@@ -80,13 +80,20 @@ type Email = {
   isImportant?: boolean;
 };
 
+type ConfirmAction = {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+};
+
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
 function createSeedEmails(): Email[] {
   return [
     {
       id: "e1",
-      from: { name: "Dr. Sarah Mitchell", email: "s.mitchell@hospital.com", avatar: "https://i.pravatar.cc/150?img=47" },
+      from: { name: "Dr. Sarah Mitchell", email: "s.mitchell@hospital.com" },
       to: [{ name: "Admin", email: "admin@leadwave.com" }],
       subject: "Patient Care Update – Ward B Rounds",
       preview: "I wanted to bring to your attention the latest updates from our morning rounds in Ward B. Three patients have shown significant improvement...",
@@ -118,7 +125,7 @@ Senior Consultant – Internal Medicine`,
     },
     {
       id: "e2",
-      from: { name: "Finance Department", email: "finance@leadwave.com", avatar: "https://i.pravatar.cc/150?img=32" },
+      from: { name: "Finance Department", email: "finance@leadwave.com" },
       to: [{ name: "Admin", email: "admin@leadwave.com" }],
       subject: "Monthly Revenue Report – May 2026",
       preview: "Please find attached the consolidated revenue report for May 2026. Total collections were up 12% compared to last month...",
@@ -151,7 +158,7 @@ Finance Department`,
     },
     {
       id: "e3",
-      from: { name: "James Carter", email: "j.carter@medstaff.org", avatar: "https://i.pravatar.cc/150?img=15" },
+      from: { name: "James Carter", email: "j.carter@medstaff.org" },
       to: [{ name: "Admin", email: "admin@leadwave.com" }],
       subject: "Re: Staffing Schedule – Upcoming Holiday",
       preview: "Thanks for sending over the holiday schedule. I've reviewed it with the team, and we have a couple of concerns about the night shift coverage...",
@@ -179,7 +186,7 @@ HR – Nursing Staff Coordinator`,
     },
     {
       id: "e4",
-      from: { name: "IT Support", email: "it@leadwave.com", avatar: "https://i.pravatar.cc/150?img=60" },
+      from: { name: "IT Support", email: "it@leadwave.com" },
       to: [{ name: "Admin", email: "admin@leadwave.com" }],
       subject: "System Maintenance Scheduled – Saturday 2 AM",
       preview: "This is a reminder that our scheduled system maintenance window is this Saturday from 2:00 AM to 4:00 AM. During this time, all HMS portals will be temporarily unavailable...",
@@ -209,7 +216,7 @@ IT Support Team`,
     },
     {
       id: "e5",
-      from: { name: "Dr. Emma Patel", email: "e.patel@hospital.com", avatar: "https://i.pravatar.cc/150?img=44" },
+      from: { name: "Dr. Emma Patel", email: "e.patel@hospital.com" },
       to: [{ name: "Admin", email: "admin@leadwave.com" }],
       subject: "Research Grant Application – Deadline Friday",
       preview: "I wanted to flag that the NIH research grant application we discussed is due this Friday at 5 PM. I've completed the clinical sections but need your administrative signatures...",
@@ -243,7 +250,7 @@ Head of Oncology Research`,
     },
     {
       id: "e6",
-      from: { name: "Admin", email: "admin@leadwave.com", avatar: "https://i.pravatar.cc/150?img=33" },
+      from: { name: "Admin", email: "admin@leadwave.com" },
       to: [{ name: "Dr. Sarah Mitchell", email: "s.mitchell@hospital.com" }],
       subject: "Re: Patient Care Update – Ward B Rounds",
       preview: "Thank you for the detailed update, Dr. Mitchell. I've forwarded the care plan changes to the head nurse for the evening briefing...",
@@ -292,7 +299,7 @@ Note: This schedule is still being finalized.`,
     },
     {
       id: "e8",
-      from: { name: "MedSupply Co.", email: "orders@medsupply.com", avatar: "https://i.pravatar.cc/150?img=50" },
+      from: { name: "MedSupply Co.", email: "orders@medsupply.com" },
       to: [{ name: "Admin", email: "admin@leadwave.com" }],
       subject: "Your order #MS-2891 has shipped",
       preview: "Your medical supplies order #MS-2891 has been dispatched and is expected to arrive by June 16th. Track your shipment using the link below...",
@@ -368,7 +375,7 @@ function getInitials(name: string) {
 }
 
 const LABEL_CONFIG: Record<EmailLabel, { label: string; color: string; bg: string; dot: string }> = {
-  work:     { label: "Work",     color: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-900/30",     dot: "bg-blue-500" },
+  work:     { label: "Work",     color: "text-zinc-900 dark:text-zinc-100",    bg: "bg-zinc-100 dark:bg-zinc-800",     dot: "bg-zinc-900 dark:bg-zinc-100" },
   personal: { label: "Personal", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/30", dot: "bg-purple-500" },
   finance:  { label: "Finance",  color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/30", dot: "bg-emerald-500" },
   health:   { label: "Health",   color: "text-rose-600 dark:text-rose-400",    bg: "bg-rose-50 dark:bg-rose-900/30",     dot: "bg-rose-500" },
@@ -384,6 +391,59 @@ const FOLDER_CONFIG: Record<EmailFolder, { label: string; icon: React.ElementTyp
   trash: { label: "Trash", icon: Trash },
   spam: { label: "Spam", icon: Warning },
 };
+
+function ConfirmModal({
+  open,
+  title,
+  description,
+  confirmLabel = "Confirm",
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={(value) => !value && onCancel()}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-950">
+        <DialogHeader className="px-6 pt-6 pb-4 bg-white dark:bg-zinc-950">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:ring-rose-900/40">
+              <Trash className="h-5 w-5" weight="fill" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-[16px] font-semibold text-zinc-900 dark:text-zinc-100">
+                {title}
+              </DialogTitle>
+              <p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                {description}
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/40">
+          <button
+            onClick={onCancel}
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
+          >
+            <Trash className="h-4 w-4" weight="fill" />
+            {confirmLabel}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ─── Compose Modal ────────────────────────────────────────────────────────────
 
@@ -443,7 +503,7 @@ function ComposeModal({ open, onClose, onSend, replyTo }: ComposeModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl p-0 overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl">
-        <DialogHeader className="flex-row items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <DialogHeader className="flex-row items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-gradient-to-r from-zinc-950 to-zinc-700">
           <DialogTitle className="text-white font-bold text-[15px]">
             {replyTo ? "Reply" : "New Message"}
           </DialogTitle>
@@ -496,7 +556,10 @@ function ComposeModal({ open, onClose, onSend, replyTo }: ComposeModalProps) {
           <div className="flex items-center justify-between px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30">
             <div className="flex items-center gap-2">
               {[Paperclip, At, Smiley].map((Icon, i) => (
-                <button key={i} className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors">
+                <button
+                  key={i}
+                  className="p-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+                >
                   <Icon className="w-4 h-4" />
                 </button>
               ))}
@@ -514,7 +577,7 @@ function ComposeModal({ open, onClose, onSend, replyTo }: ComposeModalProps) {
                 className={cn(
                   "flex items-center gap-2 px-5 py-2 text-sm font-bold rounded-xl shadow-md transition-all",
                   to.trim() && subject.trim()
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25"
+                    ? "bg-gradient-to-r from-zinc-950 to-zinc-700 text-white hover:from-zinc-900 hover:to-zinc-800 shadow-zinc-900/20"
                     : "bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
                 )}
               >
@@ -547,34 +610,34 @@ function EmailListItem({ email, isSelected, onClick, onStar }: EmailListItemProp
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-all border-b border-zinc-100 dark:border-zinc-800/60 group relative",
+        "w-full flex items-start gap-4 px-6 py-4 text-left transition-all border-b border-zinc-100 dark:border-zinc-800/60 group relative",
         isSelected
-          ? "bg-blue-50/80 dark:bg-blue-950/30"
+          ? "bg-zinc-100/90 dark:bg-zinc-800/40"
           : email.isRead
-            ? "bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
-            : "bg-blue-50/30 dark:bg-blue-950/10 hover:bg-blue-50/50 dark:hover:bg-blue-950/20"
+          ? "bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+            : "bg-zinc-50/40 dark:bg-zinc-900/20 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/30"
       )}
     >
       {/* Unread indicator */}
       {!email.isRead && (
-        <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+        <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 shrink-0" />
       )}
 
       <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-        <AvatarImage src={email.from.avatar} alt={email.from.name} />
-        <AvatarFallback className="text-[12px] font-bold bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+        {email.from.avatar && <AvatarImage src={email.from.avatar} alt={email.from.name} />}
+        <AvatarFallback className="text-[12px] font-bold bg-gradient-to-br from-zinc-700 to-zinc-950 text-white">
           {getInitials(email.from.name)}
         </AvatarFallback>
       </Avatar>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-0.5">
-          <span className={cn("text-[13px] truncate", email.isRead ? "font-medium text-zinc-700 dark:text-zinc-300" : "font-bold text-zinc-900 dark:text-zinc-100")}>
+          <span className={cn("text-[13px] truncate", email.isRead ? "font-medium text-zinc-900 dark:text-zinc-100" : "font-bold text-zinc-900 dark:text-zinc-100")}>
             {email.from.name}
           </span>
           <span className="text-[11px] text-zinc-400 shrink-0">{email.time}</span>
         </div>
-        <p className={cn("text-[13px] truncate mb-1", email.isRead ? "font-normal text-zinc-600 dark:text-zinc-400" : "font-semibold text-zinc-800 dark:text-zinc-200")}>
+        <p className={cn("text-[13px] truncate mb-1", email.isRead ? "font-normal text-zinc-700 dark:text-zinc-300" : "font-semibold text-zinc-900 dark:text-zinc-100")}>
           {email.subject}
         </p>
         <p className="text-[12px] text-zinc-400 dark:text-zinc-500 truncate">{email.preview}</p>
@@ -600,7 +663,10 @@ function EmailListItem({ email, isSelected, onClick, onStar }: EmailListItemProp
 
       {/* Star button */}
       <button
-        onClick={(e) => { e.stopPropagation(); onStar(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onStar();
+        }}
         className={cn(
           "p-1 rounded-md transition-all shrink-0 mt-0.5",
           email.isStarred ? "text-amber-400" : "text-zinc-300 dark:text-zinc-700 opacity-0 group-hover:opacity-100 hover:text-amber-400"
@@ -643,10 +709,7 @@ function EmailDetail({ email, onClose, onReply, onForward, onDelete, onArchive, 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 shrink-0">
         <div className="flex items-center gap-3">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 text-sm font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-          >
+          <button onClick={onClose} className="flex items-center gap-1.5 text-sm font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Back</span>
           </button>
@@ -688,8 +751,8 @@ function EmailDetail({ email, onClose, onReply, onForward, onDelete, onArchive, 
         {/* Sender info */}
         <div className="flex items-start gap-4 mb-6">
           <Avatar className="h-11 w-11 shrink-0">
-            <AvatarImage src={email.from.avatar} alt={email.from.name} />
-            <AvatarFallback className="text-[13px] font-bold bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+            {email.from.avatar && <AvatarImage src={email.from.avatar} alt={email.from.name} />}
+            <AvatarFallback className="text-[13px] font-bold bg-gradient-to-br from-zinc-700 to-zinc-950 text-white">
               {getInitials(email.from.name)}
             </AvatarFallback>
           </Avatar>
@@ -722,20 +785,20 @@ function EmailDetail({ email, onClose, onReply, onForward, onDelete, onArchive, 
               {email.attachments.map((att) => (
                 <div
                   key={att.id}
-                  className="flex items-center gap-3 px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-300 dark:hover:border-blue-700 transition-colors cursor-pointer group"
+                  className="flex items-center gap-3 px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-pointer group"
                 >
                   <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-                    att.type === "pdf" ? "bg-rose-50 dark:bg-rose-900/30" : att.type === "image" ? "bg-blue-50 dark:bg-blue-900/30" : "bg-emerald-50 dark:bg-emerald-900/30"
+                    att.type === "pdf" ? "bg-rose-50 dark:bg-rose-900/30" : att.type === "image" ? "bg-zinc-100 dark:bg-zinc-800" : "bg-emerald-50 dark:bg-emerald-900/30"
                   )}>
                     <FileText className={cn("w-4 h-4",
-                      att.type === "pdf" ? "text-rose-500" : att.type === "image" ? "text-blue-500" : "text-emerald-500"
+                      att.type === "pdf" ? "text-rose-500" : att.type === "image" ? "text-zinc-700 dark:text-zinc-300" : "text-emerald-500"
                     )} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[13px] font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-[140px]">{att.name}</p>
                     <p className="text-[11px] text-zinc-400">{att.size}</p>
                   </div>
-                  <Eye className="w-4 h-4 text-zinc-300 group-hover:text-blue-500 transition-colors ml-1" />
+                  <Eye className="w-4 h-4 text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors ml-1" />
                 </div>
               ))}
             </div>
@@ -747,7 +810,7 @@ function EmailDetail({ email, onClose, onReply, onForward, onDelete, onArchive, 
       <div className="shrink-0 border-t border-zinc-100 dark:border-zinc-800 px-6 py-4 bg-white dark:bg-zinc-950 flex items-center gap-3">
         <button
           onClick={onReply}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/20 hover:from-blue-700 hover:to-indigo-700 transition-all"
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-zinc-950 to-zinc-700 text-white rounded-xl shadow-md shadow-zinc-900/20 hover:from-zinc-900 hover:to-zinc-800 transition-all"
         >
           <ArrowUDownLeft className="w-4 h-4" /> Reply
         </button>
@@ -786,7 +849,7 @@ function ActionButton({
         destructive
           ? "text-zinc-400 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/30"
           : active
-            ? cn(activeColor || "text-blue-600", "bg-blue-50 dark:bg-blue-900/30")
+            ? cn(activeColor || "text-zinc-900 dark:text-zinc-100", "bg-zinc-100 dark:bg-zinc-800")
             : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200"
       )}
     >
@@ -804,8 +867,7 @@ export function EmailPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isComposeOpen, setIsComposeOpen] = React.useState(false);
   const [replyToEmail, setReplyToEmail] = React.useState<Email | null>(null);
-
-
+  const [confirmAction, setConfirmAction] = React.useState<ConfirmAction | null>(null);
   const selectedEmail = React.useMemo(
     () => emails.find((e) => e.id === selectedEmailId) ?? null,
     [emails, selectedEmailId]
@@ -883,19 +945,23 @@ export function EmailPage() {
     setTimeout(() => setReplyToEmail(null), 300);
   }
 
+  function requestConfirm(action: ConfirmAction) {
+    setConfirmAction(action);
+  }
+
   const unreadInboxCount = emails.filter((e) => e.folder === "inbox" && !e.isRead).length;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 top-16 flex overflow-hidden border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+    <div className="flex h-full min-h-0 w-full overflow-hidden">
 
       {/* ── Left Sidebar: Folder Nav ── */}
-      <div className="w-[220px] shrink-0 flex flex-col bg-zinc-50/60 dark:bg-zinc-900/30 border-r border-zinc-200 dark:border-zinc-800">
+      <div className="flex min-h-0 w-[220px] shrink-0 flex-col border-r border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-900/30">
 
         {/* Compose button */}
         <div className="px-4 pt-5 pb-3">
           <button
             onClick={() => { setReplyToEmail(null); setIsComposeOpen(true); }}
-            className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 transition-all"
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-zinc-950 to-zinc-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-zinc-900/20 hover:from-zinc-900 hover:to-zinc-800 transition-all"
           >
             <Pencil className="w-4 h-4" />
             Compose
@@ -913,12 +979,12 @@ export function EmailPage() {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left",
                     selectedFolder === folderId
-                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold"
+                      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
                       : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200"
                   )}
                 >
                   <Icon
-                    className={cn("w-4.5 h-4.5 shrink-0", selectedFolder === folderId ? "text-blue-600 dark:text-blue-400" : "text-zinc-400")}
+                    className={cn("w-4.5 h-4.5 shrink-0", selectedFolder === folderId ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-400")}
                     weight={selectedFolder === folderId ? "fill" : "regular"}
                   />
                   <span className="flex-1">{label}</span>
@@ -927,7 +993,7 @@ export function EmailPage() {
                       "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
                       folderId === "spam"
                         ? "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
-                        : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"
                     )}>
                       {folderCounts[folderId]}
                     </span>
@@ -942,8 +1008,8 @@ export function EmailPage() {
             <p className="px-3 mb-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Labels</p>
             <div className="space-y-0.5">
               {(Object.entries(LABEL_CONFIG) as [EmailLabel, typeof LABEL_CONFIG[EmailLabel]][]).map(
-                ([labelId, { label, color, bg }]) => (
-                  <button
+                ([labelId, { label }]) => (
+                <button
                     key={labelId}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
                   >
@@ -963,18 +1029,18 @@ export function EmailPage() {
             <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">2.1 / 15 GB</span>
           </div>
           <div className="h-1.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full w-[14%] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" />
+            <div className="h-full w-[14%] bg-gradient-to-r from-zinc-950 to-zinc-700 rounded-full" />
           </div>
         </div>
       </div>
 
       {/* ── Middle: Email List ── */}
       <div className={cn(
-        "flex flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 transition-all",
+        "flex min-h-0 flex-col border-r border-zinc-200 bg-white transition-all dark:border-zinc-800 dark:bg-zinc-950",
         selectedEmail ? "w-[320px] shrink-0" : "flex-1"
       )}>
         {/* List header */}
-        <div className="px-4 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+        <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-[15px] font-black text-zinc-900 dark:text-zinc-100 capitalize">
@@ -992,13 +1058,13 @@ export function EmailPage() {
           </div>
 
           {/* Search */}
-          <div className="relative">
+          <div className="relative mt-1">
             <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search emails..."
-              className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all placeholder:text-zinc-400"
+              className="h-11 w-full pl-10 pr-4 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-500/20 focus:border-zinc-900 transition-all placeholder:text-zinc-500 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400"
             />
           </div>
         </div>
@@ -1031,35 +1097,64 @@ export function EmailPage() {
 
       {/* ── Right: Email Detail ── */}
       {selectedEmail ? (
-        <div className="flex-1 min-w-0">
+        <div className="flex min-h-0 flex-1 min-w-0">
           <EmailDetail
             email={selectedEmail}
             onClose={() => setSelectedEmailId(null)}
             onReply={handleReply}
             onForward={handleForward}
-            onDelete={() => handleDelete(selectedEmail.id)}
-            onArchive={() => handleArchive(selectedEmail.id)}
+            onDelete={() =>
+              requestConfirm({
+                title: "Delete email?",
+                description: "This will move the message to trash.",
+                confirmLabel: "Delete",
+                onConfirm: () => handleDelete(selectedEmail.id),
+              })
+            }
+            onArchive={() =>
+              requestConfirm({
+                title: "Archive email?",
+                description: "This will move the message to the archive folder.",
+                confirmLabel: "Archive",
+                onConfirm: () => handleArchive(selectedEmail.id),
+              })
+            }
             onStar={() => handleStar(selectedEmail.id)}
           />
         </div>
       ) : (
-        <div className="flex-1 min-w-0 flex flex-col items-center justify-center gap-4 bg-zinc-50/30 dark:bg-zinc-900/10">
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 flex items-center justify-center">
-            <EnvelopeOpen className="w-12 h-12 text-blue-400 dark:text-blue-500" />
+        <div className="flex min-h-0 flex-1 min-w-0 flex-col items-center justify-center gap-4 bg-zinc-50/30 dark:bg-zinc-900/10">
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 flex items-center justify-center">
+            <EnvelopeOpen className="w-12 h-12 text-zinc-400 dark:text-zinc-500" />
           </div>
           <div className="text-center">
             <p className="text-[15px] font-bold text-zinc-600 dark:text-zinc-400">Select an email to read</p>
-            <p className="text-[13px] text-zinc-400 dark:text-zinc-600 mt-1">Choose from your {FOLDER_CONFIG[selectedFolder].label.toLowerCase()}</p>
+            <p className="text-[13px] text-zinc-400 dark:text-zinc-600 mt-1">
+              Choose from your {FOLDER_CONFIG[selectedFolder].label.toLowerCase()}
+            </p>
           </div>
           <button
             onClick={() => { setReplyToEmail(null); setIsComposeOpen(true); }}
-            className="flex items-center gap-2 mt-2 px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg shadow-blue-500/20 hover:from-blue-700 hover:to-indigo-700 transition-all"
+            className="flex items-center gap-2 mt-2 px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-zinc-950 to-zinc-700 text-white rounded-xl shadow-lg shadow-zinc-900/20 hover:from-zinc-900 hover:to-zinc-800 transition-all"
           >
             <Pencil className="w-4 h-4" />
             Compose New
           </button>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmAction !== null}
+        title={confirmAction?.title ?? ""}
+        description={confirmAction?.description ?? ""}
+        confirmLabel={confirmAction?.confirmLabel}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          const action = confirmAction;
+          setConfirmAction(null);
+          action?.onConfirm();
+        }}
+      />
 
       {/* Compose Modal */}
       <ComposeModal

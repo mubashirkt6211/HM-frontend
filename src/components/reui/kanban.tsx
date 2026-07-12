@@ -365,7 +365,7 @@ function Kanban<T>({
   const defaultProps = {
     "data-slot": "kanban",
     "data-dragging": activeId !== null,
-    className: cn(activeId !== null && "cursor-grabbing!", className),
+    className: cn("w-full min-w-0", activeId !== null && "cursor-grabbing!", className),
     children,
   }
 
@@ -401,7 +401,10 @@ function KanbanBoard({ className, render, ...props }: KanbanBoardProps) {
 
   const defaultProps = {
     "data-slot": "kanban-board",
-    className: cn("grid auto-rows-fr gap-4 sm:grid-cols-3", className),
+    className: cn(
+      "grid w-full min-w-0 auto-rows-fr gap-4 sm:grid-cols-3",
+      className
+    ),
     children: props.children,
   }
 
@@ -486,7 +489,7 @@ function KanbanColumn({
     ref: setNodeRef,
     style,
     className: cn(
-      "group/kanban-column flex flex-col",
+      "group/kanban-column flex w-full min-w-0 flex-col",
       isSortableDragging && "opacity-50 z-50",
       disabled && "opacity-50",
       className

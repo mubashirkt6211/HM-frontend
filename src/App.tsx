@@ -41,7 +41,6 @@ function App() {
     >
 
       {isCalendar && <CalendarPage />}
-      {currentPage === "analytics" && <AnalyticsPage />}
       {currentPage === "messages" && <MessagesPage />}
       {currentPage === "patients" && <PatientsPage />}
       {currentPage === "tasks" && <TasksPage />}
