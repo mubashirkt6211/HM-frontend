@@ -9,6 +9,7 @@ import { TasksPage } from "@/pages/TasksPage"
 import { DoctorsPage } from "@/pages/DoctorsPage"
 import { RevenuePage } from "@/pages/RevenuePage"
 import { ProfilePage } from "@/pages/ProfilePage"
+import { CompanySetupPage } from "@/pages/CompanySetupPage"
 import { NursePage } from "@/pages/NursePage"
 import { PrivilegesPage } from "@/pages/PrivilegesPage"
 import { ReportsPage } from "@/pages/ReportsPage"
@@ -19,7 +20,7 @@ import { UserRole } from "@/models/user";
 
 
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "analytics" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "privillage" | "reports" | "orthopedics" | "orthodontics" | "emails" | string;
+type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "analytics" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "company-setup" | "privillage" | "reports" | "orthopedics" | "orthodontics" | "emails" | string;
 
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
       {currentPage === "orthopedicts" && <ComingSoonPage title="Orthopedics Registry" icon={Hammer} />}
       {currentPage === "orthodontics" && <ComingSoonPage title="Orthodontics Registry" icon={Tooth} />}
 
+      {currentPage === "company-setup" && <CompanySetupPage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
       {currentPage === "dashboard" && (
         <Dashboard
