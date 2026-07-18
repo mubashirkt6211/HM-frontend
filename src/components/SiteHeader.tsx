@@ -26,7 +26,9 @@ import {
   ShieldCheck,
   User,
   DollarSign,
-  Activity
+  Activity,
+  Building2,
+  Building2Icon
 } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
@@ -60,6 +62,7 @@ const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
   revenue: { label: "Revenue", icon: DollarSign },
   nurse: { label: "Nurse Staff", icon: Activity },
   notifications: { label: "Notifications", icon: Bell },
+  "company-setup": { label: "Company setup", icon: Building2Icon },
 };
 
 const CATEGORIES = [
@@ -452,6 +455,16 @@ export function SiteHeader({
                   <Settings className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
                 </div>
                 <span className="text-[13px] font-medium text-zinc-600 dark:text-zinc-400">Settings</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => onPageChange?.("company-setup")}
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
+              >
+                <div className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-zinc-800 group-hover:bg-white dark:group-hover:bg-zinc-800 transition-colors">
+                  <Building2 className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
+                </div>
+                <span className="text-[13px] font-medium text-zinc-600 dark:text-zinc-400">Company setup</span>
               </DropdownMenuItem>
             </div>
 
