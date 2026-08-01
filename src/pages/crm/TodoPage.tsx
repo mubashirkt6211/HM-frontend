@@ -1,9 +1,9 @@
 /**
- * Main Dashboard Page - Focused on the Overview (DashboardTab)
+ * Todo Page - renamed from the old dashboard page.
  */
 import { DashboardTab } from "@/components/dashboard";
 
-export function Dashboard({
+export function TodoPage({
   onProfileClick,
 }: {
   onProfileClick?: () => void;

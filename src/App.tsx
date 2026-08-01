@@ -1,26 +1,42 @@
 import { useState } from "react";
 import { AppLayout } from "@/layouts/AppLayout"
-import { Dashboard } from "@/pages/Dashboard"
-import { CalendarPage } from "@/pages/CalendarPage"
-import { MessagesPage } from "@/pages/MessagesPage"
-import { PatientsPage } from "@/pages/PatientsPage"
-import { LeadsPage } from "@/pages/LeadsPage"
-import { TasksPage } from "@/pages/TasksPage"
-import { DoctorsPage } from "@/pages/DoctorsPage"
-import { RevenuePage } from "@/pages/RevenuePage"
-import { ProfilePage } from "@/pages/ProfilePage"
-import { CompanySetupPage } from "@/pages/CompanySetupPage"
-import { NursePage } from "@/pages/NursePage"
-import { PrivilegesPage } from "@/pages/PrivilegesPage"
-import { ReportsPage } from "@/pages/ReportsPage"
-import { ComingSoonPage } from "@/pages/ComingSoonPage"
-import { EmailPage } from "@/pages/EmailPage"
-import { Hammer, Tooth } from "@phosphor-icons/react"
+import { Dashboard } from "@/pages/crm/Dashboard"
+import { TodoPage } from "@/pages/crm/TodoPage"
+import { CalendarPage } from "@/pages/shared/CalendarPage"
+import { MessagesPage } from "@/pages/crm/MessagesPage"
+import { PatientsPage } from "@/pages/healthcare/PatientsPage"
+import { LeadsPage } from "@/pages/crm/LeadsPage"
+import { PipelinePage } from "@/pages/crm/PipelinePage"
+import { TasksPage } from "@/pages/crm/TasksPage"
+import { DoctorsPage } from "@/pages/healthcare/DoctorsPage"
+import { RevenuePage } from "@/pages/crm/RevenuePage"
+import { ProfilePage } from "@/pages/crm/ProfilePage"
+import { CompanySetupPage } from "@/pages/crm/CompanySetupPage"
+import { NursePage } from "@/pages/healthcare/NursePage"
+import { PrivilegesPage } from "@/pages/crm/PrivilegesPage"
+import { ReportsPage } from "@/pages/crm/ReportsPage"
+import { ComingSoonPage } from "@/pages/crm/ComingSoonPage"
+import { EmailPage } from "@/pages/crm/EmailPage"
+import { ItineraryBuilderPage } from "@/pages/crm/ItineraryBuilderPage"
+import { Hammer, Tooth, Sparkle, TreeStructure, User, Users, Star, Megaphone, ClipboardText, Funnel, Buildings, Briefcase, Handshake, ChartLineUp, ShieldCheck, ClockClockwise } from "@phosphor-icons/react"
 import { UserRole } from "@/models/user";
 
 
 
-type PageType = "dashboard" | "calender" | "calendar" | "messages" | "patients" | "analytics" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "company-setup" | "privillage" | "reports" | "orthopedics" | "orthodontics" | "emails" | string;
+type PageType = "dashboard" | "todo" | "calendar" | "itinerary-builder" | "messages" | "patients" | "analytics" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "company-setup" | "privileges" | "reports" | "orthopedics" | "orthodontics" | "emails" | "team" | "notes" | "receptionist" | "accounts" | "deals" | "open-deals" | "won-deals" | "lost-deals" | "uk-eu-companies" | "b2b-building" | "partnership" | "crm-template" | "clients" | "contacts" | "people" | "sales-navigator" | "emails-marketing-agency" | "automations" | "workflows" | string;
+
+const normalizePageId = (page: string): PageType => {
+  switch (page) {
+    case "calender":
+      return "calendar";
+    case "privillage":
+      return "privileges";
+    case "orthopedicts":
+      return "orthopedics";
+    default:
+      return page as PageType;
+  }
+};
 
 
 function App() {
@@ -28,8 +44,92 @@ function App() {
   const [activeDashboardTab, setActiveDashboardTab] = useState("Dashboard");
   const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
 
+  const normalizedCurrentPage = normalizePageId(currentPage);
 
-  const isCalendar = currentPage === "calendar" || currentPage === "calender";
+  const renderPage = () => {
+    switch (normalizedCurrentPage) {
+      case "dashboard":
+        return <Dashboard />;
+      case "messages":
+        return <MessagesPage />;
+      case "patients":
+        return <PatientsPage />;
+      case "leads":
+        return <LeadsPage />;
+      case "pipeline":
+        return <PipelinePage />;
+      case "tasks":
+        return <TasksPage />;
+      case "doctors":
+        return <DoctorsPage />;
+      case "nurse":
+        return <NursePage />;
+      case "revenue":
+        return <RevenuePage />;
+      case "privileges":
+        return <PrivilegesPage />;
+      case "reports":
+        return <ReportsPage />;
+      case "emails":
+        return <EmailPage />;
+      case "profile":
+        return <ProfilePage onBack={() => setCurrentPage("dashboard")} />;
+      case "company-setup":
+        return <CompanySetupPage onBack={() => setCurrentPage("dashboard")} />;
+      case "todo":
+        return <TodoPage />;
+      case "analytics":
+        return <ComingSoonPage title="Forecast" icon={Funnel} />;
+      case "accounts":
+        return <ComingSoonPage title="Accounts" icon={Briefcase} />;
+      case "deals":
+        return <ComingSoonPage title="Deals" icon={Handshake} />;
+      case "open-deals":
+        return <ComingSoonPage title="Open Deals" icon={ChartLineUp} />;
+      case "won-deals":
+        return <ComingSoonPage title="Won Deals" icon={ShieldCheck} />;
+      case "lost-deals":
+        return <ComingSoonPage title="Lost Deals" icon={ClockClockwise} />;
+      case "team":
+        return <ComingSoonPage title="Contacts" icon={Users} />;
+      case "notes":
+        return <ComingSoonPage title="Prospects" icon={Sparkle} />;
+      case "receptionist":
+        return <ComingSoonPage title="Receptionist" icon={User} />;
+      case "uk-eu-companies":
+        return <ComingSoonPage title="Hot Leads" icon={Star} />;
+      case "b2b-building":
+        return <ComingSoonPage title="Priority Accounts" icon={Star} />;
+      case "partnership":
+        return <ComingSoonPage title="Partnerships" icon={Star} />;
+      case "crm-template":
+        return <ComingSoonPage title="Meeting Template" icon={Star} />;
+      case "clients":
+        return <ComingSoonPage title="Companies" icon={Buildings} />;
+      case "contacts":
+        return <ComingSoonPage title="Contacts" icon={Users} />;
+      case "people":
+        return <ComingSoonPage title="People" icon={Users} />;
+      case "sales-navigator":
+        return <ComingSoonPage title="Campaigns" icon={Megaphone} />;
+      case "emails-marketing-agency":
+        return <ComingSoonPage title="Sequences" icon={ClipboardText} />;
+      case "automations":
+        return <ComingSoonPage title="Automations" icon={Sparkle} />;
+      case "workflows":
+        return <ComingSoonPage title="Workflows" icon={TreeStructure} />;
+      case "orthopedics":
+        return <ComingSoonPage title="Orthopedics Registry" icon={Hammer} />;
+      case "orthodontics":
+        return <ComingSoonPage title="Orthodontics Registry" icon={Tooth} />;
+      case "calendar":
+        return <CalendarPage />;
+      case "itinerary-builder":
+        return <ItineraryBuilderPage />;
+      default:
+        return <ComingSoonPage title="Coming Soon" />;
+    }
+  };
 
   return (
     <AppLayout
@@ -42,28 +142,7 @@ function App() {
       setUserRole={setUserRole}
     >
 
-      {isCalendar && <CalendarPage />}
-      {currentPage === "messages" && <MessagesPage />}
-      {currentPage === "patients" && <PatientsPage />}
-      {currentPage === "leads" && <LeadsPage />}
-      {currentPage === "tasks" && <TasksPage />}
-      {currentPage === "doctors" && <DoctorsPage />}
-      {currentPage === "nurse" && <NursePage />}
-      {currentPage === "revenue" && <RevenuePage />}
-      {currentPage === "privillage" && <PrivilegesPage />}
-      {currentPage === "reports" && <ReportsPage />}
-      {currentPage === "emails" && <EmailPage />}
-      {currentPage === "orthopedics" && <ComingSoonPage title="Orthopedics Registry" icon={Hammer} />}
-      {currentPage === "orthopedicts" && <ComingSoonPage title="Orthopedics Registry" icon={Hammer} />}
-      {currentPage === "orthodontics" && <ComingSoonPage title="Orthodontics Registry" icon={Tooth} />}
-
-      {currentPage === "company-setup" && <CompanySetupPage onBack={() => setCurrentPage("dashboard")} />}
-      {currentPage === "profile" && <ProfilePage onBack={() => setCurrentPage("dashboard")} />}
-      {currentPage === "dashboard" && (
-        <Dashboard
-          onProfileClick={() => setCurrentPage("profile")}
-        />
-      )}
+      {renderPage()}
     </AppLayout>
   );
 }

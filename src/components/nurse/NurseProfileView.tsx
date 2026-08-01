@@ -12,7 +12,7 @@ import {
    Plus, FolderOpen
 } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { Nurse } from "@/pages/NursePage";
+import type { Nurse } from "@/pages/healthcare/NursePage";
 
 interface NurseProfileViewProps {
    nurse: Nurse;

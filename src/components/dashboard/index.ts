@@ -21,3 +21,5 @@ export {
   CategoryCard,
 } from "./components";
 export { CustomGauge } from "./CustomGauge";
+export { WeeklyHealthCharts } from "./WeeklyHealthCharts";
+

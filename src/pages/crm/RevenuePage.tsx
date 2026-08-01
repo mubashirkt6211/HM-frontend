@@ -475,6 +475,7 @@ function BillsView() {
                   {opt.count}
                 </span>
               </button>
+              
             ))}
           </div>
 

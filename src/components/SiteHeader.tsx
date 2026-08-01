@@ -28,7 +28,19 @@ import {
   DollarSign,
   Activity,
   Building2,
-  Building2Icon
+  Building2Icon,
+  Mail,
+  Target,
+  Bone,
+  Smile,
+  Briefcase,
+  Handshake,
+  TrendingUp,
+  UserPlus,
+  Megaphone,
+  Star,
+  Workflow,
+  ClipboardList,
 } from "lucide-react";
 
 import { useSidebar } from "@/components/ui/sidebar";
@@ -46,23 +58,47 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { UserRole } from "@/models/user"
+import { MapTrifold } from "@phosphor-icons/react";
 
 
 const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
   dashboard: { label: "Dashboard", icon: LayoutDashboard },
-  calender: { label: "Calendar", icon: Calendar },
+  analytics: { label: "Forecast", icon: TrendingUp },
+  leads: { label: "Leads", icon: Target },
+  todo: { label: "To Do", icon: CheckCircle2 },
   calendar: { label: "Calendar", icon: Calendar },
+  "itinerary-builder": { label: "Itinerary Builder", icon: MapTrifold },
+  accounts: { label: "Accounts", icon: Briefcase },
+  deals: { label: "Deals", icon: Handshake },
+  "open-deals": { label: "Open Deals", icon: BarChart2 },
+  "won-deals": { label: "Won Deals", icon: ShieldCheck },
+  "lost-deals": { label: "Lost Deals", icon: Archive },
+  notes: { label: "Prospects", icon: UserPlus },
+  contacts: { label: "Contacts", icon: Users },
+  clients: { label: "Companies", icon: Building2 },
+  people: { label: "People", icon: Users },
+  "uk-eu-companies": { label: "Hot Leads", icon: Star },
+  "b2b-building": { label: "Priority Accounts", icon: Star },
+  partnership: { label: "Partnerships", icon: Handshake },
+  "crm-template": { label: "Meeting Template", icon: Star },
+  "sales-navigator": { label: "Campaigns", icon: Megaphone },
+  "emails-marketing-agency": { label: "Sequences", icon: ClipboardList },
+  automations: { label: "Automations", icon: Zap },
+  workflows: { label: "Workflows", icon: Workflow },
   patients: { label: "Patients", icon: Activity },
   doctors: { label: "Doctors", icon: UserSquare },
   messages: { label: "Messages", icon: MessageSquare },
   tasks: { label: "Tasks", icon: CheckSquare },
+  emails: { label: "Emails", icon: Mail },
   reports: { label: "Reports", icon: BarChart2 },
-  privillage: { label: "Privileges", icon: ShieldCheck },
+  privileges: { label: "Privileges", icon: ShieldCheck },
   profile: { label: "Profile", icon: User },
   revenue: { label: "Revenue", icon: DollarSign },
-  nurse: { label: "Nurse Staff", icon: Activity },
+  nurse: { label: "Nurses", icon: Activity },
   notifications: { label: "Notifications", icon: Bell },
   "company-setup": { label: "Company setup", icon: Building2Icon },
+  orthopedics: { label: "Orthopedics", icon: Bone },
+  orthodontics: { label: "Orthodontics", icon: Smile },
 };
 
 const CATEGORIES = [
