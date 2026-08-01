@@ -278,7 +278,7 @@ export function DoctorSchedule({ doctorId = null, onBack }: DoctorScheduleProps 
 
           {/* Filters */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <Select value={departmentFilter} onValueChange={(val) => val && setDepartmentFilter(val)}>
               <SelectTrigger className="w-40 h-9 text-[12px] font-bold rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
                 <div className="flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-zinc-400" />
@@ -291,7 +291,7 @@ export function DoctorSchedule({ doctorId = null, onBack }: DoctorScheduleProps 
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(val) => val && setStatusFilter(val)}>
               <SelectTrigger className="w-36 h-9 text-[12px] font-bold rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
                 <div className="flex items-center gap-1.5">
                   <Activity className="w-3.5 h-3.5 text-zinc-400" />
@@ -308,7 +308,7 @@ export function DoctorSchedule({ doctorId = null, onBack }: DoctorScheduleProps 
               </SelectContent>
             </Select>
 
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <Select value={priorityFilter} onValueChange={(val) => val && setPriorityFilter(val)}>
               <SelectTrigger className="w-36 h-9 text-[12px] font-bold rounded-xl border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
                 <div className="flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 text-zinc-400" />

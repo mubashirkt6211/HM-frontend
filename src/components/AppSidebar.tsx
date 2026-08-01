@@ -4,28 +4,6 @@ import {
     MagnifyingGlass,
     Command,
     CaretDown,
-    CalendarCheck,
-    Users,
-    Star,
-    ChartLineUp,
-    Envelope,
-    Sparkle,
-    TreeStructure,
-    Buildings,
-    Handshake,
-    Target,
-    Briefcase,
-    UserList,
-    ChatCenteredDots,
-    PhoneCall,
-    Funnel,
-    Wallet,
-    TrendUp,
-    ShieldCheck,
-    Megaphone,
-    ClipboardText,
-    ClockClockwise,
-    UserPlus,
 } from "@phosphor-icons/react";
 
 import {
@@ -42,70 +20,9 @@ import {
 
 import { cn } from "@/lib/utils"
 import logog from "@/assets/logog.png"
-import { LayoutGrid } from "lucide-react";
 
+import { sidebarNavigationSections, type NavItemConfig, type NavSubItemConfig } from "@/config/navigation";
 import { UserRole } from "@/models/user";
-
-interface NavItemConfig {
-    icon?: React.ElementType;
-    title: string;
-    pageId?: string;
-    badge?: string;
-    iconColor?: string;
-    iconFill?: boolean;
-    roles?: UserRole[];
-    subItems?: { title: string; pageId: string; icon?: React.ElementType; roles?: UserRole[] }[];
-}
-
-const mainNavigation: NavItemConfig[] = [
-    {
-        icon: LayoutGrid,
-        title: "Overview",
-        pageId: "dashboard",
-        subItems: [
-            { title: "Pipeline", pageId: "dashboard", icon: Funnel },
-            { title: "Forecast", pageId: "analytics", icon: TrendUp },
-            { title: "Revenue", pageId: "revenue", icon: Wallet, roles: [UserRole.ADMIN, UserRole.MANAGER] },
-        ]
-    },
-    { icon: Target, title: "Leads", pageId: "leads", badge: "24", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
-    { icon: Briefcase, title: "Accounts", pageId: "privillage", badge: "4" },
-    { icon: UserList, title: "Contacts", pageId: "team" },
-    {
-        icon: Handshake, title: "Deals", pageId: "team",
-        roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR, UserRole.RECEPTIONIST],
-        subItems: [
-            { title: "Open Deals", pageId: "doctors", icon: ChartLineUp },
-            { title: "Won Deals", pageId: "nurse", icon: ShieldCheck, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
-            { title: "Lost Deals", pageId: "receptionist", icon: ClockClockwise, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
-        ]
-    },
-    { icon: UserPlus, title: "Prospects", pageId: "notes" },
-    { icon: ChatCenteredDots, title: "Conversations", pageId: "messages", badge: "12" },
-    { icon: PhoneCall, title: "Follow-ups", pageId: "tasks" },
-    { icon: CalendarCheck, title: "Calendar", pageId: "calender" },
-    { icon: Envelope, title: "Emails", pageId: "emails", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
-    { icon: ChartLineUp, title: "Reports", pageId: "reports", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
-    { icon: Sparkle, title: "Automations", pageId: "automations", roles: [UserRole.ADMIN] },
-    { icon: TreeStructure, title: "Workflows", pageId: "workflows", roles: [UserRole.ADMIN] },
-];
-
-const favoritesNavigation: NavItemConfig[] = [
-    { icon: Star, title: "Hot Leads", pageId: "uk-eu-companies", iconColor: "text-orange-400" },
-    { icon: Star, title: "Priority Accounts", pageId: "b2b-building", iconColor: "text-orange-400" },
-    { icon: Star, title: "Partnerships", pageId: "partnership", iconColor: "text-orange-400" },
-    { icon: Star, title: "Meeting Template", pageId: "crm-template", iconColor: "text-orange-400" },
-];
-
-const recordsNavigation: NavItemConfig[] = [
-    { icon: Buildings, title: "Companies", pageId: "clients", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { icon: Users, title: "People", pageId: "contacts", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-];
-
-const listNavigation: NavItemConfig[] = [
-    { icon: Megaphone, title: "Campaigns", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true },
-    { icon: ClipboardText, title: "Sequences", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true },
-];
 
 export function AppSidebar({
     currentPage = "dashboard",
@@ -129,10 +46,12 @@ export function AppSidebar({
         }));
     };
 
-    const filteredMainNavigation = filterByRole(mainNavigation);
-    const filteredFavoritesNavigation = filterByRole(favoritesNavigation);
-    const filteredRecordsNavigation = filterByRole(recordsNavigation);
-    const filteredListNavigation = filterByRole(listNavigation);
+    const filteredNavigationSections = sidebarNavigationSections
+        .map((section) => ({
+            ...section,
+            items: filterByRole(section.items),
+        }))
+        .filter((section) => section.items.length > 0);
 
     return (
         <Sidebar
@@ -177,110 +96,44 @@ export function AppSidebar({
 
                 {/* CONTENT */}
                 <SidebarContent className="px-4 py-2 flex-1 overflow-y-auto no-scrollbar">
+                    {filteredNavigationSections.map((section, sectionIndex) => {
+                        if (isCollapsed && section.title) return null;
 
-                    {/* MAIN NAVIGATION */}
-                    <SidebarGroup className="p-0">
-                        <SidebarGroupContent>
-                            <SidebarMenu className="gap-0.5">
-                                {filteredMainNavigation.map((item) => (
-                                    <NavItem
-                                        key={item.title}
-
-                                        icon={item.icon}
-                                        title={item.title}
-                                        isCollapsed={isCollapsed}
-                                        isActive={item.pageId ? (currentPage === item.pageId || (item.subItems?.some(s => s.pageId === currentPage))) : false}
-                                        onClick={item.pageId ? () => onPageChange?.(item.pageId as string) : undefined}
-                                        badge={item.badge}
-                                        subItems={item.subItems}
-                                        currentPage={currentPage}
-                                        onPageChange={onPageChange}
-                                    />
-                                ))}
-                            </SidebarMenu>
-                        </SidebarGroupContent>
-                    </SidebarGroup>
-
-                    {/* FAVORITES */}
-                    {!isCollapsed && (
-                        <SidebarGroup className="p-0 mt-6">
-                            <div className="flex items-center justify-between px-3 mb-2">
-                                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-                                    <motion.span>Favorites</motion.span>
-                                </div>
-                            </div>
-                            <SidebarGroupContent>
-                                <SidebarMenu className="gap-0.5">
-                                    {filteredFavoritesNavigation.map((item) => (
-                                        <NavItem
-                                            key={item.title}
-
-                                            icon={item.icon}
-                                            iconColor={item.iconColor}
-                                            title={item.title}
-                                            isCollapsed={isCollapsed}
-                                            isActive={currentPage === item.pageId}
-                                            onClick={() => onPageChange?.(item.pageId as string)}
-                                        />
-                                    ))}
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    )}
-
-                    {/* RECORDS */}
-                    {!isCollapsed && (
-                        <SidebarGroup className="p-0 mt-6">
-                            <div className="flex items-center justify-between px-3 mb-2">
-                                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-                                    <motion.span>Records</motion.span>
-                                </div>
-                            </div>
-                            <SidebarGroupContent>
-                                <SidebarMenu className="gap-0.5">
-                                    {filteredRecordsNavigation.map((item) => (
-                                        <NavItem
-                                            key={item.title}
-
-                                            icon={item.icon}
-                                            title={item.title}
-                                            isCollapsed={isCollapsed}
-                                            isActive={currentPage === item.pageId}
-                                            onClick={() => onPageChange?.(item.pageId as string)}
-                                        />
-                                    ))}
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    )}
-
-                    {/* LIST */}
-                    {!isCollapsed && (
-                        <SidebarGroup className="p-0 mt-6">
-                            <div className="flex items-center justify-between px-3 mb-2">
-                                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-                                    <motion.span>List</motion.span>
-                                </div>
-                            </div>
-                            <SidebarGroupContent>
-                                <SidebarMenu className="gap-0.5">
-                                    {filteredListNavigation.map((item) => (
-                                        <NavItem
-                                            key={item.title}
-
-                                            icon={item.icon}
-                                            iconColor={item.iconColor}
-                                            iconFill={item.iconFill}
-                                            title={item.title}
-                                            isCollapsed={isCollapsed}
-                                            isActive={currentPage === item.pageId}
-                                            onClick={() => onPageChange?.(item.pageId as string)}
-                                        />
-                                    ))}
-                                </SidebarMenu>
-                            </SidebarGroupContent>
-                        </SidebarGroup>
-                    )}
+                        return (
+                            <SidebarGroup
+                                key={section.title ?? "main"}
+                                className={cn("p-0", sectionIndex > 0 && "mt-6")}
+                            >
+                                {section.title && (
+                                    <div className="flex items-center justify-between px-3 mb-2">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+                                            <motion.span>{section.title}</motion.span>
+                                        </div>
+                                    </div>
+                                )}
+                                <SidebarGroupContent>
+                                    <SidebarMenu className="gap-0.5">
+                                        {section.items.map((item) => (
+                                            <NavItem
+                                                key={`${section.title ?? "main"}-${item.title}`}
+                                                icon={item.icon}
+                                                iconColor={item.iconColor}
+                                                iconFill={item.iconFill}
+                                                title={item.title}
+                                                isCollapsed={isCollapsed}
+                                                isActive={item.pageId ? (currentPage === item.pageId || (item.subItems?.some(s => s.pageId === currentPage))) : false}
+                                                onClick={item.pageId ? () => onPageChange?.(item.pageId as string) : undefined}
+                                                badge={item.badge}
+                                                subItems={item.subItems}
+                                                currentPage={currentPage}
+                                                onPageChange={onPageChange}
+                                            />
+                                        ))}
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+                        );
+                    })}
 
                 </SidebarContent>
 
@@ -310,25 +163,37 @@ function NavItem({
     iconFill?: boolean
     badge?: string
     onClick?: () => void
-    subItems?: { title: string; pageId: string; icon?: React.ElementType }[]
+    subItems?: NavSubItemConfig[]
     currentPage?: string
     onPageChange?: (page: string) => void
 }) {
-    const [isOpen, setIsOpen] = React.useState(false);
-
-
     const hasSubItems = subItems && subItems.length > 0;
+    const hasActiveSubItem = !!subItems?.some((sub) => sub.pageId === currentPage);
+    const [isOpen, setIsOpen] = React.useState(hasActiveSubItem);
+
+    React.useEffect(() => {
+        if (hasActiveSubItem) {
+            setIsOpen(true);
+        }
+    }, [hasActiveSubItem]);
+
+    const handleClick = () => {
+        if (hasSubItems) {
+            setIsOpen((open) => !open);
+        }
+        onClick?.();
+    };
 
     return (
         <SidebarMenuItem>
             <SidebarMenuButton
                 asChild={!onClick && !hasSubItems}
                 tooltip={title}
-                isActive={isActive && !hasSubItems}
-                onClick={hasSubItems ? () => setIsOpen(!isOpen) : onClick}
+                isActive={isActive}
+                onClick={handleClick}
                 className={cn(
                     "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-all relative group cursor-pointer h-9 mb-0.5",
-                    isActive && !hasSubItems
+                    isActive
                         ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold"
                         : "text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-200",
                     isCollapsed && "justify-center px-0"

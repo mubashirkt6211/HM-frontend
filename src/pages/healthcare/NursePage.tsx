@@ -285,8 +285,8 @@ export function NursePage() {
   })
 
   const sorted = [...filtered].sort((a, b) => {
-    let aVal: any = (a as any)[sort.field]
-    let bVal: any = (b as any)[sort.field]
+    const aVal: any = (a as any)[sort.field]
+    const bVal: any = (b as any)[sort.field]
     if (aVal < bVal) return sort.dir === "asc" ? -1 : 1
     if (aVal > bVal) return sort.dir === "asc" ? 1 : -1
     return 0

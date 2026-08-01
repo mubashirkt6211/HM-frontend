@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog"
 
 import pdfIcon from "@/assets/pdf.png"
+import { Button } from "@base-ui/react/button"
 
 // ─── Types ────────────────────────────────────────────────────
 export interface Patient {
@@ -238,13 +239,16 @@ function AddPatientModal({
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[13px] font-bold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" weight="bold" />
-              Add Patient
-            </button>
+             <Button
+                              className="group relative overflow-hidden rounded-lg border border-blue-800/40 bg-gradient-to-b from-blue-400 via-blue-600 to-blue-700 px-4 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.15),0_4px_10px_-2px_rgba(37,99,235,0.55)] transition-all duration-150 hover:from-blue-400 hover:via-blue-500 hover:to-blue-600 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.55),inset_0_-1px_1px_rgba(0,0,0,0.15),0_6px_14px_-2px_rgba(37,99,235,0.65)] active:translate-y-px active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] gap-1"
+                            >
+                              {/* glossy top-half highlight */}
+                              <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-lg bg-gradient-to-b from-white/40 to-white/0" />
+                              {/* soft diagonal sheen sweep on hover */}
+                              <span className="pointer-events-none absolute -inset-y-2 -left-1/2 w-1/3 -skew-x-12 bg-white/25 opacity-0 transition-all duration-500 group-hover:left-[120%] group-hover:opacity-100" />
+                              <Plus className="relative z-10 size-4" />
+                              <span className="relative z-10">Create Task</span>
+                            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -474,8 +478,8 @@ export function PatientsPage() {
   })
 
   const sorted = [...filtered].sort((a, b) => {
-    let aVal: any = (a as any)[sort.field]
-    let bVal: any = (b as any)[sort.field]
+    const aVal: any = (a as any)[sort.field]
+    const bVal: any = (b as any)[sort.field]
     if (aVal < bVal) return sort.dir === "asc" ? -1 : 1
     if (aVal > bVal) return sort.dir === "asc" ? 1 : -1
     return 0

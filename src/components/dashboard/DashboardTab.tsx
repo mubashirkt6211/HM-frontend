@@ -54,8 +54,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { CalendarPage } from "@/pages/CalendarPage";
+import { CalendarPage } from "@/pages/shared/CalendarPage";
 import { cn } from "@/lib/utils";
+import { CalendarCheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { CalendarCogIcon } from "lucide-react";
 
 /* ================================================================
    Types
@@ -1451,7 +1453,7 @@ export function DashboardTab() {
   // View tab config
   const viewTabs = [
     { id: "Kanban", label: "Kanban View", icon: <SquaresFour className="size-4" /> },
-    { id: "Calendar", label: "Calendar View", icon: <CalendarBlank className="size-4" /> },
+    { id: "Calendar", label: "Calendar View", icon: <CalendarCogIcon className="size-4" /> },
   ];
 
   return (
