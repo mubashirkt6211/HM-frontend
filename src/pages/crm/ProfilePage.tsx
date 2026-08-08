@@ -550,35 +550,38 @@ function ApplicationWizardModal({
 }) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
+  // Form states
   const [name, setName] = useState(profile.name);
   const [roleTitle, setRoleTitle] = useState(profile.role);
   const [department, setDepartment] = useState(profile.department);
   const [email, setEmail] = useState(profile.email);
+  const [npiNumber, setNpiNumber] = useState("NPI-8842-HMS");
   const [selectedRoleCard, setSelectedRoleCard] = useState("exec");
-  const [accessLevel, setAccessLevel] = useState(profile.accessLevel);
+  const [accessLevel, setAccessLevel] = useState("Level 4 Executive");
   const [hipaaVerified, setHipaaVerified] = useState(true);
+  const [fhirSyncEnabled, setFhirSyncEnabled] = useState(true);
   const [twoFactor, setTwoFactor] = useState(true);
 
   const roleCards = [
     {
       id: "exec",
-      title: "Executive Staff Admin",
-      desc: "Full administrative governance, patient data access & system security privileges.",
-      badge: "Level 4 Access",
+      title: "Executive Director & Medical Admin",
+      desc: "Full governance over patient records, FHIR standards, telemetry alarms, and staff privileges.",
+      badge: "Level 4 Executive",
       icon: ShieldCheck,
     },
     {
       id: "clinical",
-      title: "Clinical R&D Specialist",
-      desc: "FHIR interoperability management, patient telemetry monitoring & research logs.",
-      badge: "Level 3 Access",
+      title: "Attending Physician & Clinical Lead",
+      desc: "Access to Electronic Health Records (EHR), patient charting, prescription writing, and lab orders.",
+      badge: "Level 3 Clinical",
       icon: UserCheck,
     },
     {
       id: "ops",
-      title: "Care & Operations Lead",
-      desc: "Hospital staff shift scheduling, biometric attendance oversight & resource allocation.",
-      badge: "Level 2 Access",
+      title: "Care Coordinator & Ward Lead",
+      desc: "Bed occupancy management, nurse shift scheduling, biometric clock-in, and patient intake triage.",
+      badge: "Level 2 Operations",
       icon: Briefcase,
     },
   ];
@@ -593,7 +596,7 @@ function ApplicationWizardModal({
       accessLevel,
     }));
     onClose();
-    showToast("Application Wizard Completed! Staff Profile & Permissions updated!");
+    showToast("Healthcare CRM Wizard Completed! Staff Profile & Permissions deployed!");
   };
 
   return (
@@ -604,31 +607,40 @@ function ApplicationWizardModal({
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
       >
+        {/* Wizard Top Header */}
         <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50">
           <div className="flex items-center justify-between mb-4">
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-                REUI Application Wizard Block
+                Healthcare CRM Setup Wizard
               </span>
               <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
-                Staff Onboarding & Permissions Setup
+                Staff Onboarding & Clinical Access Matrix
               </h2>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+            >
               ✕
             </button>
           </div>
 
+          {/* Stepper Progress Bar */}
           <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-500" style={{ width: `${(step / 4) * 100}%` }} />
+            <div
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-500"
+              style={{ width: `${(step / 4) * 100}%` }}
+            />
           </div>
 
+          {/* Stepper Pills */}
           <div className="grid grid-cols-4 gap-2">
             {[
-              { num: 1, label: "Identity" },
-              { num: 2, label: "Role & Access" },
-              { num: 3, label: "Security" },
-              { num: 4, label: "Review" },
+              { num: 1, label: "Identity & NPI" },
+              { num: 2, label: "Role Privileges" },
+              { num: 3, label: "HIPAA & FHIR" },
+              { num: 4, label: "Review & Deploy" },
             ].map((s) => (
               <button
                 key={s.num}
@@ -642,7 +654,16 @@ function ApplicationWizardModal({
                     : "bg-white dark:bg-zinc-900 text-zinc-400 border-zinc-200 dark:border-zinc-800"
                 )}
               >
-                <span className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0", step === s.num ? "bg-white text-zinc-950 dark:bg-zinc-950 dark:text-white" : step > s.num ? "bg-emerald-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400")}>
+                <span
+                  className={cn(
+                    "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                    step === s.num
+                      ? "bg-white text-zinc-950 dark:bg-zinc-950 dark:text-white"
+                      : step > s.num
+                      ? "bg-emerald-500 text-white"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
+                  )}
+                >
                   {step > s.num ? <Check size={10} weight="bold" /> : s.num}
                 </span>
                 <span className="truncate hidden sm:inline">{s.label}</span>
@@ -651,32 +672,63 @@ function ApplicationWizardModal({
           </div>
         </div>
 
+        {/* Wizard Body Steps */}
         <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar space-y-6">
+          {/* STEP 1: IDENTITY & NPI CREDENTIALS */}
           {step === 1 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 1: Personal & Professional Identity</h3>
-                <p className="text-xs font-bold text-zinc-400 mt-1">Configure staff name, official email, and designation</p>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 1: Clinical Identity & Medical NPI Credentials</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Configure staff name, medical license ID, and hospital department</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-400 uppercase">Full Name</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none" />
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Staff Full Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-400 uppercase">Role / Designation</label>
-                  <input type="text" value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)} className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none" />
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Clinical Role / Specialty</label>
+                  <input
+                    type="text"
+                    value={roleTitle}
+                    onChange={(e) => setRoleTitle(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Hospital Department</label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Medical License / NPI Number</label>
+                  <input
+                    type="text"
+                    value={npiNumber}
+                    onChange={(e) => setNpiNumber(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
                 </div>
               </div>
             </motion.div>
           )}
 
+          {/* STEP 2: HEALTHCARE ROLE & PRIVILEGES */}
           {step === 2 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 2: Workspace Role & Access Level</h3>
-                <p className="text-xs font-bold text-zinc-400 mt-1">Select staff role template and security clearance</p>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 2: Healthcare Role & Access Privileges</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Select staff role template to assign EHR patient charting privileges</p>
               </div>
 
               <div className="space-y-3">
@@ -684,7 +736,19 @@ function ApplicationWizardModal({
                   const Icon = rc.icon;
                   const isSelected = selectedRoleCard === rc.id;
                   return (
-                    <div key={rc.id} onClick={() => setSelectedRoleCard(rc.id)} className={cn("p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all", isSelected ? "bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-500 shadow-xs" : "bg-zinc-50/50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400")}>
+                    <div
+                      key={rc.id}
+                      onClick={() => {
+                        setSelectedRoleCard(rc.id);
+                        setAccessLevel(rc.badge);
+                      }}
+                      className={cn(
+                        "p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all",
+                        isSelected
+                          ? "bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-500 shadow-xs"
+                          : "bg-zinc-50/50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
+                      )}
+                    >
                       <div className="flex items-center gap-3">
                         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", isSelected ? "bg-indigo-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500")}>
                           <Icon size={20} weight="bold" />
@@ -694,6 +758,10 @@ function ApplicationWizardModal({
                           <p className="text-xs font-medium text-zinc-400 mt-0.5">{rc.desc}</p>
                         </div>
                       </div>
+
+                      <span className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[10px] font-black uppercase shrink-0">
+                        {rc.badge}
+                      </span>
                     </div>
                   );
                 })}
@@ -701,32 +769,54 @@ function ApplicationWizardModal({
             </motion.div>
           )}
 
+          {/* STEP 3: HIPAA, FHIR & BIOMETRICS */}
           {step === 3 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 3: Security Verification</h3>
-                <p className="text-xs font-bold text-zinc-400 mt-1">Enable 2FA authentication and HIPAA privacy verification</p>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 3: HIPAA Compliance & FHIR Integration</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Configure PHI privacy controls and automated telemetry feeds</p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
                   <div>
-                    <p className="text-xs font-black text-zinc-900 dark:text-white">HIPAA Privacy Compliance Verified</p>
-                    <p className="text-[11px] font-bold text-zinc-400">Audited for Level IV medical record governance</p>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">HIPAA Level IV PHI Privacy Encryption</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Enforces 256-bit AES encryption on electronic medical records</p>
                   </div>
                   <button onClick={() => setHipaaVerified(!hipaaVerified)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", hipaaVerified ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
-                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform", hipaaVerified && "translate-x-4")} />
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform shadow-xs", hipaaVerified && "translate-x-4")} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
+                  <div>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">FHIR R4 Telemetry Data Endpoint Sync</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Automated sync with hospital laboratory & ICU vitals feeds</p>
+                  </div>
+                  <button onClick={() => setFhirSyncEnabled(!fhirSyncEnabled)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", fhirSyncEnabled ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform shadow-xs", fhirSyncEnabled && "translate-x-4")} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
+                  <div>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">Hardware Passkey / Biometric 2FA</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Enforces YubiKey / OTP login for medical staff</p>
+                  </div>
+                  <button onClick={() => setTwoFactor(!twoFactor)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", twoFactor ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform shadow-xs", twoFactor && "translate-x-4")} />
                   </button>
                 </div>
               </div>
             </motion.div>
           )}
 
+          {/* STEP 4: REVIEW & DEPLOYMENT */}
           {step === 4 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 4: Final Review</h3>
-                <p className="text-xs font-bold text-zinc-400 mt-1">Review onboarding summary before applying permissions</p>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 4: Final Summary & Deployment</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Review healthcare staff onboarding summary before deploying privileges</p>
               </div>
 
               <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4">
@@ -737,23 +827,56 @@ function ApplicationWizardModal({
                     <p className="text-xs font-bold text-indigo-500">{roleTitle} • {department}</p>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs font-bold">
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">NPI License</span>
+                    <p className="text-zinc-900 dark:text-zinc-100">{npiNumber}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">Clearance Level</span>
+                    <p className="text-zinc-900 dark:text-zinc-100">{accessLevel}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">HIPAA Class IV</span>
+                    <p className="text-emerald-600 font-black">Verified & Encrypted</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">FHIR R4 Sync</span>
+                    <p className="text-indigo-600 font-black">Active Endpoint Sync</p>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
         </div>
 
+        {/* Footer Actions */}
         <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950/50">
-          <button disabled={step === 1} onClick={() => setStep((s) => Math.max(1, s - 1) as any)} className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-extrabold text-zinc-600 dark:text-zinc-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-zinc-100 dark:hover:bg-zinc-800">
-            <CaretLeft size={16} weight="bold" /> Previous
+          <button
+            disabled={step === 1}
+            onClick={() => setStep((s) => Math.max(1, s - 1) as any)}
+            className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-extrabold text-zinc-600 dark:text-zinc-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <CaretLeft size={16} weight="bold" />
+            Previous
           </button>
 
           {step < 4 ? (
-            <button onClick={() => setStep((s) => Math.min(4, s + 1) as any)} className="flex items-center gap-1.5 px-6 py-2.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-xs font-black rounded-xl shadow-xs hover:scale-105 transition-all">
-              Next Step <ArrowRight size={14} weight="bold" />
+            <button
+              onClick={() => setStep((s) => Math.min(4, s + 1) as any)}
+              className="flex items-center gap-1.5 px-6 py-2.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-xs font-black rounded-xl shadow-xs hover:scale-105 transition-all"
+            >
+              Next Step
+              <ArrowRight size={14} weight="bold" />
             </button>
           ) : (
-            <button onClick={handleComplete} className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md hover:scale-105 transition-all">
-              <CheckCircle size={16} weight="fill" /> Complete Onboarding
+            <button
+              onClick={handleComplete}
+              className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md hover:scale-105 transition-all"
+            >
+              <CheckCircle size={16} weight="fill" />
+              Deploy Healthcare Privileges
             </button>
           )}
         </div>
