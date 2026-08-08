@@ -1,18 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
 import {
   ChartLineUp,
   User,
   Envelope,
   CursorClick,
-  MagnifyingGlass,
   Calendar,
-  Funnel,
   CaretDown,
   CaretRight,
-  DotsThreeVertical,
-  ArrowUpRight,
-  ArrowDownRight,
   UsersThree,
   Clock,
   House
@@ -110,7 +105,7 @@ export function ReportsPage() {
     }).join(' ');
   };
 
-  const generateAreaPath = (data: { value: number }[]) => {
+  const _generateAreaPath = (data: { value: number }[]) => {
     const path = generatePath(data);
     const width = 800;
     const height = 240;

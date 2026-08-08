@@ -1,19 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "motion/react"
+import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   MagnifyingGlass, Plus, X, FunnelSimple, ArrowsDownUp, ListDashes,
-  CalendarBlank, Users, CaretLeft, CaretRight, Funnel,
-  ArrowUp, ArrowDown, Clock, CaretDown,
+  Clock, CaretDown,
   Syringe,
-  DotsThree, DotsThreeVertical,
+  DotsThree,
   UserCircle, Envelope, Trash, Star,
 } from "@phosphor-icons/react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,

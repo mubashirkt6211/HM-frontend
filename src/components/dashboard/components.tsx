@@ -83,7 +83,7 @@ export function VisualChart({
   const gradientId = `gradient-${Math.random().toString(36).substring(2, 9)}`;
 
   return (
-    <ResponsiveContainer width="100%" height={height} className="mt-4">
+    <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={0} className="mt-4">
       <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

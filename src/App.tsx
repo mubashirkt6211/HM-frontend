@@ -1,29 +1,29 @@
 import { useState } from "react";
-import { AppLayout } from "@/layouts/AppLayout"
-import { Dashboard } from "@/pages/crm/Dashboard"
-import { TodoPage } from "@/pages/crm/TodoPage"
-import { CalendarPage } from "@/pages/shared/CalendarPage"
-import { MessagesPage } from "@/pages/crm/MessagesPage"
-import { PatientsPage } from "@/pages/healthcare/PatientsPage"
-import { LeadsPage } from "@/pages/crm/LeadsPage"
-import { PipelinePage } from "@/pages/crm/PipelinePage"
-import { TasksPage } from "@/pages/crm/TasksPage"
-import { DoctorsPage } from "@/pages/healthcare/DoctorsPage"
-import { RevenuePage } from "@/pages/crm/RevenuePage"
-import { ProfilePage } from "@/pages/crm/ProfilePage"
-import { CompanySetupPage } from "@/pages/crm/CompanySetupPage"
-import { NursePage } from "@/pages/healthcare/NursePage"
-import { PrivilegesPage } from "@/pages/crm/PrivilegesPage"
-import { ReportsPage } from "@/pages/crm/ReportsPage"
-import { ComingSoonPage } from "@/pages/crm/ComingSoonPage"
-import { EmailPage } from "@/pages/crm/EmailPage"
-import { ItineraryBuilderPage } from "@/pages/crm/ItineraryBuilderPage"
-import { Hammer, Tooth, Sparkle, TreeStructure, User, Users, Star, Megaphone, ClipboardText, Funnel, Buildings, Briefcase, Handshake, ChartLineUp, ShieldCheck, ClockClockwise } from "@phosphor-icons/react"
+import { AppLayout } from "@/layouts/AppLayout";
+import { Dashboard } from "@/pages/crm/Dashboard";
+import { TodoPage } from "@/pages/crm/TodoPage";
+import { CalendarPage } from "@/pages/shared/CalendarPage";
+import { MessagesPage } from "@/pages/crm/MessagesPage";
+import { PatientsPage } from "@/pages/healthcare/PatientsPage";
+import { LeadsPage } from "@/pages/crm/LeadsPage";
+import { PipelinePage } from "@/pages/crm/PipelinePage";
+import { TasksPage } from "@/pages/crm/TasksPage";
+import { DoctorsPage } from "@/pages/healthcare/DoctorsPage";
+import { RevenuePage } from "@/pages/crm/RevenuePage";
+import { ProfilePage } from "@/pages/crm/ProfilePage";
+import { CompanySetupPage } from "@/pages/crm/CompanySetupPage";
+import { NursePage } from "@/pages/healthcare/NursePage";
+import { PrivilegesPage } from "@/pages/crm/PrivilegesPage";
+import { ReportsPage } from "@/pages/crm/ReportsPage";
+import { ComingSoonPage } from "@/pages/crm/ComingSoonPage";
+import { EmailPage } from "@/pages/crm/EmailPage";
+import { ItineraryBuilderPage } from "@/pages/crm/ItineraryBuilderPage";
+import { ServiceSetupPage } from "@/pages/crm/ServiceSetupPage";
+import { CrmConfigPage } from "@/pages/crm/CrmConfigPage";
+import { Hammer, Tooth, Sparkle, TreeStructure, User, Users, Star, Megaphone, ClipboardText, Funnel, Buildings, Briefcase, Handshake, ChartLineUp, ShieldCheck, ClockClockwise } from "@phosphor-icons/react";
 import { UserRole } from "@/models/user";
 
-
-
-type PageType = "dashboard" | "todo" | "calendar" | "itinerary-builder" | "messages" | "patients" | "analytics" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "company-setup" | "privileges" | "reports" | "orthopedics" | "orthodontics" | "emails" | "team" | "notes" | "receptionist" | "accounts" | "deals" | "open-deals" | "won-deals" | "lost-deals" | "uk-eu-companies" | "b2b-building" | "partnership" | "crm-template" | "clients" | "contacts" | "people" | "sales-navigator" | "emails-marketing-agency" | "automations" | "workflows" | string;
+type PageType = "dashboard" | "todo" | "calendar" | "itinerary-builder" | "messages" | "patients" | "analytics" | "tasks" | "doctors" | "nurse" | "revenue" | "profile" | "company-setup" | "privileges" | "reports" | "service-setup" | "crm-config" | string;
 
 const normalizePageId = (page: string): PageType => {
   switch (page) {
@@ -37,7 +37,6 @@ const normalizePageId = (page: string): PageType => {
       return page as PageType;
   }
 };
-
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
@@ -70,6 +69,10 @@ function App() {
         return <PrivilegesPage />;
       case "reports":
         return <ReportsPage />;
+      case "service-setup":
+        return <ServiceSetupPage />;
+      case "crm-config":
+        return <CrmConfigPage />;
       case "emails":
         return <EmailPage />;
       case "profile":
@@ -141,10 +144,9 @@ function App() {
       userRole={userRole}
       setUserRole={setUserRole}
     >
-
       {renderPage()}
     </AppLayout>
   );
 }
 
-export default App
+export default App;

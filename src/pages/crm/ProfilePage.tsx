@@ -27,21 +27,13 @@ import {
   Flag,
   ChatDots,
   CalendarCheck,
-  ArrowRight,
   ArrowUp,
   ArrowDown,
-  Export,
   SquaresFour,
   CheckCircle,
   XCircle,
   CaretLeft,
   CaretRight,
-  FirstAid,
-  Sun,
-  WarningCircle,
-  Baby,
-  PaperPlaneTilt,
-  X,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import claraAvatar from "@/assets/clara_avatar.png";

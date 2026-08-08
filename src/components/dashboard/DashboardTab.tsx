@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Briefcase,
   CalendarBlank,
@@ -27,6 +27,9 @@ import {
   ChatCircle,
   Flag,
   CalendarDots,
+  Question,
+  BookmarkSimple,
+  Tag,
 } from "@phosphor-icons/react";
 
 import { Badge } from "@/components/reui/badge";
@@ -47,6 +50,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Sheet,
   SheetClose,
   SheetContent,
@@ -57,7 +66,8 @@ import {
 import { CalendarPage } from "@/pages/shared/CalendarPage";
 import { cn } from "@/lib/utils";
 import { CalendarCheckIcon } from "@phosphor-icons/react/dist/ssr";
-import { CalendarCogIcon } from "lucide-react";
+import { CalendarCogIcon, User } from "lucide-react";
+import { Filters, type Filter, type FilterFieldConfig } from "@/components/reui/filters";
 
 /* ================================================================
    Types
@@ -181,6 +191,39 @@ const PRIORITY_META: Record<Priority, { label: string; dot: string; tone: string
     tone: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300",
   },
 };
+
+const TODO_FILTER_FIELDS: FilterFieldConfig[] = [
+  {
+    key: "priority",
+    label: "Priority",
+    icon: <Flag className="size-4 text-amber-500" />,
+    type: "select",
+    options: [
+      { value: "high", label: "High" },
+      { value: "medium", label: "Medium" },
+      { value: "low", label: "Low" },
+    ],
+  },
+  {
+    key: "stage",
+    label: "Stage",
+    icon: <Folders className="size-4 text-blue-500" />,
+    type: "select",
+    options: [
+      { value: "todo", label: "To Do" },
+      { value: "on_process", label: "On Process" },
+      { value: "on_review", label: "On Review" },
+      { value: "completed", label: "Completed" },
+    ],
+  },
+  {
+    key: "title",
+    label: "Title / Search",
+    icon: <MagnifyingGlass className="size-4 text-violet-500" />,
+    type: "text",
+    placeholder: "Task title...",
+  },
+];
 
 /* ================================================================
    Task data — HMS-context Kanban
@@ -573,7 +616,7 @@ function Dropdown({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  useOutsideClick(ref, () => setOpen(false));
+  useOutsideClick(ref as React.RefObject<HTMLElement>, () => setOpen(false));
 
   return (
     <div className="relative" ref={ref}>
@@ -896,7 +939,7 @@ function PipelineColumn({
         </div>
 
         {/* Cards */}
-        <KanbanColumnContent value={value} className="flex-1 space-y-4 overflow-y-auto pb-4 no-scrollbar">
+        <KanbanColumnContent value={value} className="flex-1 space-y-4 overflow-y-auto sleek-scroll pr-1 pb-4">
           {tasks.length === 0 ? (
             <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-zinc-800 text-[12px] text-gray-400">
               No tasks match your filter
@@ -1369,8 +1412,7 @@ function TimelineView({
 
 export function DashboardTab() {
   const [columns, setColumns] = useState(INITIAL_COLUMNS);
-  const [priorityFilter, setPriorityFilter] = useState<Set<Priority>>(new Set());
-  const [stageFilter, setStageFilter] = useState<Set<StageKey>>(new Set());
+  const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [selected, setSelected] = useState<{ task: Task; columnKey: string } | null>(null);
   const [showAiBanner, setShowAiBanner] = useState(true);
   const [activeView, setActiveView] = useState("Kanban");
@@ -1378,7 +1420,7 @@ export function DashboardTab() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("can view");
 
-  const accessMembers = [
+  const [accessMembers, setAccessMembers] = useState([
     {
       id: "juma",
       name: "Juma Omondi",
@@ -1400,32 +1442,89 @@ export function DashboardTab() {
       access: "can view",
       avatar: "https://i.pravatar.cc/120?img=19",
     },
-  ];
+  ]);
+
+  const [accessRules, setAccessRules] = useState({
+    viewAnalytics: true,
+    inviteOthers: false,
+    require2FA: false,
+  });
+
+  const [automationRules, setAutomationRules] = useState({
+    onboardingEmail: true,
+    autoAssignTasks: false,
+  });
+
+  const [notificationRules, setNotificationRules] = useState({
+    weeklyDigest: true,
+    taskAssignments: true,
+  });
+
+  const [teamTags, setTeamTags] = useState<string[]>(["Growth Team", "Designers"]);
+  const [newTagInput, setNewTagInput] = useState("");
+  const [showAddTagInput, setShowAddTagInput] = useState(false);
+
+  const [inviteToast, setInviteToast] = useState<string | null>(null);
+
+  const handleInvite = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    if (inviteEmail.trim()) {
+      const emailTrimmed = inviteEmail.trim();
+      const nameParts = emailTrimmed.split("@")[0].split(/[._-]/);
+      const formattedName = nameParts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+
+      const newMember = {
+        id: Date.now().toString(),
+        name: formattedName || "New Member",
+        email: emailTrimmed,
+        access: inviteRole,
+        avatar: `https://i.pravatar.cc/120?u=${emailTrimmed}`,
+      };
+
+      setAccessMembers((prev) => [newMember, ...prev]);
+      setInviteToast(`Invitation successfully sent to ${emailTrimmed}!`);
+    } else {
+      setInviteToast("Workspace invite configuration updated successfully!");
+    }
+
+    setInviteEmail("");
+    setIsInviteOpen(false);
+
+    setTimeout(() => {
+      setInviteToast(null);
+    }, 4000);
+  };
 
   const filteredColumns = useMemo(() => {
     const next: Record<string, Task[]> = {};
 
     for (const [key, tasks] of Object.entries(columns) as [StageKey, Task[]][]) {
       next[key] = tasks.filter((task) => {
-        const matchesPriority = priorityFilter.size === 0 || priorityFilter.has(task.priority);
-        const matchesStage = stageFilter.size === 0 || stageFilter.has(key);
-        return matchesPriority && matchesStage;
+        for (const filter of activeFilters) {
+          if (!filter.values || filter.values.length === 0 || !filter.values[0]) continue;
+          const val = String(filter.values[0]).toLowerCase();
+          if (filter.field === "priority" && task.priority.toLowerCase() !== val) {
+            return false;
+          }
+          if (filter.field === "stage" && key.toLowerCase() !== val) {
+            return false;
+          }
+          if (filter.field === "title") {
+            const matches =
+              task.title.toLowerCase().includes(val) ||
+              task.description.toLowerCase().includes(val);
+            if (!matches) return false;
+          }
+        }
+        return true;
       });
     }
 
     return next;
-  }, [columns, priorityFilter, stageFilter]);
+  }, [columns, activeFilters]);
 
-  const isFiltering = priorityFilter.size > 0 || stageFilter.size > 0;
-
-  const togglePriority = (p: Priority) => {
-    setPriorityFilter((prev) => {
-      const next = new Set(prev);
-      if (next.has(p)) next.delete(p);
-      else next.add(p);
-      return next;
-    });
-  };
+  const isFiltering = activeFilters.length > 0;
 
   const openTask = (task: Task, columnKey: string) => setSelected({ task, columnKey });
   const closeTask = () => setSelected(null);
@@ -1457,7 +1556,25 @@ export function DashboardTab() {
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .sleek-scroll::-webkit-scrollbar { width: 5px; height: 6px; }
+        .sleek-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sleek-scroll::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 6px; }
+        .sleek-scroll:hover::-webkit-scrollbar-thumb { background: #d4d4d8; }
+        .dark .sleek-scroll::-webkit-scrollbar-thumb { background: #27272a; }
+        .dark .sleek-scroll:hover::-webkit-scrollbar-thumb { background: #3f3f46; }
+      `}} />
+      {inviteToast && (
+        <div className="fixed top-5 right-5 z-[100] flex items-center gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800 shadow-xl dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 animate-in fade-in slide-in-from-top-3 duration-200">
+          <CheckCircle className="size-4 text-emerald-500 shrink-0" weight="fill" />
+          <span>{inviteToast}</span>
+          <button onClick={() => setInviteToast(null)} className="ml-2 text-emerald-500 hover:text-emerald-700">
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
       <div className="mx-auto w-full max-w-full px-6 py-6 lg:px-10">
 
         {/* ── Welcome Banner ── */}
@@ -1468,15 +1585,15 @@ export function DashboardTab() {
           <p className="mt-2 text-[14px] text-zinc-500 dark:text-zinc-400">
             Monitor all of your tasks and track project progress here.
           </p>
-        </section>       
+        </section>
 
         {/* ── Task Board Section ── */}
         <section className="mt-8">
           {/* Board header: title + member avatars */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              
-              
+
+
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center -space-x-2">
@@ -1521,70 +1638,23 @@ export function DashboardTab() {
               ))}
             </div>
 
-            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 -mb-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {isFiltering ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {[...priorityFilter].map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => togglePriority(p)}
-                        className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200"
-                      >
-                        {PRIORITY_META[p].label}
-                        <X className="size-3" />
-                      </button>
-                    ))}
-                    {[...stageFilter].map((stage) => (
-                      <button
-                        key={stage}
-                        onClick={() => {
-                          setStageFilter((prev) => {
-                            const next = new Set(prev);
-                            next.delete(stage);
-                            return next;
-                          });
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
-                      >
-                        {COLUMN_TITLES[stage]}
-                        <X className="size-3" />
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex items-center gap-3">
-                {isFiltering && (
+            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end pb-3 -mb-3">
+              <div className="flex items-center gap-2.5">
+                <Filters
+                  filters={activeFilters}
+                  fields={TODO_FILTER_FIELDS}
+                  onChange={setActiveFilters}
+                />
+                {activeFilters.length > 0 && (
                   <button
-                    onClick={() => {
-                      setPriorityFilter(new Set());
-                      setStageFilter(new Set());
-                    }}
-                    className="flex items-center gap-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1.5 text-[12px] font-medium text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+                    type="button"
+                    onClick={() => setActiveFilters([])}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-500 shadow-xs transition hover:bg-zinc-50 hover:text-rose-500 hover:border-rose-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 cursor-pointer"
                   >
                     <X className="size-3" />
-                    Clear
+                    Clear all
                   </button>
                 )}
-                <FilterControl
-                  active={priorityFilter}
-                  stageActive={stageFilter}
-                  onToggle={togglePriority}
-                  onStageToggle={(stage) => {
-                    setStageFilter((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(stage)) next.delete(stage);
-                      else next.add(stage);
-                      return next;
-                    });
-                  }}
-                  onClear={() => {
-                    setPriorityFilter(new Set());
-                    setStageFilter(new Set());
-                  }}
-                />
                 <Button
                   size="lg"
                   className="group relative overflow-hidden rounded-lg border border-blue-800/40 bg-gradient-to-b from-blue-400 via-blue-600 to-blue-700 px-4 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.15),0_4px_10px_-2px_rgba(37,99,235,0.55)] transition-all duration-150 hover:from-blue-400 hover:via-blue-500 hover:to-blue-600 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.55),inset_0_-1px_1px_rgba(0,0,0,0.15),0_6px_14px_-2px_rgba(37,99,235,0.65)] active:translate-y-px active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] gap-1"
@@ -1621,7 +1691,7 @@ export function DashboardTab() {
               getItemValue={(item) => item.id}
               className="h-full"
             >
-              <KanbanBoard className="grid h-full w-full auto-rows-fr grid-cols-1 gap-6 overflow-hidden md:grid-cols-2 xl:grid-cols-4">
+              <KanbanBoard className="grid h-full w-full auto-rows-fr grid-cols-1 gap-6 overflow-x-auto sleek-scroll pb-4 md:grid-cols-2 xl:grid-cols-4">
                 {Object.entries(filteredColumns).map(([columnValue, tasks]) => (
                   <PipelineColumn
                     key={columnValue}
@@ -1668,93 +1738,397 @@ export function DashboardTab() {
         </section>
       </div>
 
-      {/* ── Drawer ── */}
+      {/* ── Invite Modal matching ReUI Form Block ── */}
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-        <DialogContent className="w-full sm:max-w-md p-0 overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-950">
-          <div className="space-y-4 px-6 pb-6 pt-6">
-            <div className="flex items-center gap-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="grid h-12 w-12 place-items-center rounded-3xl bg-white text-zinc-700 shadow-sm dark:bg-zinc-950 dark:text-zinc-200">
-                <Plus className="size-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Invite to Project</h2>
-                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Collaborate with members on this project.
-                </p>
-              </div>
+        <DialogContent className="sm:max-w-2xl border border-zinc-200/80 dark:border-zinc-800 p-0 overflow-hidden rounded-2xl shadow-2xl bg-white dark:bg-zinc-950">
+          <div className="p-6 sm:p-8 max-h-[82vh] overflow-y-auto sleek-scroll">
+
+            {/* Top Banner / Header */}
+            <div className="mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+              <DialogHeader className="text-left space-y-0.5">
+                <DialogTitle className="text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                  Invite Member Setup
+                </DialogTitle>
+                <DialogDescription className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Configure member role permissions, access rules, and automated workflow.
+                </DialogDescription>
+              </DialogHeader>
+
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/50 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Ready to publish
+              </span>
             </div>
 
-            <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-              <div className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200">Invite Members</div>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Input
-                  id="invite-email"
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(event) => setInviteEmail(event.target.value)}
-                  placeholder="hi@alignui.com"
-                  className="h-11 rounded-2xl border-zinc-200 bg-zinc-50 px-4 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
-                />
-                <div className="flex items-center gap-2">
-                  <Select value={inviteRole} onValueChange={(value) => setInviteRole(value ?? "can view")}> 
-                    <SelectTrigger className="h-11 min-w-[140px] rounded-2xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white">
-                      <SelectValue placeholder="can view" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-[22px] border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
-                      <SelectItem value="can view">can view</SelectItem>
-                      <SelectItem value="can edit">can edit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    className="h-11 min-w-[96px] rounded-2xl px-4 text-sm font-semibold"
-                    onClick={() => {
-                      setIsInviteOpen(false);
-                      setInviteEmail("");
-                      setInviteRole("can view");
-                    }}
-                  >
-                    Invite
-                  </Button>
+            <form onSubmit={handleInvite} className="space-y-6">
+
+              {/* Row 1: Role Type */}
+              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+                <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2 flex items-center gap-1">
+                  Role Type
+                  <Question className="size-3.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer" />
+                </label>
+                <div className="flex-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none cursor-pointer"
+                      >
+                        <span className="font-medium">{inviteRole}</span>
+                        <CaretDown className="size-4 text-zinc-400" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-64 rounded-xl border-zinc-200 p-1.5 shadow-xl dark:border-zinc-800 bg-white dark:bg-zinc-950 z-[100]">
+                      {["Can View (Read-Only)", "Can Edit (Full Access)", "Workspace Admin"].map((role) => (
+                        <DropdownMenuItem
+                          key={role}
+                          onClick={() => setInviteRole(role)}
+                          className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                        >
+                          <span>{role}</span>
+                          {inviteRole === role && <CheckCircle className="size-3.5 text-[#34C759]" weight="fill" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
-            </div>
 
-            <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-zinc-900 dark:text-white">Members with access</p>
-                <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-semibold uppercase text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-                  {accessMembers.length}
-                </span>
+              {/* Row 2: Member Email & Team Tags */}
+              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+                <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
+                  Member Email
+                </label>
+                <div className="flex-1 space-y-2.5">
+                  <div className="relative">
+                    <Envelope className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                    <input
+                      required
+                      type="email"
+                      placeholder="E.g. colleague@northstar.studio"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-3.5 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-xs outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder:text-zinc-500 transition-all"
+                    />
+                  </div>
+
+                  {/* Team Tags */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {teamTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-100/80 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                      >
+                        <Tag className="size-3 text-zinc-400" />
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => setTeamTags((prev) => prev.filter((t) => t !== tag))}
+                          className="text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    ))}
+
+                    {showAddTagInput ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          autoFocus
+                          type="text"
+                          placeholder="Tag name..."
+                          value={newTagInput}
+                          onChange={(e) => setNewTagInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && newTagInput.trim()) {
+                              e.preventDefault();
+                              setTeamTags((prev) => [...prev, newTagInput.trim()]);
+                              setNewTagInput("");
+                              setShowAddTagInput(false);
+                            }
+                          }}
+                          className="h-7 w-28 rounded-md border border-zinc-300 bg-white px-2 text-xs text-zinc-800 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newTagInput.trim()) {
+                              setTeamTags((prev) => [...prev, newTagInput.trim()]);
+                              setNewTagInput("");
+                            }
+                            setShowAddTagInput(false);
+                          }}
+                          className="h-7 px-2 rounded-md bg-zinc-900 text-white text-[11px] font-bold dark:bg-zinc-100 dark:text-zinc-950 cursor-pointer"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddTagInput(true)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-700 shadow-xs hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                      >
+                        <Plus className="size-3.5" />
+                        Add team tag
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="space-y-3">
-                {accessMembers.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between gap-4 rounded-3xl border border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-11">
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback className="bg-zinc-100 text-[10px] font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-200">
-                          {member.name
-                            .split(" ")
-                            .map((part) => part[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-zinc-900 dark:text-white">{member.name}</p>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">{member.email}</p>
+
+              {/* Row 3: Access Rules */}
+              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+                <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-0.5">
+                  Access Rules
+                </label>
+                <div className="flex-1 space-y-2.5">
+                  <label
+                    onClick={() => setAccessRules((prev) => ({ ...prev, viewAnalytics: !prev.viewAnalytics }))}
+                    className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300 select-none"
+                  >
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-all",
+                        accessRules.viewAnalytics
+                          ? "border-[#34C759] bg-[#34C759] text-white shadow-xs"
+                          : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900"
+                      )}
+                    >
+                      {accessRules.viewAnalytics && (
+                        <svg className="size-3 stroke-white" fill="none" viewBox="0 0 24 24" strokeWidth="3.5" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </span>
+                    Allow viewing project analytics
+                  </label>
+                  <label
+                    onClick={() => setAccessRules((prev) => ({ ...prev, inviteOthers: !prev.inviteOthers }))}
+                    className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300 select-none"
+                  >
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-all",
+                        accessRules.inviteOthers
+                          ? "border-[#34C759] bg-[#34C759] text-white shadow-xs"
+                          : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900"
+                      )}
+                    >
+                      {accessRules.inviteOthers && (
+                        <svg className="size-3 stroke-white" fill="none" viewBox="0 0 24 24" strokeWidth="3.5" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </span>
+                    Allow inviting other members
+                  </label>
+                  <label
+                    onClick={() => setAccessRules((prev) => ({ ...prev, require2FA: !prev.require2FA }))}
+                    className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300 select-none"
+                  >
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-all",
+                        accessRules.require2FA
+                          ? "border-[#34C759] bg-[#34C759] text-white shadow-xs"
+                          : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900"
+                      )}
+                    >
+                      {accessRules.require2FA && (
+                        <svg className="size-3 stroke-white" fill="none" viewBox="0 0 24 24" strokeWidth="3.5" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </span>
+                    Require two-factor authentication
+                  </label>
+                </div>
+              </div>
+
+              {/* Row 4: Automation Rules */}
+              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+                <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-0.5">
+                  Automation Rules
+                </label>
+                <div className="flex-1 space-y-2.5">
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300 select-none">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={automationRules.onboardingEmail}
+                      onClick={() => setAutomationRules((prev) => ({ ...prev, onboardingEmail: !prev.onboardingEmail }))}
+                      className={cn(
+                        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                        automationRules.onboardingEmail ? "bg-[#34C759]" : "bg-zinc-200 dark:bg-zinc-800"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "pointer-events-none inline-block size-4 rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+                          automationRules.onboardingEmail ? "translate-x-4" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                    <span className="flex items-center gap-1.5">
+                      Send welcome onboarding email
+                      <Question className="size-3 text-zinc-400" />
+                      <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Live</span>
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300 select-none">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={automationRules.autoAssignTasks}
+                      onClick={() => setAutomationRules((prev) => ({ ...prev, autoAssignTasks: !prev.autoAssignTasks }))}
+                      className={cn(
+                        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                        automationRules.autoAssignTasks ? "bg-[#34C759]" : "bg-zinc-200 dark:bg-zinc-800"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "pointer-events-none inline-block size-4 rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+                          automationRules.autoAssignTasks ? "translate-x-4" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                    Auto-assign incoming project tasks
+                  </label>
+                </div>
+              </div>
+
+              {/* Row 5: Current Members */}
+              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+                <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-1 flex items-center gap-2">
+                  Active Members
+                  <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-bold text-zinc-600 dark:text-zinc-300">
+                    {accessMembers.length}
+                  </span>
+                </label>
+                <div className="flex-1 space-y-2 max-h-48 overflow-y-auto sleek-scroll pr-1">
+                  {accessMembers.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-zinc-200/80 bg-white p-3 shadow-xs dark:border-zinc-800 dark:bg-zinc-900/50"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="size-8 shrink-0">
+                          <AvatarImage src={member.avatar} />
+                          <AvatarFallback className="bg-zinc-200 text-[9px] font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                            {member.name
+                              .split(" ")
+                              .map((p) => p[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-zinc-900 dark:text-white truncate">{member.name}</p>
+                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">{member.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
+                          {member.access}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setAccessMembers((prev) => prev.filter((m) => m.id !== member.id))}
+                          className="p-1 rounded-lg text-zinc-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                          title="Remove access"
+                        >
+                          <X className="size-3.5" />
+                        </button>
                       </div>
                     </div>
-                    <div className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-sm font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
-                      {member.access}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Members who have the link have access to this project.
-            </p>
+              {/* Row 6: Notification Rules */}
+              <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+                <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-0.5">
+                  Notification Rules
+                </label>
+                <div className="flex-1 space-y-2.5">
+                  <label
+                    onClick={() => setNotificationRules((prev) => ({ ...prev, weeklyDigest: !prev.weeklyDigest }))}
+                    className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300 select-none"
+                  >
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-all",
+                        notificationRules.weeklyDigest
+                          ? "border-[#34C759] bg-[#34C759] text-white shadow-xs"
+                          : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900"
+                      )}
+                    >
+                      {notificationRules.weeklyDigest && (
+                        <svg className="size-3 stroke-white" fill="none" viewBox="0 0 24 24" strokeWidth="3.5" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </span>
+                    Send weekly activity digest
+                  </label>
+                  <label
+                    onClick={() => setNotificationRules((prev) => ({ ...prev, taskAssignments: !prev.taskAssignments }))}
+                    className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-zinc-700 dark:text-zinc-300 select-none"
+                  >
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-all",
+                        notificationRules.taskAssignments
+                          ? "border-[#34C759] bg-[#34C759] text-white shadow-xs"
+                          : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900"
+                      )}
+                    >
+                      {notificationRules.taskAssignments && (
+                        <svg className="size-3 stroke-white" fill="none" viewBox="0 0 24 24" strokeWidth="3.5" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </span>
+                    Notify on task assignments
+                  </label>
+                  <label className="flex items-center gap-2.5 cursor-not-allowed text-xs font-medium text-zinc-400 dark:text-zinc-500 select-none">
+                    <span className="flex size-4 shrink-0 items-center justify-center rounded-[5px] border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900" />
+                    <span className="flex items-center gap-1">
+                      Require terms acceptance
+                      <Question className="size-3 text-zinc-400" />
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Footer matching ReUI image */}
+              <div className="pt-6 mt-8 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                  Draft stays private.
+                </span>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsInviteOpen(false)}
+                    className="h-9 px-4 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-xs flex items-center gap-1.5 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                  >
+                    <BookmarkSimple className="size-3.5" />
+                    Save draft
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="h-9 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    Publish invite
+                  </button>
+                </div>
+              </div>
+
+            </form>
           </div>
         </DialogContent>
       </Dialog>
