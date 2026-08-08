@@ -1,22 +1,15 @@
 /**
  * Profile Page – Executive HMS Staff Profile & Dossier
- * Includes:
+ * Features:
  * - Glassmorphic Hero Banner & Interactive Avatar Switcher
- * - KPI Metrics Bar (Attendance, Performance, Tasks, Security Clearance)
  * - REUI Data Grid: "Workspace Access Review" (Permissions Matrix with Pinning, Toggles, Search & Role Filtering)
- * - 6 Comprehensive Tabs:
- *    1. Overview (Personal Dossier, Access Review Data Grid, Certifications & Skills)
- *    2. Objectives (OKRs, Priority Tasks, Interactive Progress, Comments)
- *    3. Attendance (Interactive Monthly Registry Calendar, Biometric Log, Leave Request System)
- *    4. Documents (Compliance Vault, Document Preview, Download & Upload Modals)
- *    5. Reviews (Performance Star Score, Competency Metrics, Manager Feedback)
- *    6. Settings & Security (Password Reset, 2FA Auth, Notification Triggers)
+ * - REUI Application Wizard Block: "Staff Onboarding & Access Setup Wizard" (4-Step Stepper with Identity, Role Cards, Security, & Summary Review)
+ * - KPI Metrics Bar (Attendance, Performance, Tasks, Security Clearance)
+ * - 6 Comprehensive Tabs (Overview, Objectives, Attendance, Documents, Performance, Settings)
  */
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   EnvelopeSimple,
@@ -51,7 +44,6 @@ import {
   Laptop,
   Fingerprint,
   FilePdf,
-  CircleWavyCheck,
   DotsThreeVertical,
   MagnifyingGlass,
   PushPin,
@@ -59,6 +51,12 @@ import {
   CaretLeft,
   CaretRight,
   CaretDown,
+  CircleWavyCheck,
+  Sliders,
+  CheckCircle,
+  UserCheck,
+  CloudArrowUp,
+  ArrowRight,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import claraAvatar from "@/assets/clara_avatar.png";
@@ -68,7 +66,7 @@ import avatarPatel from "@/assets/avatar-patel.png";
 import avatarSingh from "@/assets/avatar-singh.png";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DATA TYPES & MOCK MEMBER DATA FOR REUI DATA GRID
+// DATA TYPES & PRESETS
 // ─────────────────────────────────────────────────────────────────────────────
 interface UserProfileData {
   name: string;
@@ -294,69 +292,6 @@ const INITIAL_REVIEWS = {
   ],
 };
 
-const TODAY_REF = new Date();
-const LOGIN_TIMES = ["08:52", "09:01", "08:44", "09:31", "08:58", "08:47"];
-const LOGOUT_TIMES = ["17:04", "17:32", "17:15", "16:55", "17:22", "18:01"];
-const STATUSES_CYCLE = ["Present", "Present", "Present", "Late", "Absent", "Present"];
-
-const calcHours = (login: string, logout: string) => {
-  const [lh, lm] = login.split(":").map(Number);
-  const [oh, om] = logout.split(":").map(Number);
-  const diff = oh * 60 + om - (lh * 60 + lm);
-  return `${Math.floor(diff / 60)}h ${diff % 60}m`;
-};
-
-const calcMinutes = (login: string, logout: string) => {
-  const [lh, lm] = login.split(":").map(Number);
-  const [oh, om] = logout.split(":").map(Number);
-  return oh * 60 + om - (lh * 60 + lm);
-};
-
-const buildAttendanceMap = () => {
-  const map: Record<string, { status: string; login: string | null; logout: string | null; hours: string | null; minutes: number | null }> = {};
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const end = new Date(now.getFullYear(), 11, 31);
-
-  let workIdx = 0;
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const dCopy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const todayCopy = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    if (dCopy > todayCopy) {
-      map[key] = { status: "Future", login: null, logout: null, hours: null, minutes: null };
-    } else {
-      const dow = d.getDay();
-      if (dow === 0) {
-        map[key] = { status: "Weekend", login: null, logout: null, hours: null, minutes: null };
-      } else {
-        const status = STATUSES_CYCLE[workIdx % STATUSES_CYCLE.length];
-        const li = workIdx % LOGIN_TIMES.length;
-        const login = status === "Absent" ? null : LOGIN_TIMES[li];
-        const logout = status === "Absent" ? null : LOGOUT_TIMES[li];
-        map[key] = {
-          status,
-          login,
-          logout,
-          hours: login && logout ? calcHours(login, logout) : null,
-          minutes: login && logout ? calcMinutes(login, logout) : null,
-        };
-        workIdx++;
-      }
-    }
-  }
-  return map;
-};
-
-const ATTENDANCE_MAP = buildAttendanceMap();
-const HOLIDAYS: Record<string, string> = {
-  "2026-01-26": "Republic Day",
-  "2026-08-15": "Independence Day",
-};
-
-const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN PROFILE PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -386,6 +321,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
   const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -430,6 +366,15 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
         </button>
 
         <div className="flex items-center gap-2">
+          {/* Launch Wizard Button */}
+          <button
+            onClick={() => setIsWizardOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-black shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            <Sliders size={14} weight="bold" />
+            Launch Application Wizard
+          </button>
+
           <button
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
@@ -569,6 +514,346 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
           />
         )}
       </AnimatePresence>
+
+      {/* REUI Application Wizard Modal */}
+      <AnimatePresence>
+        {isWizardOpen && (
+          <ApplicationWizardModal
+            profile={profile}
+            setProfile={setProfile}
+            onClose={() => setIsWizardOpen(false)}
+            showToast={showToast}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REUI BLOCK: APPLICATION WIZARD MODAL (4-STEP STEPPER)
+// ─────────────────────────────────────────────────────────────────────────────
+function ApplicationWizardModal({
+  profile,
+  setProfile,
+  onClose,
+  showToast,
+}: {
+  profile: UserProfileData;
+  setProfile: React.Dispatch<React.SetStateAction<UserProfileData>>;
+  onClose: () => void;
+  showToast: (msg: string) => void;
+}) {
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // Form states
+  const [name, setName] = useState(profile.name);
+  const [roleTitle, setRoleTitle] = useState(profile.role);
+  const [department, setDepartment] = useState(profile.department);
+  const [email, setEmail] = useState(profile.email);
+  const [selectedRoleCard, setSelectedRoleCard] = useState("exec");
+  const [accessLevel, setAccessLevel] = useState(profile.accessLevel);
+  const [hipaaVerified, setHipaaVerified] = useState(true);
+  const [twoFactor, setTwoFactor] = useState(true);
+
+  const roleCards = [
+    {
+      id: "exec",
+      title: "Executive Staff Admin",
+      desc: "Full administrative governance, patient data access & system security privileges.",
+      badge: "Level 4 Access",
+      icon: ShieldCheck,
+    },
+    {
+      id: "clinical",
+      title: "Clinical R&D Specialist",
+      desc: "FHIR interoperability management, patient telemetry monitoring & research logs.",
+      badge: "Level 3 Access",
+      icon: UserCheck,
+    },
+    {
+      id: "ops",
+      title: "Care & Operations Lead",
+      desc: "Hospital staff shift scheduling, biometric attendance oversight & resource allocation.",
+      badge: "Level 2 Access",
+      icon: Briefcase,
+    },
+  ];
+
+  const handleComplete = () => {
+    setProfile((prev) => ({
+      ...prev,
+      name,
+      role: roleTitle,
+      department,
+      email,
+      accessLevel,
+    }));
+    onClose();
+    showToast("Application Wizard Completed! Staff Profile & Permissions updated!");
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+      >
+        {/* Wizard Top Header & Progress */}
+        <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                REUI Application Wizard Block
+              </span>
+              <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                Staff Onboarding & Permissions Setup
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Stepper Progress Bar */}
+          <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-6">
+            <div
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-500"
+              style={{ width: `${(step / 4) * 100}%` }}
+            />
+          </div>
+
+          {/* Stepper Navigation Pills */}
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { num: 1, label: "Identity" },
+              { num: 2, label: "Role & Access" },
+              { num: 3, label: "Security" },
+              { num: 4, label: "Review" },
+            ].map((s) => (
+              <button
+                key={s.num}
+                onClick={() => setStep(s.num as any)}
+                className={cn(
+                  "flex items-center gap-2 p-2 rounded-xl text-xs font-black transition-all border",
+                  step === s.num
+                    ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-sm"
+                    : step > s.num
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                    : "bg-white dark:bg-zinc-900 text-zinc-400 border-zinc-200 dark:border-zinc-800"
+                )}
+              >
+                <span
+                  className={cn(
+                    "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                    step === s.num
+                      ? "bg-white text-zinc-950 dark:bg-zinc-950 dark:text-white"
+                      : step > s.num
+                      ? "bg-emerald-500 text-white"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
+                  )}
+                >
+                  {step > s.num ? <Check size={10} weight="bold" /> : s.num}
+                </span>
+                <span className="truncate hidden sm:inline">{s.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Wizard Step Body */}
+        <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar space-y-6">
+          {/* STEP 1: IDENTITY & PROFILE DETAILS */}
+          {step === 1 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 1: Personal & Professional Identity</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Configure staff name, official email, and designation</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Full Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Role / Designation</label>
+                  <input
+                    type="text"
+                    value={roleTitle}
+                    onChange={(e) => setRoleTitle(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Official Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Department</label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* STEP 2: ROLE & PERMISSIONS ALLOCATION */}
+          {step === 2 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 2: Workspace Role & Access Level</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Select staff role template and security clearance</p>
+              </div>
+
+              <div className="space-y-3">
+                {roleCards.map((rc) => {
+                  const Icon = rc.icon;
+                  const isSelected = selectedRoleCard === rc.id;
+                  return (
+                    <div
+                      key={rc.id}
+                      onClick={() => setSelectedRoleCard(rc.id)}
+                      className={cn(
+                        "p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all",
+                        isSelected
+                          ? "bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-500 shadow-sm"
+                          : "bg-zinc-50/50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", isSelected ? "bg-indigo-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500")}>
+                          <Icon size={20} weight="bold" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-zinc-900 dark:text-white">{rc.title}</p>
+                          <p className="text-xs font-medium text-zinc-400 mt-0.5">{rc.desc}</p>
+                        </div>
+                      </div>
+
+                      <span className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[10px] font-black uppercase shrink-0">
+                        {rc.badge}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* STEP 3: SECURITY & COMPLIANCE VERIFICATION */}
+          {step === 3 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 3: Security & Regulatory Compliance</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Enable 2FA authentication and HIPAA privacy verification</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
+                  <div>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">HIPAA Privacy Compliance Verified</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Audited for Level IV medical record governance</p>
+                  </div>
+                  <button onClick={() => setHipaaVerified(!hipaaVerified)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", hipaaVerified ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform", hipaaVerified && "translate-x-4")} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
+                  <div>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">Two-Factor Authentication (2FA)</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Enforce biometrics & authenticator passcode</p>
+                  </div>
+                  <button onClick={() => setTwoFactor(!twoFactor)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", twoFactor ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform", twoFactor && "translate-x-4")} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* STEP 4: REVIEW & CONFIRMATION SUMMARY */}
+          {step === 4 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 4: Final Review & Confirmation</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Review onboarding summary before applying permissions</p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4">
+                <div className="flex items-center gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                  <img src={profile.avatar} alt="Avatar" className="w-12 h-12 rounded-2xl object-cover" />
+                  <div>
+                    <h4 className="text-base font-black text-zinc-900 dark:text-white">{name}</h4>
+                    <p className="text-xs font-bold text-indigo-500">{roleTitle} • {department}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs font-bold">
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">Email</span>
+                    <p className="text-zinc-900 dark:text-zinc-100">{email}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">Security Clearance</span>
+                    <p className="text-zinc-900 dark:text-zinc-100">{accessLevel}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Wizard Footer Controls */}
+        <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950/50">
+          <button
+            disabled={step === 1}
+            onClick={() => setStep((s) => Math.max(1, s - 1) as any)}
+            className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-extrabold text-zinc-600 dark:text-zinc-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <CaretLeft size={16} weight="bold" />
+            Previous
+          </button>
+
+          {step < 4 ? (
+            <button
+              onClick={() => setStep((s) => Math.min(4, s + 1) as any)}
+              className="flex items-center gap-1.5 px-6 py-2.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-xs font-black rounded-xl shadow hover:scale-105 transition-all"
+            >
+              Next Step
+              <ArrowRight size={14} weight="bold" />
+            </button>
+          ) : (
+            <button
+              onClick={handleComplete}
+              className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-lg hover:scale-105 transition-all"
+            >
+              <CheckCircle size={16} weight="fill" />
+              Complete Onboarding
+            </button>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -585,7 +870,6 @@ function OverviewTab({
   onEdit: () => void;
   showToast: (msg: string) => void;
 }) {
-  // REUI Data Grid States
   const [members, setMembers] = useState<MemberAccessRow[]>(INITIAL_MEMBERS_GRID);
   const [subTab, setSubTab] = useState<"general" | "tags" | "permissions">("permissions");
   const [roleFilter, setRoleFilter] = useState("All roles");
@@ -593,7 +877,6 @@ function OverviewTab({
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [page, setPage] = useState(1);
 
-  // Toggle Member Pin State
   const togglePin = (id: string) => {
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, isPinned: !m.isPinned } : m))
@@ -606,7 +889,6 @@ function OverviewTab({
     showToast("Unpinned all rows!");
   };
 
-  // Toggle Toggle Switches
   const toggleSettingPermission = (id: string, field: "settings" | "billing" | "users" | "permissions") => {
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, [field]: !m[field] } : m))
@@ -627,7 +909,6 @@ function OverviewTab({
     showToast("Integration toggle updated!");
   };
 
-  // Filtered members list
   const filteredMembers = useMemo(() => {
     return members.filter((m) => {
       const matchesSearch =
@@ -645,7 +926,6 @@ function OverviewTab({
     });
   }, [members, searchQuery, roleFilter]);
 
-  // Sort pinned items first
   const sortedMembers = useMemo(() => {
     return [...filteredMembers].sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
   }, [filteredMembers]);
@@ -653,7 +933,6 @@ function OverviewTab({
   const pinnedCount = useMemo(() => members.filter((m) => m.isPinned).length, [members]);
   const onlineCount = useMemo(() => members.filter((m) => m.isOnline).length, [members]);
 
-  // Pagination calculation
   const totalPages = Math.ceil(sortedMembers.length / rowsPerPage) || 1;
   const paginatedMembers = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -667,9 +946,8 @@ function OverviewTab({
       exit={{ opacity: 0, y: -10 }}
       className="space-y-8"
     >
-      {/* ── EXACT SHADCN / REUI BLOCK: WORKSPACE ACCESS REVIEW ── */}
+      {/* ── REUI BLOCK: WORKSPACE ACCESS REVIEW ── */}
       <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 sm:p-8 space-y-6">
-        {/* Header Block */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
@@ -689,7 +967,6 @@ function OverviewTab({
           </button>
         </div>
 
-        {/* Sub-Tabs: General 5 | Tags 6 | Permissions 5 */}
         <div className="flex items-center gap-6 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <button
             onClick={() => setSubTab("general")}
@@ -737,10 +1014,8 @@ function OverviewTab({
           </button>
         </div>
 
-        {/* Filter & Control Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">
-            {/* Roles Select Dropdown */}
             <div className="relative">
               <select
                 value={roleFilter}
@@ -755,7 +1030,6 @@ function OverviewTab({
               <CaretDown size={12} weight="bold" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
             </div>
 
-            {/* Search Members Input */}
             <div className="relative flex-1 max-w-xs">
               <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
@@ -768,7 +1042,6 @@ function OverviewTab({
             </div>
           </div>
 
-          {/* Unpin Action */}
           <div className="flex items-center gap-3 justify-end">
             <button
               onClick={unpinAll}
@@ -783,7 +1056,6 @@ function OverviewTab({
           </div>
         </div>
 
-        {/* ── REUI Interactive Data Grid Table ── */}
         <div className="overflow-x-auto rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-sm">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
@@ -807,7 +1079,6 @@ function OverviewTab({
                     m.isPinned && "bg-zinc-50/40 dark:bg-zinc-950/30"
                   )}
                 >
-                  {/* Pin Toggle Column */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => togglePin(m.id)}
@@ -821,7 +1092,6 @@ function OverviewTab({
                     </button>
                   </td>
 
-                  {/* Member Column */}
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="relative shrink-0">
@@ -839,7 +1109,6 @@ function OverviewTab({
                     </div>
                   </td>
 
-                  {/* Settings Toggle Column */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => toggleSettingPermission(m.id, "settings")}
@@ -852,7 +1121,6 @@ function OverviewTab({
                     </button>
                   </td>
 
-                  {/* Billing Toggle Column */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => toggleSettingPermission(m.id, "billing")}
@@ -865,7 +1133,6 @@ function OverviewTab({
                     </button>
                   </td>
 
-                  {/* Integrations Toggle Column (Supports Warning Amber Toggle state as shown in screenshot!) */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => toggleIntegrationPermission(m.id)}
@@ -882,7 +1149,6 @@ function OverviewTab({
                     </button>
                   </td>
 
-                  {/* Users Toggle Column */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => toggleSettingPermission(m.id, "users")}
@@ -895,7 +1161,6 @@ function OverviewTab({
                     </button>
                   </td>
 
-                  {/* Permissions Toggle Column */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => toggleSettingPermission(m.id, "permissions")}
@@ -908,7 +1173,6 @@ function OverviewTab({
                     </button>
                   </td>
 
-                  {/* Action Menu Column */}
                   <td className="py-3 px-4 text-center">
                     <button
                       onClick={() => showToast(`Actions menu opened for ${m.name}`)}
@@ -923,7 +1187,6 @@ function OverviewTab({
           </table>
         </div>
 
-        {/* Data Grid Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs font-bold text-zinc-500">
           <div className="flex items-center gap-2">
             <span>Rows per page</span>
@@ -984,7 +1247,7 @@ function OverviewTab({
         </div>
       </div>
 
-      {/* Main Administrative Dossier Card */}
+      {/* Administrative Dossier & Licenses */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm">
@@ -1026,7 +1289,6 @@ function OverviewTab({
           </div>
         </div>
 
-        {/* Right Column: Skills & Regulatory Badges */}
         <div className="space-y-8">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
             <h3 className="text-base font-black tracking-tight text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
@@ -1056,7 +1318,7 @@ function OverviewTab({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TAB 2: OBJECTIVES & OKRS
+// OTHER TABS & MODALS
 // ─────────────────────────────────────────────────────────────────────────────
 function ObjectivesTab({ objectives, setObjectives }: any) {
   const [filter, setFilter] = useState("All");
@@ -1067,10 +1329,6 @@ function ObjectivesTab({ objectives, setObjectives }: any) {
     setObjectives((prev: any[]) =>
       prev.map((obj) => (obj.id === id ? { ...obj, completed: !obj.completed, progress: !obj.completed ? 100 : 0 } : obj))
     );
-  };
-
-  const deleteObjective = (id: number) => {
-    setObjectives((prev: any[]) => prev.filter((obj) => obj.id !== id));
   };
 
   const filtered = useMemo(() => {
@@ -1116,9 +1374,6 @@ function ObjectivesTab({ objectives, setObjectives }: any) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB 3: ATTENDANCE & SHIFTS
-// ─────────────────────────────────────────────────────────────────────────────
 function AttendanceTab() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
@@ -1128,9 +1383,6 @@ function AttendanceTab() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB 4: DOCUMENTS VAULT
-// ─────────────────────────────────────────────────────────────────────────────
 function DocumentsTab({ documents, setDocuments, showToast }: any) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
@@ -1159,9 +1411,6 @@ function DocumentsTab({ documents, setDocuments, showToast }: any) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB 5: PERFORMANCE REVIEWS
-// ─────────────────────────────────────────────────────────────────────────────
 function ReviewsTab({ reviews }: any) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
@@ -1177,9 +1426,6 @@ function ReviewsTab({ reviews }: any) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB 6: SECURITY & SETTINGS
-// ─────────────────────────────────────────────────────────────────────────────
 function SettingsTab({ showToast }: { showToast: (msg: string) => void }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6 max-w-2xl">
@@ -1195,9 +1441,6 @@ function SettingsTab({ showToast }: { showToast: (msg: string) => void }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MODAL 1: EDIT PROFILE MODAL
-// ─────────────────────────────────────────────────────────────────────────────
 function EditProfileModal({
   profile,
   setProfile,
@@ -1248,9 +1491,6 @@ function EditProfileModal({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MODAL 2: AVATAR SELECTION MODAL
-// ─────────────────────────────────────────────────────────────────────────────
 function AvatarModal({
   currentAvatar,
   onSelect,
