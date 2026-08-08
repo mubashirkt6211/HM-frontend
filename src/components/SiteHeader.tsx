@@ -457,6 +457,16 @@ export function SiteHeader({
 
             <div className="space-y-0.5">
               <DropdownMenuItem
+                onClick={() => onPageChange?.("setup-wizard")}
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:text-white" />
+                </div>
+                <span className="text-[13px] font-extrabold text-zinc-900 dark:text-zinc-100">Profile Setup</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
                 onClick={() => onPageChange?.("profile")}
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
               >

@@ -66,6 +66,7 @@ export const sidebarNavigationSections: NavSectionConfig[] = [
                     { title: "Forecast", pageId: "analytics", icon: TrendUp },
                     { title: "Revenue", pageId: "revenue", icon: Wallet, roles: [UserRole.ADMIN, UserRole.MANAGER] },
                     { title: "To Do", pageId: "todo", icon: CheckCircle2 },
+                    { title: "Profile Setup", pageId: "setup-wizard", icon: Sliders },
                 ],
             },
             { icon: Target, title: "Leads", pageId: "leads", badge: "24", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
@@ -102,7 +103,7 @@ export const sidebarNavigationSections: NavSectionConfig[] = [
     {
         title: "Administration & Security",
         items: [
-            { icon: UserList, title: "User Profile", pageId: "profile" },
+            { icon: Sliders, title: "Profile Setup", pageId: "setup-wizard", badge: "Wizard" },
             { icon: ShieldCheck, title: "Privileges & Roles", pageId: "privileges", roles: [UserRole.ADMIN, UserRole.MANAGER] },
             { icon: Gear, title: "System Config", pageId: "crm-config", badge: "Email/WhatsApp", roles: [UserRole.ADMIN] },
             { icon: Buildings, title: "Company Setup", pageId: "company-setup", roles: [UserRole.ADMIN] },

@@ -76,7 +76,9 @@ function App() {
       case "emails":
         return <EmailPage />;
       case "profile":
-        return <ProfilePage onBack={() => setCurrentPage("dashboard")} />;
+        return <ProfilePage onBack={() => setCurrentPage("dashboard")} onNavigate={(p) => setCurrentPage(p as PageType)} initialWizardMode={false} />;
+      case "setup-wizard":
+        return <ProfilePage onBack={() => setCurrentPage("dashboard")} onNavigate={(p) => setCurrentPage(p as PageType)} initialWizardMode={true} />;
       case "company-setup":
         return <CompanySetupPage onBack={() => setCurrentPage("dashboard")} />;
       case "todo":
