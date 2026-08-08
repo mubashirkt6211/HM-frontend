@@ -59,6 +59,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { UserRole } from "@/models/user"
 import { MapTrifold } from "@phosphor-icons/react";
+import claraAvatar from "@/assets/clara_avatar.png";
 
 
 const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
@@ -434,21 +435,21 @@ export function SiteHeader({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="h-9 w-9 cursor-pointer border-2 border-zinc-100 dark:border-zinc-800 hover:ring-4 hover:ring-zinc-50 dark:hover:ring-zinc-900/50 transition-all duration-300">
-              <AvatarImage src="https://i.pinimg.com/1200x/39/86/91/398691f123726a5763e9c47980964fff.jpg" alt="@sophie" />
-              <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white">SB</AvatarFallback>
+              <AvatarImage src={claraAvatar} alt="@clara" />
+              <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white">CL</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-64 p-1.5 rounded-[22px] border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]" align="end" sideOffset={8}>
-            <DropdownMenuLabel className="p-3 pt-2">
+            <DropdownMenuLabel className="p-3 pt-2 cursor-pointer" onClick={() => onPageChange?.("profile")}>
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Sophie Bennett</span>
-                  <span className="text-[11px] font-medium text-zinc-400">sophie@ui.live</span>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">Clara Lefèvre</span>
+                  <span className="text-[11px] font-medium text-zinc-400">clara.lefevre@hms-health.com</span>
                 </div>
                 <div className="relative">
                   <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-blue-500 opacity-20 blur-sm"></div>
                   <Avatar className="h-10 w-10 border-2 border-white dark:border-zinc-900 shadow-sm relative">
-                    <AvatarImage src="https://i.pinimg.com/1200x/39/86/91/398691f123726a5763e9c47980964fff.jpg" />
+                    <AvatarImage src={claraAvatar} />
                   </Avatar>
                 </div>
               </div>

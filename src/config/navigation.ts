@@ -102,6 +102,7 @@ export const sidebarNavigationSections: NavSectionConfig[] = [
     {
         title: "Administration & Security",
         items: [
+            { icon: UserList, title: "User Profile", pageId: "profile" },
             { icon: ShieldCheck, title: "Privileges & Roles", pageId: "privileges", roles: [UserRole.ADMIN, UserRole.MANAGER] },
             { icon: Gear, title: "System Config", pageId: "crm-config", badge: "Email/WhatsApp", roles: [UserRole.ADMIN] },
             { icon: Buildings, title: "Company Setup", pageId: "company-setup", roles: [UserRole.ADMIN] },
