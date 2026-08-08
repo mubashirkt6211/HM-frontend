@@ -154,59 +154,54 @@ const INITIAL_MEMBERS_GRID: MemberAccessRow[] = [
   },
 ];
 
-const MINIMAL_TIMELINE = [
+const REUI_CRM_TIMELINE = [
   {
     id: 1,
-    type: "edit",
-    title: 'Edited records in "Vehicles/Countries"',
-    detail: "Added 2 records",
-    date: "2026-08-08",
+    date: "May 2026",
+    title: "v2.5 Release Channels & FHIR Telemetry Integration",
+    description: "Create staged release channels for beta clinical teams, enterprise hospital accounts, and internal QA cohorts. Added real-time vitals telemetry sync.",
+    badges: [
+      { text: "New", color: "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+      { text: "Team Rollout", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Channel Permissions", color: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800" },
+      { text: "Scheduled Publishing", color: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800" },
+    ],
   },
   {
     id: 2,
-    type: "comment",
-    title: 'New comment in project "Vehicles"',
-    comment: "Sorry, I thought you already added it.",
-    user: "Clara Lefèvre",
-    avatar: claraAvatar,
-    date: "2026-08-07",
+    date: "Apr 2026",
+    title: "v2.4 AI Assist & Patient Triage",
+    description: "Added workspace summaries, prompt presets, faster doctor consultation note reviews, and automated patient intake triage suggestions.",
+    badges: [
+      { text: "New", color: "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+      { text: "Faster Reviews", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Prompt Library", color: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800" },
+      { text: "Review Summaries", color: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" },
+    ],
   },
   {
     id: 3,
-    type: "project",
-    title: 'New project created "World Geography"',
-    detail: "It's time someone compiled a list of countries to use within a web application.",
-    date: "2026-08-05",
+    date: "Mar 2026",
+    title: "v2.3 Theme Studio & HIPAA Audit Governance",
+    description: "Introduced token previews, component states, Level IV HIPAA security governance, and one-click CSS & compliance report exports.",
+    badges: [
+      { text: "Improved", color: "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800" },
+      { text: "Design Systems", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Token Previews", color: "bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800" },
+      { text: "CSS Export", color: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700" },
+    ],
   },
   {
     id: 4,
-    type: "comment",
-    title: 'New comment in project "Vehicles"',
-    comment: "What you did, is so much better approach in my opinion. Can I start adding more data now?",
-    user: "Dr. James Okafor",
-    avatar: avatarJohnson,
-    date: "2026-08-02",
-  },
-  {
-    id: 5,
-    type: "edit",
-    title: 'Edited records in "Vehicles/Countries"',
-    detail: "Added 2 records",
-    date: "2026-07-28",
-  },
-  {
-    id: 6,
-    type: "edit",
-    title: 'Edited records in "Vehicles/Countries"',
-    detail: "Updated 12 records",
-    date: "2026-07-20",
-  },
-  {
-    id: 7,
-    type: "project",
-    title: 'Created new project "Vehicles"',
-    detail: "Initial project setup for fleet management and telemetry",
-    date: "2026-07-15",
+    date: "Feb 2026",
+    title: "v2.2 Live Collaborative Patient Charting",
+    description: "Improved shared cursors, presence labels, multi-doctor chart editing, and conflict-safe draft recovery for emergency room logs.",
+    badges: [
+      { text: "Improved", color: "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800" },
+      { text: "Collaboration", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Presence Labels", color: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800" },
+      { text: "Draft Recovery", color: "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+    ],
   },
 ];
 
@@ -416,45 +411,64 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
           </div>
 
           <AnimatePresence mode="wait">
-            {/* ── ACTIVITY TIMELINE FEED (Exact KgBase Minimal Timeline) ── */}
+            {/* ── REUI APPLICATION TIMELINE BLOCK (EXACT SPECIFICATION) ── */}
             {activeTab === "activity" && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="relative pl-6 space-y-8 border-l border-zinc-200 dark:border-zinc-800"
+                className="space-y-6 pt-2"
               >
-                {MINIMAL_TIMELINE.map((item) => (
-                  <div key={item.id} className="relative group">
-                    {/* Icon Node on Timeline Line */}
-                    <div className="absolute -left-[31px] top-0.5 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 p-0.5 rounded-full">
-                      {item.type === "edit" && <DiamondsFour size={14} weight="bold" />}
-                      {item.type === "comment" && <ChatCircleDots size={14} weight="bold" />}
-                      {item.type === "project" && <FolderSimple size={14} weight="bold" />}
-                    </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">
+                    Release & Activity Changelog
+                  </h3>
+                  <p className="text-xs font-medium text-zinc-400 mt-1">
+                    Recent releases, fixes, FHIR telemetry logs, and platform updates.
+                  </p>
+                </div>
 
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-zinc-900 dark:text-white">{item.title}</span>
-                        <span className="text-[11px] font-medium text-zinc-400">{item.date}</span>
+                <div className="relative space-y-8 pt-4">
+                  {/* Center Vertical Timeline Track Line */}
+                  <div className="absolute left-[92px] top-6 bottom-4 w-px bg-zinc-200 dark:border-zinc-800" />
+
+                  {REUI_CRM_TIMELINE.map((item) => (
+                    <div key={item.id} className="flex items-start gap-4 relative group">
+                      {/* Left Date Column */}
+                      <div className="w-20 shrink-0 text-right text-xs font-semibold text-zinc-400 pt-0.5">
+                        {item.date}
                       </div>
 
-                      {item.detail && (
-                        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{item.detail}</p>
-                      )}
+                      {/* Center Node (Hollow Circle Ring) */}
+                      <div className="w-4 h-4 rounded-full border-2 border-zinc-400 dark:border-zinc-500 bg-white dark:bg-zinc-950 shrink-0 relative z-10 mt-0.5" />
 
-                      {item.comment && (
-                        <div className="mt-2 p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800/80 space-y-2">
-                          <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed">{item.comment}</p>
-                          <div className="flex items-center gap-2 pt-1">
-                            <img src={item.avatar} alt={item.user} className="w-5 h-5 rounded-full object-cover" />
-                            <span className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400">{item.user}</span>
-                          </div>
+                      {/* Right Item Content & Pill Badges */}
+                      <div className="flex-1 space-y-2 min-w-0">
+                        <h4 className="text-sm font-extrabold text-zinc-900 dark:text-white leading-snug">
+                          {item.title}
+                        </h4>
+
+                        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          {item.description}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          {item.badges.map((b, idx) => (
+                            <span
+                              key={idx}
+                              className={cn(
+                                "px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border transition-all",
+                                b.color
+                              )}
+                            >
+                              {b.text}
+                            </span>
+                          ))}
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </motion.div>
             )}
 
