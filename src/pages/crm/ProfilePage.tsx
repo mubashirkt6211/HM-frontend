@@ -1,15 +1,16 @@
 /**
  * Profile Page – Executive HMS Staff Profile & Dossier
- * Features:
- * - Glassmorphic Hero Banner & Interactive Avatar Switcher
- * - REUI Data Grid: "Workspace Access Review" (Permissions Matrix with Pinning, Toggles, Search & Role Filtering)
- * - REUI Application Wizard Block: "Staff Onboarding & Access Setup Wizard" (4-Step Stepper with Identity, Role Cards, Security, & Summary Review)
- * - KPI Metrics Bar (Attendance, Performance, Tasks, Security Clearance)
- * - 6 Comprehensive Tabs (Overview, Objectives, Attendance, Documents, Performance, Settings)
+ * Inspired by Attio / Linear Modern CRM Profile Interface:
+ * - 2-Column Split Layout (Left Details & Actions Column + Right Overview, Activity & Email Feeds)
+ * - Navigation Header: Record Counter (1 of 8,420 in Staff Records)
+ * - Compose Email & Action Buttons Bar
+ * - AI Description Capsule, Email Capsule, Company Badges, Lists & Rating Stars
+ * - Highlights Card & Upcoming Events Carousel Cards
+ * - Timeline Activity Feed with Avatars & Collapsible Interaction Logs
+ * - Integrated REUI Workspace Access Review Data Grid
+ * - Integrated REUI 4-Step Application Wizard Onboarding Modal
  */
 import React, { useState, useMemo } from "react";
-import type { DateRange } from "react-day-picker";
-import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   EnvelopeSimple,
@@ -30,19 +31,13 @@ import {
   CalendarCheck,
   Check,
   Gear,
-  LockKey,
   DownloadSimple,
-  Eye,
   Star,
-  UploadSimple,
   PencilSimple,
-  BellRinging,
   Sparkle,
   Medal,
-  IdentificationCard,
   ShareFat,
   Laptop,
-  Fingerprint,
   FilePdf,
   DotsThreeVertical,
   MagnifyingGlass,
@@ -51,12 +46,25 @@ import {
   CaretLeft,
   CaretRight,
   CaretDown,
+  CaretUp,
   CircleWavyCheck,
   Sliders,
   CheckCircle,
   UserCheck,
-  CloudArrowUp,
   ArrowRight,
+  ArrowsClockwise,
+  UserPlus,
+  LinkSimple,
+  DotsThree,
+  CalendarBlank,
+  ChatCircleDots,
+  UsersThree,
+  TrendUp,
+  Envelope,
+  Sparkle as SparkleIcon,
+  CheckCircle as CheckCircleIcon,
+  House,
+  MagnifyingGlassPlus,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import claraAvatar from "@/assets/clara_avatar.png";
@@ -66,7 +74,7 @@ import avatarPatel from "@/assets/avatar-patel.png";
 import avatarSingh from "@/assets/avatar-singh.png";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DATA TYPES & PRESETS
+// DATA TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 interface UserProfileData {
   name: string;
@@ -170,34 +178,6 @@ const INITIAL_MEMBERS_GRID: MemberAccessRow[] = [
     users: false,
     permissions: false,
   },
-  {
-    id: "m6",
-    name: "Clara Lefèvre",
-    role: "Senior Product Manager",
-    statusText: "Online",
-    isOnline: true,
-    avatar: claraAvatar,
-    isPinned: false,
-    settings: true,
-    billing: true,
-    integrations: "on",
-    users: true,
-    permissions: true,
-  },
-  {
-    id: "m7",
-    name: "Dr. Sarah Mitchell",
-    role: "Chief Oncologist",
-    statusText: "Online",
-    isOnline: true,
-    avatar: avatarSingh,
-    isPinned: false,
-    settings: true,
-    billing: false,
-    integrations: "on",
-    users: true,
-    permissions: false,
-  },
 ];
 
 const PRESET_AVATARS = [
@@ -209,88 +189,40 @@ const PRESET_AVATARS = [
   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300",
 ];
 
-const TEAM_USERS = [
-  { id: 1, name: "Clara Lefèvre", avatar: claraAvatar, role: "Lead Product Manager" },
-  { id: 2, name: "Dr. James Okafor", avatar: avatarJohnson, role: "Chief Medical Officer" },
-  { id: 3, name: "Priya Nair", avatar: avatarPatel, role: "Senior UX Researcher" },
-  { id: 4, name: "Lucas Meyer", avatar: avatarKim, role: "Fullstack Architect" },
-  { id: 5, name: "Amina Diallo", avatar: avatarSingh, role: "Clinical Data Analyst" },
-];
-
-const INITIAL_OBJECTIVES = [
+const ACTIVITY_FEED = [
   {
     id: 1,
-    title: "Review Healthcare CRM Architecture 2.0",
-    description: "C-level architectural compliance and security review phase",
-    category: "Architecture",
-    priority: "High",
-    completed: false,
-    dueDate: "Tomorrow",
-    progress: 85,
-    assignees: [1, 2, 4],
-    commentList: [
-      { id: 1, userId: 2, text: "FHIR standard mapping looks solid. Ready for security audit.", time: "2h ago" },
-    ],
+    user: "Sam Jackson",
+    avatar: avatarJohnson,
+    action: "made an outbound call regarding FHIR Integration",
+    time: "2 hours ago",
+    type: "call",
   },
   {
     id: 2,
-    title: "Optimize Doctor & Nurse Telemetry Dashboard",
-    description: "Refactor WebSocket real-time vitals feed and alerts",
-    category: "Dashboard",
-    priority: "Normal",
-    completed: false,
-    dueDate: "25 Aug",
-    progress: 40,
-    assignees: [1, 3],
-    commentList: [],
-  },
-];
-
-const INITIAL_DOCUMENTS = [
-  {
-    id: "doc-1",
-    title: "Executive Employment Agreement 2026.pdf",
-    category: "Contracts",
-    size: "2.4 MB",
-    uploadedDate: "Jan 12, 2026",
-    status: "Verified",
-    type: "pdf",
+    user: "Clara Lefèvre",
+    avatar: claraAvatar,
+    action: "attended an executive architecture review with Clinical R&D",
+    time: "4 hours ago",
+    type: "meeting",
   },
   {
-    id: "doc-2",
-    title: "HIPAA Security Certification_ClassIV.pdf",
-    category: "Certifications",
-    size: "1.8 MB",
-    uploadedDate: "Feb 04, 2026",
-    status: "Verified",
-    type: "pdf",
+    id: 3,
+    user: "Ashley Lawson",
+    avatar: avatarPatel,
+    action: "attended an in-person product design workshop",
+    time: "Yesterday, 3:45 PM",
+    type: "event",
+  },
+  {
+    id: 4,
+    user: "Dr. James Okafor",
+    avatar: avatarSingh,
+    action: "approved HIPAA Class IV security compliance dossier",
+    time: "2 days ago",
+    type: "approval",
   },
 ];
-
-const INITIAL_REVIEWS = {
-  overallScore: 4.9,
-  totalReviews: 14,
-  percentile: "Top 2% Staff",
-  competencies: [
-    { name: "Clinical System Architecture", score: 98 },
-    { name: "HIPAA & Data Privacy Governance", score: 100 },
-    { name: "Cross-Functional Leadership", score: 96 },
-    { name: "Product Delivery Speed", score: 94 },
-  ],
-  managerFeedback: [
-    {
-      id: 1,
-      period: "Annual Performance Review 2025",
-      reviewer: "Dr. James Okafor (Chief Medical Officer)",
-      rating: 5.0,
-      quote: "Clara has revolutionized our R&D workflow. Her attention to FHIR standards and UI design has elevated staff productivity.",
-      date: "Dec 20, 2025",
-    },
-  ],
-  endorsements: [
-    { id: 1, user: TEAM_USERS[1], skill: "FHIR Data Architecture", date: "2 weeks ago" },
-  ],
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN PROFILE PAGE COMPONENT
@@ -300,25 +232,27 @@ interface ProfilePageProps {
 }
 
 export function ProfilePage({ onBack }: ProfilePageProps) {
-  const [activeTab, setActiveTab] = useState("Infos");
   const [profile, setProfile] = useState<UserProfileData>({
     name: "Clara Lefèvre",
-    role: "Senior Product Manager & HealthTech Lead",
+    role: "Founder & HealthTech Lead at HMS Systems",
     department: "Clinical R&D & CRM Solutions",
     employeeId: "HMS-EMP-8842",
     email: "clara.lefevre@hms-health.com",
     phone: "+33 (0) 1 42 68 53 00",
-    location: "Paris HQ — R&D Wing B",
+    location: "San Francisco, CA",
     accessLevel: "Level 4 (Executive Staff)",
-    bio: "Passionate HealthTech leader specializing in clinical workflow automation, FHIR interoperability standards, and high-performance hospital CRM systems.",
+    bio: "Clara Lefèvre is Founder & HealthTech Lead at HMS Systems in the sustainability & healthcare space who just raised a Series B round.",
     emergencyContact: "Henri Lefèvre (Spouse) — +33 (0) 6 12 34 56 78",
     joiningDate: "January 15, 2022",
     manager: "Dr. James Okafor (Chief Medical Officer)",
     avatar: claraAvatar,
   });
 
-  const [objectives, setObjectives] = useState(INITIAL_OBJECTIVES);
-  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+  const [activeRightTab, setActiveRightTab] = useState<"overview" | "activity" | "emails" | "permissions">("overview");
+  const [isDetailsOpen, setIsDetailsOpen] = useState(true);
+  const [isListsOpen, setIsListsOpen] = useState(true);
+  const [showAllInteractions, setShowAllInteractions] = useState(false);
+
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -329,17 +263,8 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const tabs = [
-    { id: "Infos", label: "Overview & Access Review", icon: User },
-    { id: "Objectives", label: "Objectives & OKRs", icon: Target },
-    { id: "Attendance", label: "Attendance & Shifts", icon: CalendarCheck },
-    { id: "Documents", label: "Document Vault", icon: FileText },
-    { id: "Reviews", label: "Performance", icon: Star },
-    { id: "Settings", label: "Security & Settings", icon: Gear },
-  ];
-
   return (
-    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pb-20 w-full px-4 md:px-8 lg:px-12 pt-6 transition-colors">
+    <div className="min-h-screen bg-zinc-50/70 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pb-20 w-full px-4 md:px-8 lg:px-12 pt-4 transition-colors">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
@@ -355,138 +280,387 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
         )}
       </AnimatePresence>
 
-      {/* Top Header Navigation Bar */}
-      <div className="flex items-center justify-between py-4 mb-6 border-b border-zinc-200/60 dark:border-zinc-800/60">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-xs font-extrabold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors group px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm"
-        >
-          <ArrowLeft weight="bold" size={14} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
-        </button>
+      {/* Top Pagination & Record Navigation Header */}
+      <div className="flex items-center justify-between py-3 mb-6 border-b border-zinc-200/80 dark:border-zinc-800 text-xs font-semibold text-zinc-500">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title="Back"
+          >
+            ✕
+          </button>
+          <div className="flex items-center gap-1 text-zinc-400">
+            <button className="p-1 hover:text-zinc-900 dark:hover:text-white">⌃</button>
+            <button className="p-1 hover:text-zinc-900 dark:hover:text-white">⌄</button>
+          </div>
+          <span className="text-zinc-600 dark:text-zinc-300 font-bold">1,538 of 59,273 in People</span>
+        </div>
 
-        <div className="flex items-center gap-2">
-          {/* Launch Wizard Button */}
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setIsWizardOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-black shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-black shadow-xs hover:scale-[1.02] transition-all"
           >
             <Sliders size={14} weight="bold" />
-            Launch Application Wizard
+            Launch Setup Wizard
           </button>
 
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
-              showToast("Profile link copied to clipboard!");
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+            onClick={() => showToast("Added to favorites!")}
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-amber-500 transition-colors"
+            title="Bookmark"
           >
-            <ShareFat size={14} weight="bold" />
-            Share Profile
-          </button>
-
-          <button
-            onClick={() => showToast("Exporting Workspace Access Review PDF...")}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 text-xs font-extrabold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            <DownloadSimple size={14} weight="bold" />
-            Export Review
+            <Star size={16} weight="bold" />
           </button>
         </div>
       </div>
 
-      {/* Hero Cover Card & Banner */}
-      <div className="relative rounded-[2.5rem] bg-gradient-to-r from-zinc-900 via-indigo-950 to-slate-900 p-6 md:p-10 text-white shadow-2xl overflow-hidden mb-8 border border-zinc-800/80">
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-          <div className="relative group shrink-0">
-            <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl overflow-hidden border-4 border-white/20 dark:border-zinc-800 shadow-2xl ring-2 ring-white/10 relative bg-zinc-800">
+      {/* ── MAIN Split 2-Column Attio/Linear Executive Profile Layout ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* ── LEFT COLUMN: Profile Header & Details Panel (5 cols) ── */}
+        <div className="lg:col-span-5 space-y-6 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 shadow-xs">
+          {/* Avatar & Title Header */}
+          <div className="space-y-4">
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-zinc-200 dark:border-zinc-800 group shadow-md">
               <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
-              <div className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-emerald-500 border-2 border-zinc-900 animate-pulse" title="Online & Active" />
-            </div>
-
-            <button
-              onClick={() => setIsAvatarModalOpen(true)}
-              className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-white text-zinc-950 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all border-2 border-zinc-900 font-bold"
-              title="Change Profile Avatar"
-            >
-              <Camera weight="bold" size={18} />
-            </button>
-          </div>
-
-          <div className="flex-1 space-y-4 text-center md:text-left">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                Active Duty • Shift A
-              </span>
-              <span className="px-3 py-1 rounded-full bg-white/10 text-white/90 border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
-                <ShieldCheck size={12} weight="fill" className="text-indigo-400" />
-                {profile.accessLevel}
-              </span>
+              <button
+                onClick={() => setIsAvatarModalOpen(true)}
+                className="absolute inset-0 bg-zinc-950/40 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+              >
+                <Camera size={18} weight="bold" />
+              </button>
             </div>
 
             <div>
-              <div className="flex items-center justify-center md:justify-start gap-3">
-                <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white">{profile.name}</h1>
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{profile.name}</h1>
                 <button
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 transition-all border border-white/10"
-                  title="Edit Profile"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                 >
                   <PencilSimple size={16} weight="bold" />
                 </button>
               </div>
-              <p className="text-sm md:text-base font-bold text-indigo-200 mt-1">{profile.role}</p>
-              <p className="text-xs font-semibold text-zinc-400 mt-1">{profile.department} • {profile.location}</p>
+              <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mt-1">{profile.role}</p>
+            </div>
+
+            {/* Action Bar: Compose email & Quick Icon Buttons */}
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <button
+                onClick={() => showToast("Opening email composer...")}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 text-xs font-black shadow-xs hover:scale-[1.02] transition-all"
+              >
+                <EnvelopeSimple size={14} weight="bold" />
+                Compose email
+              </button>
+
+              <button onClick={() => showToast("Synced profile logs")} className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200">
+                <ArrowsClockwise size={14} weight="bold" />
+              </button>
+
+              <button onClick={() => showToast("Tagged contact")} className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200">
+                <UserCheck size={14} weight="bold" />
+              </button>
+
+              <button onClick={() => showToast("Added collaborator")} className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200">
+                <UserPlus size={14} weight="bold" />
+              </button>
+
+              <button onClick={() => showToast("Copied link")} className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200">
+                <LinkSimple size={14} weight="bold" />
+              </button>
+
+              <button onClick={() => showToast("More actions")} className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200">
+                <DotsThree size={14} weight="bold" />
+              </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Tab Segmented Control */}
-      <div className="flex items-center justify-start overflow-x-auto custom-scrollbar p-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl mb-8 shadow-sm">
-        <div className="flex items-center gap-1.5 w-full">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
+          <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800" />
+
+          {/* Details Collapsible Section */}
+          <div className="space-y-4">
+            <button
+              onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+              className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-wider w-full justify-between"
+            >
+              <span className="flex items-center gap-1.5">
+                {isDetailsOpen ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
+                Details
+              </span>
+            </button>
+
+            {isDetailsOpen && (
+              <div className="space-y-3 text-xs font-bold pt-1">
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <span className="col-span-4 text-zinc-400 font-semibold flex items-center gap-1.5">
+                    <User size={14} /> Name
+                  </span>
+                  <span className="col-span-8 text-zinc-900 dark:text-zinc-100 font-black">{profile.name}</span>
+                </div>
+
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <span className="col-span-4 text-zinc-400 font-semibold flex items-center gap-1.5">
+                    <FileText size={14} /> Description
+                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[9px] font-black uppercase">
+                      AI
+                    </span>
+                  </span>
+                  <span className="col-span-8 text-zinc-900 dark:text-zinc-100">{profile.role}</span>
+                </div>
+
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <span className="col-span-4 text-zinc-400 font-semibold flex items-center gap-1.5">
+                    <EnvelopeSimple size={14} /> Emails
+                  </span>
+                  <span className="col-span-8">
+                    <span className="px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[11px] font-extrabold inline-block">
+                      {profile.email}
+                    </span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <span className="col-span-4 text-zinc-400 font-semibold flex items-center gap-1.5">
+                    <MapPin size={14} /> Location
+                  </span>
+                  <span className="col-span-8 text-zinc-900 dark:text-zinc-100">{profile.location}</span>
+                </div>
+
+                <div className="grid grid-cols-12 gap-2 items-center">
+                  <span className="col-span-4 text-zinc-400 font-semibold flex items-center gap-1.5">
+                    <Buildings size={14} /> Company
+                  </span>
+                  <span className="col-span-8 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <span className="font-extrabold text-zinc-900 dark:text-zinc-100">HMS Global Health Systems</span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800" />
+
+          {/* Lists Collapsible Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all shrink-0 relative",
-                  isActive
-                    ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md scale-[1.02]"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
-                )}
+                onClick={() => setIsListsOpen(!isListsOpen)}
+                className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-wider"
               >
-                <Icon size={16} weight={isActive ? "fill" : "bold"} />
-                <span>{tab.label}</span>
+                {isListsOpen ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
+                Lists
+                <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400">
+                  2
+                </span>
               </button>
-            );
-          })}
+
+              <button className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white p-1">
+                <Plus size={14} weight="bold" />
+              </button>
+            </div>
+
+            {isListsOpen && (
+              <div className="p-4 rounded-2xl bg-zinc-50/70 dark:bg-zinc-950/60 border border-zinc-100 dark:border-zinc-800/80 space-y-3 text-xs font-bold">
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                  <Star size={14} weight="fill" />
+                  <span>Community Members</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200">
+                  <Buildings size={14} />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span>GreenLeaf Systems</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+                  <Phone size={14} />
+                  <span>{profile.phone}</span>
+                </div>
+
+                <div className="flex items-center gap-1 text-amber-400 pt-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={14} weight="fill" />
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-2 border-t border-zinc-200/60 dark:border-zinc-800">
+                  <span className="hover:text-zinc-900 dark:hover:text-white cursor-pointer">Show all</span>
+                  <span className="flex items-center gap-1">
+                    <ChatCircleDots size={14} /> 34
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── RIGHT COLUMN: Main Tabbed Overview, Activity Feed & Permissions Data Grid (7 cols) ── */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Top Pill Tabs */}
+          <div className="flex items-center gap-6 border-b border-zinc-200/80 dark:border-zinc-800 pb-3">
+            <button
+              onClick={() => setActiveRightTab("overview")}
+              className={cn(
+                "flex items-center gap-2 text-sm font-black transition-all pb-1.5 relative",
+                activeRightTab === "overview"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <UsersThree size={16} weight="bold" />
+              Overview
+            </button>
+
+            <button
+              onClick={() => setActiveRightTab("activity")}
+              className={cn(
+                "flex items-center gap-2 text-sm font-black transition-all pb-1.5 relative",
+                activeRightTab === "activity"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <TrendUp size={16} weight="bold" />
+              Activity
+            </button>
+
+            <button
+              onClick={() => setActiveRightTab("emails")}
+              className={cn(
+                "flex items-center gap-2 text-sm font-black transition-all pb-1.5 relative",
+                activeRightTab === "emails"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <Envelope size={16} weight="bold" />
+              Emails
+              <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-extrabold text-zinc-600 dark:text-zinc-400">
+                217
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveRightTab("permissions")}
+              className={cn(
+                "flex items-center gap-2 text-sm font-black transition-all pb-1.5 relative",
+                activeRightTab === "permissions"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <ShieldCheck size={16} weight="bold" />
+              Access Matrix
+            </button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {activeRightTab === "overview" && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                {/* Highlights Card */}
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-black text-zinc-500 uppercase tracking-wider">
+                    <UsersThree size={16} className="text-indigo-500" />
+                    Highlights
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold uppercase text-zinc-400">Summary</p>
+                    <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-relaxed">
+                      {profile.bio}
+                    </p>
+                  </div>
+
+                  {/* Upcoming Event Cards Carousel */}
+                  <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-2xl bg-zinc-50/70 dark:bg-zinc-950/60 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase">Upcoming</span>
+                        <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-100 mt-1">AI Founders Summit</h4>
+                        <p className="text-[11px] font-semibold text-zinc-400">Apr 29, 10:30 AM</p>
+                      </div>
+
+                      <div className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-center shadow-xs">
+                        <span className="text-[9px] font-black uppercase text-zinc-400">THU</span>
+                        <p className="text-sm font-black text-zinc-900 dark:text-white leading-none">29</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-zinc-50/70 dark:bg-zinc-950/60 border border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase">Upcoming</span>
+                        <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-100 mt-1">FHIR HealthTech Sync</h4>
+                        <p className="text-[11px] font-semibold text-zinc-400">May 04, 02:00 PM</p>
+                      </div>
+
+                      <div className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-center shadow-xs">
+                        <span className="text-[9px] font-black uppercase text-zinc-400">TUE</span>
+                        <p className="text-sm font-black text-zinc-900 dark:text-white leading-none">04</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Activity Feed Section */}
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <TrendUp size={16} className="text-indigo-500" />
+                      Activity & Interactions
+                    </h3>
+                    <CaretRight size={14} className="text-zinc-400" />
+                  </div>
+
+                  <div className="space-y-4 pt-2">
+                    {ACTIVITY_FEED.map((act) => (
+                      <div key={act.id} className="flex items-start gap-3 text-xs font-bold">
+                        <img src={act.avatar} alt={act.user} className="w-8 h-8 rounded-full object-cover shrink-0 border border-zinc-200 dark:border-zinc-700" />
+                        <div className="flex-1">
+                          <p className="text-zinc-900 dark:text-zinc-100 leading-snug">
+                            <span className="font-black">{act.user}</span> {act.action}
+                          </p>
+                          <span className="text-[10px] font-medium text-zinc-400">{act.time}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setShowAllInteractions(!showAllInteractions)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white pt-2"
+                  >
+                    <CaretDown size={14} />
+                    {showAllInteractions ? "Hide interactions" : "Show 26 more interactions"}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {activeRightTab === "activity" && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 shadow-xs space-y-4">
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Full Interaction Logs</h3>
+                <p className="text-xs font-bold text-zinc-400">Complete historical timeline of calls, meetings, and system audits.</p>
+              </motion.div>
+            )}
+
+            {activeRightTab === "emails" && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-6 md:p-8 shadow-xs space-y-4">
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Email Threads (217 Messages)</h3>
+                <p className="text-xs font-bold text-zinc-400">Encrypted communication history with Clara Lefèvre.</p>
+              </motion.div>
+            )}
+
+            {activeRightTab === "permissions" && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <OverviewTab profile={profile} onEdit={() => setIsEditProfileOpen(true)} showToast={showToast} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-
-      {/* Tab Contents */}
-      <AnimatePresence mode="wait">
-        {activeTab === "Infos" && (
-          <OverviewTab key="infos" profile={profile} onEdit={() => setIsEditProfileOpen(true)} showToast={showToast} />
-        )}
-        {activeTab === "Objectives" && (
-          <ObjectivesTab key="objectives" objectives={objectives} setObjectives={setObjectives} />
-        )}
-        {activeTab === "Attendance" && <AttendanceTab key="attendance" />}
-        {activeTab === "Documents" && (
-          <DocumentsTab key="documents" documents={documents} setDocuments={setDocuments} showToast={showToast} />
-        )}
-        {activeTab === "Reviews" && <ReviewsTab key="reviews" reviews={INITIAL_REVIEWS} />}
-        {activeTab === "Settings" && <SettingsTab key="settings" showToast={showToast} />}
-      </AnimatePresence>
 
       {/* Edit Profile Modal */}
       <AnimatePresence>
@@ -546,7 +720,6 @@ function ApplicationWizardModal({
 }) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
-  // Form states
   const [name, setName] = useState(profile.name);
   const [roleTitle, setRoleTitle] = useState(profile.role);
   const [department, setDepartment] = useState(profile.department);
@@ -601,7 +774,6 @@ function ApplicationWizardModal({
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
       >
-        {/* Wizard Top Header & Progress */}
         <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -620,7 +792,6 @@ function ApplicationWizardModal({
             </button>
           </div>
 
-          {/* Stepper Progress Bar */}
           <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-6">
             <div
               className="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-500"
@@ -628,7 +799,6 @@ function ApplicationWizardModal({
             />
           </div>
 
-          {/* Stepper Navigation Pills */}
           <div className="grid grid-cols-4 gap-2">
             {[
               { num: 1, label: "Identity" },
@@ -666,9 +836,7 @@ function ApplicationWizardModal({
           </div>
         </div>
 
-        {/* Wizard Step Body */}
         <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar space-y-6">
-          {/* STEP 1: IDENTITY & PROFILE DETAILS */}
           {step === 1 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
@@ -717,7 +885,6 @@ function ApplicationWizardModal({
             </motion.div>
           )}
 
-          {/* STEP 2: ROLE & PERMISSIONS ALLOCATION */}
           {step === 2 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
@@ -760,7 +927,6 @@ function ApplicationWizardModal({
             </motion.div>
           )}
 
-          {/* STEP 3: SECURITY & COMPLIANCE VERIFICATION */}
           {step === 3 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
@@ -792,7 +958,6 @@ function ApplicationWizardModal({
             </motion.div>
           )}
 
-          {/* STEP 4: REVIEW & CONFIRMATION SUMMARY */}
           {step === 4 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
               <div>
@@ -824,7 +989,6 @@ function ApplicationWizardModal({
           )}
         </div>
 
-        {/* Wizard Footer Controls */}
         <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950/50">
           <button
             disabled={step === 1}
@@ -859,7 +1023,7 @@ function ApplicationWizardModal({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TAB 1: OVERVIEW & WORKSPACE ACCESS REVIEW DATA GRID
+// DATA GRID VIEW (REUI WORKSPACE ACCESS MATRIX)
 // ─────────────────────────────────────────────────────────────────────────────
 function OverviewTab({
   profile,
@@ -940,14 +1104,8 @@ function OverviewTab({
   }, [sortedMembers, page, rowsPerPage]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="space-y-8"
-    >
-      {/* ── REUI BLOCK: WORKSPACE ACCESS REVIEW ── */}
-      <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 sm:p-8 space-y-6">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+      <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
@@ -960,103 +1118,14 @@ function OverviewTab({
 
           <button
             onClick={() => showToast("Exporting Workspace Access Review report...")}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-all border border-zinc-200 dark:border-zinc-700 shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-all border border-zinc-200 dark:border-zinc-700 shadow-xs"
           >
             <DownloadSimple size={15} weight="bold" />
             Export review
           </button>
         </div>
 
-        <div className="flex items-center gap-6 border-b border-zinc-100 dark:border-zinc-800 pb-3">
-          <button
-            onClick={() => setSubTab("general")}
-            className={cn(
-              "flex items-center gap-2 text-xs font-black transition-all pb-1 relative",
-              subTab === "general"
-                ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
-                : "text-zinc-400 hover:text-zinc-600"
-            )}
-          >
-            General
-            <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-extrabold text-zinc-600 dark:text-zinc-400">
-              5
-            </span>
-          </button>
-
-          <button
-            onClick={() => setSubTab("tags")}
-            className={cn(
-              "flex items-center gap-2 text-xs font-black transition-all pb-1 relative",
-              subTab === "tags"
-                ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
-                : "text-zinc-400 hover:text-zinc-600"
-            )}
-          >
-            Tags
-            <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-extrabold text-zinc-600 dark:text-zinc-400">
-              6
-            </span>
-          </button>
-
-          <button
-            onClick={() => setSubTab("permissions")}
-            className={cn(
-              "flex items-center gap-2 text-xs font-black transition-all pb-1 relative",
-              subTab === "permissions"
-                ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
-                : "text-zinc-400 hover:text-zinc-600"
-            )}
-          >
-            Permissions
-            <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-extrabold text-zinc-600 dark:text-zinc-400">
-              5
-            </span>
-          </button>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="relative">
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none pr-8 cursor-pointer appearance-none"
-              >
-                <option>All roles</option>
-                <option>Owners</option>
-                <option>Admins</option>
-                <option>Leads</option>
-              </select>
-              <CaretDown size={12} weight="bold" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-            </div>
-
-            <div className="relative flex-1 max-w-xs">
-              <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-              <input
-                type="text"
-                placeholder="Search members"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 justify-end">
-            <button
-              onClick={unpinAll}
-              className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
-            >
-              <PushPinSlash size={14} weight="bold" />
-              Unpin all
-            </button>
-            <span className="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-xs font-extrabold">
-              {pinnedCount} rows pinned
-            </span>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-sm">
+        <div className="overflow-x-auto rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-zinc-50/70 dark:bg-zinc-950/60 border-b border-zinc-200/80 dark:border-zinc-800 text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider">
@@ -1072,112 +1141,55 @@ function OverviewTab({
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs font-bold">
               {paginatedMembers.map((m) => (
-                <tr
-                  key={m.id}
-                  className={cn(
-                    "hover:bg-zinc-50/60 dark:hover:bg-zinc-800/30 transition-colors",
-                    m.isPinned && "bg-zinc-50/40 dark:bg-zinc-950/30"
-                  )}
-                >
+                <tr key={m.id} className={cn("hover:bg-zinc-50/60 dark:hover:bg-zinc-800/30 transition-colors", m.isPinned && "bg-zinc-50/40 dark:bg-zinc-950/30")}>
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => togglePin(m.id)}
-                      className={cn(
-                        "p-1 rounded-md transition-colors",
-                        m.isPinned ? "text-zinc-950 dark:text-white" : "text-zinc-300 dark:text-zinc-700 hover:text-zinc-500"
-                      )}
-                      title={m.isPinned ? "Unpin row" : "Pin row to top"}
-                    >
+                    <button onClick={() => togglePin(m.id)} className={cn("p-1 rounded-md transition-colors", m.isPinned ? "text-zinc-950 dark:text-white" : "text-zinc-300 dark:text-zinc-700 hover:text-zinc-500")}>
                       <PushPin size={14} weight={m.isPinned ? "fill" : "bold"} className={cn(m.isPinned && "-rotate-45")} />
                     </button>
                   </td>
 
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="relative shrink-0">
-                        <img src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-zinc-200 dark:border-zinc-700" />
-                        {m.isOnline && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900" />
-                        )}
-                      </div>
+                      <img src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-zinc-200 dark:border-zinc-700" />
                       <div>
                         <p className="font-extrabold text-zinc-900 dark:text-zinc-100 leading-snug">{m.name}</p>
-                        <p className="text-[11px] font-semibold text-zinc-400 leading-snug">
-                          {m.role} • {m.statusText}
-                        </p>
+                        <p className="text-[11px] font-semibold text-zinc-400 leading-snug">{m.role} • {m.statusText}</p>
                       </div>
                     </div>
                   </td>
 
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => toggleSettingPermission(m.id, "settings")}
-                      className={cn(
-                        "w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle",
-                        m.settings ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"
-                      )}
-                    >
+                    <button onClick={() => toggleSettingPermission(m.id, "settings")} className={cn("w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.settings ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
                       <div className={cn("w-4 h-4 rounded-full bg-white transition-transform shadow-xs", m.settings && "translate-x-4")} />
                     </button>
                   </td>
 
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => toggleSettingPermission(m.id, "billing")}
-                      className={cn(
-                        "w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle",
-                        m.billing ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"
-                      )}
-                    >
+                    <button onClick={() => toggleSettingPermission(m.id, "billing")} className={cn("w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.billing ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
                       <div className={cn("w-4 h-4 rounded-full bg-white transition-transform shadow-xs", m.billing && "translate-x-4")} />
                     </button>
                   </td>
 
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => toggleIntegrationPermission(m.id)}
-                      className={cn(
-                        "w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle",
-                        m.integrations === "on"
-                          ? "bg-emerald-500"
-                          : m.integrations === "warning"
-                          ? "bg-amber-500"
-                          : "bg-zinc-200 dark:bg-zinc-700"
-                      )}
-                    >
+                    <button onClick={() => toggleIntegrationPermission(m.id)} className={cn("w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.integrations === "on" ? "bg-emerald-500" : m.integrations === "warning" ? "bg-amber-500" : "bg-zinc-200 dark:bg-zinc-700")}>
                       <div className={cn("w-4 h-4 rounded-full bg-white transition-transform shadow-xs", m.integrations !== "off" && "translate-x-4")} />
                     </button>
                   </td>
 
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => toggleSettingPermission(m.id, "users")}
-                      className={cn(
-                        "w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle",
-                        m.users ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"
-                      )}
-                    >
+                    <button onClick={() => toggleSettingPermission(m.id, "users")} className={cn("w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.users ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
                       <div className={cn("w-4 h-4 rounded-full bg-white transition-transform shadow-xs", m.users && "translate-x-4")} />
                     </button>
                   </td>
 
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => toggleSettingPermission(m.id, "permissions")}
-                      className={cn(
-                        "w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle",
-                        m.permissions ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"
-                      )}
-                    >
+                    <button onClick={() => toggleSettingPermission(m.id, "permissions")} className={cn("w-9 h-5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.permissions ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
                       <div className={cn("w-4 h-4 rounded-full bg-white transition-transform shadow-xs", m.permissions && "translate-x-4")} />
                     </button>
                   </td>
 
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => showToast(`Actions menu opened for ${m.name}`)}
-                      className="p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                    >
+                    <button onClick={() => showToast(`Actions menu opened for ${m.name}`)} className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
                       <DotsThreeVertical size={16} weight="bold" />
                     </button>
                   </td>
@@ -1186,256 +1198,6 @@ function OverviewTab({
             </tbody>
           </table>
         </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs font-bold text-zinc-500">
-          <div className="flex items-center gap-2">
-            <span>Rows per page</span>
-            <select
-              value={rowsPerPage}
-              onChange={(e) => {
-                setRowsPerPage(Number(e.target.value));
-                setPage(1);
-              }}
-              className="px-2 py-1 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <span>
-              {sortedMembers.length === 0
-                ? "0 of 0"
-                : `${(page - 1) * rowsPerPage + 1} - ${Math.min(page * rowsPerPage, sortedMembers.length)} of ${sortedMembers.length}`}
-            </span>
-
-            <div className="flex items-center gap-1">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              >
-                <CaretLeft size={14} weight="bold" />
-              </button>
-
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={cn(
-                    "w-7 h-7 rounded-lg text-xs font-extrabold transition-all",
-                    page === i + 1
-                      ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-xs"
-                      : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  )}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              >
-                <CaretRight size={14} weight="bold" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Administrative Dossier & Licenses */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-              <div>
-                <h3 className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">Administrative Dossier</h3>
-                <p className="text-xs font-bold text-zinc-400 mt-1">Official verified credentials and system registry details</p>
-              </div>
-              <button
-                onClick={onEdit}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
-              >
-                <PencilSimple size={14} weight="bold" />
-                Edit Info
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { label: "Official Email", value: profile.email, icon: EnvelopeSimple },
-                { label: "Direct Telephone", value: profile.phone, icon: Phone },
-                { label: "Office Location", value: profile.location, icon: MapPin },
-                { label: "Department / Team", value: profile.department, icon: Buildings },
-                { label: "Reporting Manager", value: profile.manager, icon: User },
-                { label: "Access Privilege", value: profile.accessLevel, icon: ShieldCheck },
-              ].map((item, idx) => {
-                const Icon = item.icon;
-                return (
-                  <div key={idx} className="p-4 rounded-2xl bg-zinc-50/70 dark:bg-zinc-950/50 border border-zinc-100 dark:border-zinc-800/80 space-y-1">
-                    <div className="flex items-center gap-2 text-zinc-400 text-[10px] font-black uppercase tracking-wider">
-                      <Icon size={14} weight="bold" className="text-indigo-500" />
-                      <span>{item.label}</span>
-                    </div>
-                    <p className="text-sm font-black text-zinc-900 dark:text-zinc-100 truncate">{item.value}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-8">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
-            <h3 className="text-base font-black tracking-tight text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-              <Medal size={18} weight="fill" className="text-amber-500" />
-              Verified Badges & Licenses
-            </h3>
-
-            <div className="space-y-3">
-              {[
-                { title: "HIPAA Security Certified", desc: "Level IV Governance", color: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" },
-                { title: "HL7 FHIR Interoperability", desc: "Master Practitioner", color: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800" },
-              ].map((badge, idx) => (
-                <div key={idx} className={cn("p-3.5 rounded-2xl border flex items-center justify-between", badge.color)}>
-                  <div>
-                    <p className="text-xs font-black">{badge.title}</p>
-                    <p className="text-[10px] font-bold opacity-80 mt-0.5">{badge.desc}</p>
-                  </div>
-                  <CircleWavyCheck size={18} weight="fill" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// OTHER TABS & MODALS
-// ─────────────────────────────────────────────────────────────────────────────
-function ObjectivesTab({ objectives, setObjectives }: any) {
-  const [filter, setFilter] = useState("All");
-  const [isAdding, setIsAdding] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-
-  const toggleObjective = (id: number) => {
-    setObjectives((prev: any[]) =>
-      prev.map((obj) => (obj.id === id ? { ...obj, completed: !obj.completed, progress: !obj.completed ? 100 : 0 } : obj))
-    );
-  };
-
-  const filtered = useMemo(() => {
-    if (filter === "Pending") return objectives.filter((o: any) => !o.completed);
-    if (filter === "Completed") return objectives.filter((o: any) => o.completed);
-    return objectives;
-  }, [objectives, filter]);
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-      <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-        <div>
-          <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Staff OKRs & Key Tasks</h3>
-          <p className="text-xs font-bold text-zinc-400 mt-1">Track strategic quarterly deliverables and collaborative actions</p>
-        </div>
-
-        <button
-          onClick={() => setIsAdding(true)}
-          className="flex items-center gap-1 px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black shadow hover:bg-indigo-700 transition-all"
-        >
-          <Plus size={14} weight="bold" />
-          Add Task
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filtered.map((obj: any) => (
-          <div key={obj.id} className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-black uppercase">
-                {obj.category}
-              </span>
-              <button onClick={() => toggleObjective(obj.id)} className="p-1 rounded bg-zinc-100 dark:bg-zinc-800">
-                <Check size={14} />
-              </button>
-            </div>
-            <h4 className="text-base font-black text-zinc-900 dark:text-zinc-100">{obj.title}</h4>
-            <p className="text-xs font-medium text-zinc-400">{obj.description}</p>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-function AttendanceTab() {
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
-      <h3 className="text-lg font-black text-zinc-900 dark:text-white">Attendance Registry</h3>
-      <p className="text-xs font-bold text-zinc-400 mt-1">Logged Biometric shift entries and active clock-in records.</p>
-    </motion.div>
-  );
-}
-
-function DocumentsTab({ documents, setDocuments, showToast }: any) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-      <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-        <h3 className="text-xl font-black text-zinc-900 dark:text-white">Encrypted Document Vault</h3>
-        <p className="text-xs font-bold text-zinc-400 mt-1">Verified contracts, licenses, and tax documents</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {documents.map((doc: any) => (
-          <div key={doc.id} className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FilePdf size={24} className="text-rose-500" />
-              <div>
-                <h4 className="text-xs font-black text-zinc-900 dark:text-zinc-100">{doc.title}</h4>
-                <p className="text-[10px] font-bold text-zinc-400">{doc.category} • {doc.size}</p>
-              </div>
-            </div>
-            <button onClick={() => showToast(`Downloading ${doc.title}...`)} className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800">
-              <DownloadSimple size={16} />
-            </button>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-function ReviewsTab({ reviews }: any) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-      <div className="bg-gradient-to-br from-indigo-900 to-zinc-900 rounded-3xl p-8 text-white shadow-lg space-y-3">
-        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Executive Assessment</span>
-        <div className="flex items-baseline gap-2">
-          <span className="text-5xl font-black">{reviews.overallScore}</span>
-          <span className="text-xl font-bold text-zinc-400">/ 5.0</span>
-        </div>
-        <p className="text-xs font-bold text-indigo-200">{reviews.percentile}</p>
-      </div>
-    </motion.div>
-  );
-}
-
-function SettingsTab({ showToast }: { showToast: (msg: string) => void }) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6 max-w-2xl">
-      <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
-        <h3 className="text-lg font-black text-zinc-900 dark:text-white">Security & Password</h3>
-        <input type="password" placeholder="Current Password" className="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-bold outline-none" />
-        <input type="password" placeholder="New Password" className="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-bold outline-none" />
-        <button onClick={() => showToast("Password updated!")} className="px-5 py-2 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-xs font-black rounded-xl">
-          Update Password
-        </button>
       </div>
     </motion.div>
   );
