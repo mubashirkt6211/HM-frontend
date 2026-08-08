@@ -254,7 +254,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pb-20 w-full px-4 md:px-12 lg:px-20 pt-8 transition-colors font-sans">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pb-20 w-full max-w-full min-w-0 px-2 sm:px-4 md:px-6 pt-4 transition-colors">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
@@ -271,7 +271,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
       </AnimatePresence>
 
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between pb-6 mb-8 border-b border-zinc-100 dark:border-zinc-900">
+      <div className="flex items-center justify-between pb-4 mb-6 border-b border-zinc-100 dark:border-zinc-900 w-full">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
@@ -283,7 +283,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsWizardOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all"
           >
             <Sliders size={14} weight="bold" />
             Setup Wizard
@@ -291,10 +291,10 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
         </div>
       </div>
 
-      {/* ── MINIMAL 2-COLUMN SPLIT LAYOUT ── */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start max-w-6xl mx-auto">
-        {/* ── LEFT COLUMN: Avatar, Name, About & Connect (4 cols) ── */}
-        <div className="md:col-span-4 space-y-8">
+      {/* ── MINIMAL 2-COLUMN SPLIT LAYOUT (TAKES FULL AVAILABLE SPACE) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start w-full max-w-full min-w-0">
+        {/* ── LEFT COLUMN: Avatar, Name, About & Connect (3 or 4 cols full width) ── */}
+        <div className="lg:col-span-3 xl:col-span-3 space-y-8 w-full min-w-0">
           {/* Avatar & Name */}
           <div className="space-y-4">
             <div className="relative w-32 h-32 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm mx-auto md:mx-0 group cursor-pointer">
@@ -374,8 +374,8 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN: Minimal Tab Headers & Vertical Timeline Feed (8 cols) ── */}
-        <div className="md:col-span-8 space-y-8">
+        {/* ── RIGHT COLUMN: Minimal Tab Headers & Vertical Timeline Feed (9 cols) ── */}
+        <div className="lg:col-span-9 xl:col-span-9 space-y-8 w-full min-w-0">
           {/* Tab Header: Activity | Projects | Teams */}
           <div className="flex items-center gap-8 border-b border-zinc-100 dark:border-zinc-900 pb-3">
             <button

@@ -1,24 +1,24 @@
 import React, { useState } from "react";
-import { 
-  PanelLeft, 
-  UserCheck, 
-  Users, 
-  CreditCard, 
-  Settings, 
-  HelpCircle, 
-  LogOut, 
-  Plus, 
-  Zap, 
-  Home, 
-  ChevronRight, 
-  LayoutDashboard, 
-  Calendar, 
-  UserSquare, 
-  Bell, 
-  CheckCircle2, 
-  Inbox, 
-  Layers, 
-  Archive, 
+import {
+  PanelLeft,
+  UserCheck,
+  Users,
+  CreditCard,
+  Settings,
+  HelpCircle,
+  LogOut,
+  Plus,
+  Zap,
+  Home,
+  ChevronRight,
+  LayoutDashboard,
+  Calendar,
+  UserSquare,
+  Bell,
+  CheckCircle2,
+  Inbox,
+  Layers,
+  Archive,
   BellRing,
   MessageSquare,
   CheckSquare,
@@ -340,7 +340,7 @@ export function SiteHeader({
                     {/* Avatar */}
                     <div className="relative shrink-0">
                       <Avatar className="h-9 w-9 border border-zinc-200 dark:border-zinc-800">
-                        <AvatarImage src={notification.user.avatar} />
+                        <AvatarImage src='https://i.pinimg.com/736x/6e/92/7d/6e927d30b46375b6e9e93f4483e3564a.jpg' />
                         <AvatarFallback className="bg-zinc-100 dark:bg-zinc-800 text-[10px]">{notification.user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       {notification.unread && (
