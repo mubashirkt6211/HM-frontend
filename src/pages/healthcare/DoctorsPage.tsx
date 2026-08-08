@@ -1,16 +1,15 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect } from "react"
-import React from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import {
   MagnifyingGlass, Plus, X, DotsThree,
   Stethoscope, Heartbeat, Brain, Bandaids, Virus, Pill,
-  Users, Funnel, SortDescending, CaretUp, CaretDown, CaretUpDown,
-  CalendarBlank, Star, MapPin, Clock, Envelope, Phone as PhoneIcon,
+  Users, CaretDown,
+  CalendarBlank, Star, Clock, Envelope,
   UserCircle, Trash, Copy, ArrowSquareOut, PencilSimple,
-  GenderFemale, GenderMale, ArrowLeft, FunnelSimple, ArrowsDownUp, ListDashes,
+  ArrowLeft, FunnelSimple, ArrowsDownUp, ListDashes,
 } from "@phosphor-icons/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {

@@ -6,8 +6,7 @@ import { cn } from "@/lib/utils"
 import {
   MagnifyingGlass, Plus, X, FunnelSimple, ArrowsDownUp, ListDashes,
   CaretDown, DotsThree, UserCircle, Envelope, Trash,
-  User, CalendarBlank, Phone, MapPin, Heartbeat, Drop, Thermometer, Pill,
-  ArrowLeft, Clock, Bed
+  User, CalendarBlank, Heartbeat
 } from "@phosphor-icons/react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

@@ -247,7 +247,7 @@ function TaskColumn({ value, tasks, isOverlay, ...props }: TaskColumnProps) {
 }
 
 export function TasksPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, _setSearchQuery] = useState("")
   const [activeFilters, setActiveFilters] = useState<Filter[]>([])
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState("")

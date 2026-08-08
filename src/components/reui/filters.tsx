@@ -1,5 +1,5 @@
 import * as React from "react"
-import { X, Plus, Check } from "@phosphor-icons/react"
+import { X, Check, FunnelSimple } from "@phosphor-icons/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,20 +63,20 @@ export function Filters({ filters, fields, onChange, trigger }: FiltersProps) {
           {trigger ? (
             <span>{trigger}</span>
           ) : (
-            <Button variant="outline" size="sm" className="rounded-md border-zinc-200 dark:border-zinc-800">
-              <Plus className="w-3.5 h-3.5 mr-2" />
-              Add Filter
+            <Button variant="outline" size="sm" className="h-9 rounded-lg border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+              <FunnelSimple className="w-3.5 h-3.5 mr-2 text-violet-600 dark:text-violet-300" />
+              Filters
             </Button>
           )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-48 p-2 rounded-2xl">
-          <DropdownMenuLabel className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2 py-1.5">Available Fields</DropdownMenuLabel>
+        <DropdownMenuContent align="start" className="w-52 rounded-xl border-zinc-200 p-2 shadow-xl dark:border-zinc-800">
+          <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Filter by</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {fields.map(field => (
             <DropdownMenuItem
               key={field.key}
               onClick={() => addFilter(field.key)}
-              className="rounded-xl cursor-pointer"
+              className="cursor-pointer rounded-lg"
             >
               <div className="flex items-center gap-2">
                 {field.icon}
@@ -92,8 +92,8 @@ export function Filters({ filters, fields, onChange, trigger }: FiltersProps) {
         if (!fieldConfig) return null
 
         return (
-          <div key={idx} className="flex items-center gap-2 p-1 pl-3 pr-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-2 text-zinc-500 mr-2">
+          <div key={idx} className="flex h-9 items-center gap-2 rounded-lg border border-zinc-200 bg-white py-1 pr-1 pl-3 shadow-sm animate-in fade-in zoom-in-95 duration-200 dark:border-zinc-700 dark:bg-zinc-900">
+            <div className="mr-1 flex items-center gap-2 text-zinc-500">
               {fieldConfig.icon}
               <span className="text-[12px] font-bold">{fieldConfig.label}</span>
             </div>
@@ -101,7 +101,7 @@ export function Filters({ filters, fields, onChange, trigger }: FiltersProps) {
             {/* Text Filter Input */}
             {fieldConfig.type === 'text' && (
               <input
-                className="bg-transparent border-none focus:ring-0 text-[12px] font-medium placeholder:text-zinc-400 w-32"
+                className="w-32 border-none bg-transparent text-[12px] font-medium placeholder:text-zinc-400 focus:ring-0"
                 placeholder={fieldConfig.placeholder || "Value..."}
                 value={filter.values[0] || ''}
                 onChange={(e) => updateFilter(idx, { values: [e.target.value] })}
@@ -112,7 +112,7 @@ export function Filters({ filters, fields, onChange, trigger }: FiltersProps) {
             {fieldConfig.type === 'select' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-2 py-1 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-800 text-[12px] font-bold text-zinc-900 dark:text-zinc-100 transition-colors">
+                  <button className="rounded-md bg-zinc-100 px-2 py-1 text-[12px] font-bold text-zinc-900 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700">
                     {filter.values.length > 0
                       ? fieldConfig.options?.find(o => o.value === filter.values[0])?.label || filter.values[0]
                       : "Any"}

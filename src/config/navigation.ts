@@ -23,6 +23,9 @@ import {
     ShieldCheck,
     Briefcase,
     MapTrifold,
+    Gear,
+    Car,
+    Sliders,
 } from "@phosphor-icons/react";
 import { CheckCircle2, LayoutGrid } from "lucide-react";
 
@@ -91,6 +94,20 @@ export const sidebarNavigationSections: NavSectionConfig[] = [
         ],
     },
     {
+        title: "Services & Operations",
+        items: [
+            { icon: Car, title: "Service Setup", pageId: "service-setup", badge: "Hotels & Cabs" },
+        ],
+    },
+    {
+        title: "Administration & Security",
+        items: [
+            { icon: ShieldCheck, title: "Privileges & Roles", pageId: "privileges", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+            { icon: Gear, title: "System Config", pageId: "crm-config", badge: "Email/WhatsApp", roles: [UserRole.ADMIN] },
+            { icon: Buildings, title: "Company Setup", pageId: "company-setup", roles: [UserRole.ADMIN] },
+        ],
+    },
+    {
         title: "Favorites",
         items: [
             { icon: Star, title: "Hot Leads", pageId: "uk-eu-companies", iconColor: "text-orange-400" },
@@ -107,7 +124,7 @@ export const sidebarNavigationSections: NavSectionConfig[] = [
         ],
     },
     {
-        title: "List",
+        title: "Marketing & Campaigns",
         items: [
             { icon: Megaphone, title: "Campaigns", pageId: "sales-navigator", iconColor: "text-pink-500", iconFill: true },
             { icon: ClipboardText, title: "Sequences", pageId: "emails-marketing-agency", iconColor: "text-pink-500", iconFill: true },

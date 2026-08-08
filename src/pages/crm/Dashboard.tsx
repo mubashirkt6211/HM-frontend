@@ -30,10 +30,13 @@ import {
   XCircle,
 } from "@phosphor-icons/react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -41,13 +44,490 @@ import {
 } from "recharts";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+function ReuiCatalogHealthCard() {
+  const [period, setPeriod] = useState<"Week" | "Month" | "Year">("Week");
+
+  const metricsData = {
+    Week: [
+      {
+        title: "Active Packages",
+        value: "8,420",
+        badgeText: "+3.4%",
+        badgeType: "positive",
+        subtext: "Rising",
+        icon: AirplaneTilt,
+        svgPath: "M2 14 Q 15 6, 25 18 T 50 10 T 75 14 T 100 6",
+      },
+      {
+        title: "Pending Quotes",
+        value: "1,245",
+        badgeText: "-1.2%",
+        badgeType: "negative",
+        subtext: "Gaps easing",
+        icon: FolderSimple,
+        svgPath: "M2 6 Q 15 16, 25 8 T 50 16 T 75 10 T 100 18",
+      },
+      {
+        title: "Confirmed Bookings",
+        value: "640",
+        badgeText: "+2.1%",
+        badgeType: "positive",
+        subtext: "Moving",
+        icon: CheckCircle,
+        svgPath: "M2 18 Q 20 14, 40 12 T 70 8 T 100 3",
+      },
+      {
+        title: "Idle Inquiries",
+        value: "1,105",
+        badgeText: "0.0%",
+        badgeType: "neutral",
+        subtext: "Stable",
+        icon: Clock,
+        svgPath: "M2 11 Q 25 13, 50 9 T 75 12 T 100 10",
+      },
+    ],
+    Month: [
+      {
+        title: "Active Packages",
+        value: "34,890",
+        badgeText: "+5.8%",
+        badgeType: "positive",
+        subtext: "Rising",
+        icon: AirplaneTilt,
+        svgPath: "M2 16 Q 15 4, 30 18 T 60 8 T 80 14 T 100 4",
+      },
+      {
+        title: "Pending Quotes",
+        value: "4,120",
+        badgeText: "-2.4%",
+        badgeType: "negative",
+        subtext: "Gaps easing",
+        icon: FolderSimple,
+        svgPath: "M2 8 Q 20 18, 40 6 T 70 16 T 100 10",
+      },
+      {
+        title: "Confirmed Bookings",
+        value: "2,840",
+        badgeText: "+4.3%",
+        badgeType: "positive",
+        subtext: "Moving",
+        icon: CheckCircle,
+        svgPath: "M2 16 Q 25 12, 50 10 T 80 6 T 100 2",
+      },
+      {
+        title: "Idle Inquiries",
+        value: "3,950",
+        badgeText: "+0.2%",
+        badgeType: "neutral",
+        subtext: "Stable",
+        icon: Clock,
+        svgPath: "M2 10 Q 25 12, 50 10 T 75 11 T 100 10",
+      },
+    ],
+    Year: [
+      {
+        title: "Active Packages",
+        value: "412,600",
+        badgeText: "+14.2%",
+        badgeType: "positive",
+        subtext: "Rising",
+        icon: AirplaneTilt,
+        svgPath: "M2 18 Q 15 2, 35 16 T 65 6 T 85 12 T 100 2",
+      },
+      {
+        title: "Pending Quotes",
+        value: "18,400",
+        badgeText: "-8.1%",
+        badgeType: "negative",
+        subtext: "Gaps easing",
+        icon: FolderSimple,
+        svgPath: "M2 5 Q 25 18, 45 4 T 70 15 T 100 8",
+      },
+      {
+        title: "Confirmed Bookings",
+        value: "14,200",
+        badgeText: "+11.5%",
+        badgeType: "positive",
+        subtext: "Moving",
+        icon: CheckCircle,
+        svgPath: "M2 18 Q 25 10, 50 8 T 80 4 T 100 1",
+      },
+      {
+        title: "Idle Inquiries",
+        value: "12,800",
+        badgeText: "-0.5%",
+        badgeType: "neutral",
+        subtext: "Stable",
+        icon: Clock,
+        svgPath: "M2 10 Q 25 11, 50 10 T 75 10 T 100 10",
+      },
+    ],
+  };
+
+  const currentMetrics = metricsData[period];
+
+  return (
+    <article className="mb-6 rounded-2xl border border-zinc-200/90 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-950 transition-all">
+      {/* Header section matching screenshot */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-extrabold text-zinc-900 dark:text-white tracking-tight">
+            Travel Pipeline Health
+          </h2>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 font-medium">
+            Package availability, inquiry velocity, and client conversion in one pass.
+          </p>
+        </div>
+
+        {/* Time Period Dropdown Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3.5 text-xs font-bold text-zinc-800 shadow-xs hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-all outline-none cursor-pointer"
+            >
+              <span>{period}</span>
+              <CaretDown className="size-3.5 text-zinc-400" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36 rounded-xl border-zinc-200 p-1.5 shadow-xl dark:border-zinc-800 bg-white dark:bg-zinc-950 z-[60]">
+            {(["Week", "Month", "Year"] as const).map((p) => (
+              <DropdownMenuItem
+                key={p}
+                onClick={() => setPeriod(p)}
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                <span>{p}</span>
+                {period === p && <CheckCircle className="size-3.5 text-[#34C759]" weight="fill" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* 4 Metric Columns Grid */}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 border-y border-zinc-100 dark:border-zinc-800/80 py-6">
+        {currentMetrics.map((item, idx) => {
+          const IconComponent = item.icon;
+          const strokeColor =
+            item.badgeType === "positive"
+              ? "#10b981"
+              : item.badgeType === "negative"
+              ? "#f43f5e"
+              : "#f59e0b";
+
+          return (
+            <div key={idx} className="flex flex-col justify-between space-y-3">
+              {/* Icon & Title */}
+              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                <IconComponent className="size-4 text-zinc-600 dark:text-zinc-300" weight="regular" />
+                <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{item.title}</span>
+              </div>
+
+              {/* Value & Sparkline Chart */}
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
+                    {item.value}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span
+                      className={cn(
+                        "rounded-md px-1.5 py-0.5 text-[11px] font-extrabold tracking-tight",
+                        item.badgeType === "positive"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                          : item.badgeType === "negative"
+                          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                      )}
+                    >
+                      {item.badgeText}
+                    </span>
+                    <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500">
+                      {item.subtext}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mini Sparkline SVG */}
+                <div className="h-9 w-24 shrink-0 overflow-hidden">
+                  <svg className="h-full w-full" viewBox="0 0 102 22" fill="none">
+                    <path
+                      d={item.svgPath}
+                      stroke={strokeColor}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer Info Row */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 font-medium">
+          <span className="flex size-4 items-center justify-center rounded-full border border-zinc-300 text-[10px] font-bold text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+            ⓘ
+          </span>
+          <span>12,845 travel inquiries tracked across 8 luxury destinations. 89.4% average client satisfaction rate.</span>
+        </div>
+
+        <button className="flex items-center gap-1.5 font-bold text-zinc-900 hover:text-emerald-600 dark:text-zinc-100 dark:hover:text-emerald-400 transition-colors cursor-pointer">
+          <span>Show full travel analytics</span>
+          <span className="text-sm">→</span>
+        </button>
+      </div>
+    </article>
+  );
+}
+
+const chart4Data = [
+  { date: "Jan 1", val: 1500 },
+  { date: "Jan 3", val: 3200 },
+  { date: "Jan 5", val: 2800 },
+  { date: "Jan 7", val: 4100 },
+  { date: "Jan 9", val: 4700 },
+  { date: "Jan 11", val: 4400 },
+  { date: "Jan 13", val: 4100 },
+  { date: "Jan 15", val: 3400 },
+  { date: "Jan 17", val: 2900 },
+  { date: "Jan 19", val: 3700 },
+  { date: "Jan 21", val: 4200 },
+  { date: "Jan 23", val: 4800 },
+  { date: "Jan 25", val: 4700 },
+  { date: "Jan 27", val: 5600 },
+  { date: "Jan 29", val: 4600 },
+  { date: "Mar 24", val: 3500 },
+];
+
+function ReuiChart4BalanceCard() {
+  const [period, setPeriod] = useState<"Today" | "7 Days" | "30 Days" | "YTD">("30 Days");
+
+  const periodDatasets = {
+    Today: [
+      { date: "00:00", val: 1200 },
+      { date: "04:00", val: 1800 },
+      { date: "08:00", val: 3400 },
+      { date: "12:00", val: 5100 },
+      { date: "16:00", val: 4600 },
+      { date: "20:00", val: 5800 },
+      { date: "23:59", val: 6200 },
+    ],
+    "7 Days": [
+      { date: "Mon", val: 2400 },
+      { date: "Tue", val: 3800 },
+      { date: "Wed", val: 3100 },
+      { date: "Thu", val: 4900 },
+      { date: "Fri", val: 5600 },
+      { date: "Sat", val: 4200 },
+      { date: "Sun", val: 3900 },
+    ],
+    "30 Days": chart4Data,
+    YTD: [
+      { date: "Jan", val: 14500 },
+      { date: "Feb", val: 18200 },
+      { date: "Mar", val: 22400 },
+      { date: "Apr", val: 28900 },
+      { date: "May", val: 26100 },
+      { date: "Jun", val: 34500 },
+      { date: "Jul", val: 39800 },
+      { date: "Aug", val: 44200 },
+    ],
+  };
+
+  const activeData = periodDatasets[period];
+
+  return (
+    <article className="mb-6 rounded-3xl border border-zinc-200/90 bg-white p-6 sm:p-8 shadow-xs dark:border-zinc-800 dark:bg-zinc-950 transition-all">
+      {/* Header & Period Switch */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-[#34C759] animate-pulse" />
+            <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 tracking-wide uppercase">
+              Current Revenue Balance
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+              $24,847.83
+            </h2>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+              <span className="text-sm">↗</span> +12.7% <span className="font-normal text-zinc-500 dark:text-zinc-400">vs previous period</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Period Switcher */}
+        <div className="flex items-center gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800">
+          {(["Today", "7 Days", "30 Days", "YTD"] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={cn(
+                "rounded-lg px-3 py-1 text-xs font-bold transition-all cursor-pointer",
+                period === p
+                  ? "bg-[#34C759] text-white shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              )}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sub Header KPI Bar */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/80 pb-4">
+        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+          <span>Today's Sales:</span>
+          <span className="font-extrabold text-zinc-900 dark:text-white">$1,249</span>
+          <span className="text-[#34C759] font-bold">(+8%)</span>
+        </div>
+
+        <div className="flex items-center gap-4 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div>
+            <span>High: </span>
+            <span className="font-extrabold text-emerald-600 dark:text-emerald-400">2,900.08</span>
+          </div>
+          <div>
+            <span>Low: </span>
+            <span className="font-extrabold text-amber-600 dark:text-amber-400">850.42</span>
+          </div>
+          <div>
+            <span>Change: </span>
+            <span className="font-extrabold text-emerald-600 dark:text-emerald-400">+14.82%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Green Area Chart Canvas */}
+      <div className="mt-6 h-[290px] w-full min-w-0">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <AreaChart data={activeData} margin={{ top: 20, right: 10, left: 10, bottom: 0 }}>
+            <defs>
+              <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#34C759" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#34C759" stopOpacity={0.0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:[stroke:#27272a]" />
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#10b981", fontSize: 11, fontWeight: 600 }}
+              dy={10}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#10b981", fontSize: 11, fontWeight: 600 }}
+              ticks={[0, 1500, 3000, 4500, 6000]}
+              tickFormatter={(v) => `$${v.toLocaleString()}`}
+              domain={[0, 6500]}
+            />
+            <Tooltip
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                const val = Number(payload[0].value);
+                return (
+                  <div className="rounded-xl border border-emerald-200 bg-white p-3.5 text-xs shadow-xl dark:border-emerald-900/50 dark:bg-zinc-950 space-y-1">
+                    <p className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center justify-between gap-3">
+                      <span>{label}</span>
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700 font-extrabold dark:bg-emerald-950 dark:text-emerald-300">Verified</span>
+                    </p>
+                    <p className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                      ${val.toLocaleString()}.00
+                    </p>
+                    <div className="pt-1 text-[11px] text-zinc-400 border-t border-zinc-100 dark:border-zinc-800 space-y-0.5">
+                      <p>Resort Bookings: <span className="font-bold text-zinc-700 dark:text-zinc-300">${Math.round(val * 0.65).toLocaleString()}</span></p>
+                      <p>Add-on Services: <span className="font-bold text-zinc-700 dark:text-zinc-300">${Math.round(val * 0.35).toLocaleString()}</span></p>
+                    </div>
+                  </div>
+                );
+              }}
+            />
+            <ReferenceLine x="Jan 17" stroke="#34C759" strokeDasharray="4 4" strokeWidth={1.5} />
+            <Area
+              type="monotone"
+              dataKey="val"
+              stroke="#34C759"
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#emeraldGradient)"
+              dot={(props: any) => {
+                const { cx, cy, payload } = props;
+                if (payload && (payload.date === "Jan 1" || payload.date === "Jan 17" || payload.date === "Jan 27" || payload.date === "Fri" || payload.date === "May")) {
+                  return (
+                    <circle
+                      key={payload.date}
+                      cx={cx}
+                      cy={cy}
+                      r={5}
+                      fill="#34C759"
+                      stroke="#ffffff"
+                      strokeWidth={3}
+                      className="shadow-lg"
+                    />
+                  );
+                }
+                return <circle key={cx || Math.random()} cx={-10} cy={-10} r={0} />;
+              }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Summary Quick Stats Chips Under Chart */}
+      <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800">
+          <div className="size-9 rounded-lg bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
+            🏖️
+          </div>
+          <div>
+            <p className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500">Resort Packages</p>
+            <p className="text-sm font-extrabold text-zinc-900 dark:text-white">$14,280.00 <span className="text-[10px] text-emerald-600 font-semibold">(57%)</span></p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800">
+          <div className="size-9 rounded-lg bg-sky-100 dark:bg-sky-950 flex items-center justify-center text-sky-600 dark:text-sky-400 font-extrabold text-sm">
+            ✈️
+          </div>
+          <div>
+            <p className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500">Flight & Cruise Add-ons</p>
+            <p className="text-sm font-extrabold text-zinc-900 dark:text-white">$6,420.00 <span className="text-[10px] text-sky-600 font-semibold">(26%)</span></p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800">
+          <div className="size-9 rounded-lg bg-amber-100 dark:bg-amber-950 flex items-center justify-center text-amber-600 dark:text-amber-400 font-extrabold text-sm">
+            🛡️
+          </div>
+          <div>
+            <p className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500">Insurance & Extras</p>
+            <p className="text-sm font-extrabold text-zinc-900 dark:text-white">$4,147.83 <span className="text-[10px] text-amber-600 font-semibold">(17%)</span></p>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 type ReportPeriod = "Last 7 days" | "Last 30 days" | "Last 3 months" | "Last 12 months";
 
@@ -426,87 +906,13 @@ export function Dashboard() {
             <div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white sm:text-3xl">Welcome back, Emore.</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="hidden text-xs text-zinc-400 sm:inline">Edited 13m ago</span>
-              <div className="flex -space-x-2">
-                {[5, 12, 32, 45].map((avatarId) => <Avatar key={avatarId} className="size-8 border-2 border-[#f7f8fa] dark:border-zinc-950"><AvatarImage src={`https://i.pravatar.cc/96?img=${avatarId}`} /><AvatarFallback>U</AvatarFallback></Avatar>)}
-              </div>
-
-            </div>
           </header>
 
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{kpis.map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}</section>
+          {/* ReUI Catalog Health Analytics Card Block */}
+          <ReuiCatalogHealthCard />
 
-          <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.8fr)]">
-            <article className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div><div className="flex items-center gap-2"><h2 className="text-base font-semibold text-zinc-900 dark:text-white">Performance Overview</h2><span className="text-zinc-400">ⓘ</span></div><div className="mt-3 flex items-end gap-2"><p className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">$1,920,000.00</p><span className="mb-1 text-[11px] font-semibold text-emerald-600">vs last month +6.8%</span></div></div>
-                <div className="flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="inline-flex h-9 items-center gap-2 rounded-xl border border-zinc-200 px-3 text-xs font-semibold outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 dark:border-zinc-700">
-                        {chartPeriod} <CaretDown className="size-3 text-zinc-400" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-xl border-zinc-200 dark:border-zinc-800">
-                      <DropdownMenuRadioGroup value={chartPeriod} onValueChange={(v) => setChartPeriod(v as ChartPeriod)}>
-                        {chartPeriods.map((p) => (
-                          <DropdownMenuRadioItem key={p} value={p}>{p}</DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <button className="grid size-9 place-items-center rounded-xl border border-zinc-200 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 dark:border-zinc-700"><DotsThree className="size-4" /></button>
-                </div>
-              </div>
-              <div className="mt-4 h-[260px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartDatasets[chartPeriod]} barCategoryGap="20%" margin={{ top: 8, right: 4, left: -8, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="#eceef1" className="dark:[stroke:#27272a]" />
-                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#9ca3af", fontSize: 11 }} dy={8} />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#9ca3af", fontSize: 10 }}
-                      ticks={[0, 200, 400, 600, 800]}
-                      tickFormatter={(value) => `$${value}`}
-                      domain={[0, 900]}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "rgba(120, 120, 120, 0.08)" }}
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null;
-                        return (
-                          <div className="rounded-xl border border-zinc-200 bg-zinc-900 px-3 py-2 text-xs text-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
-                            <p className="mb-1 font-semibold">{label} 2025</p>
-                            <div className="flex items-center gap-1.5 text-zinc-200">
-                              <span className="size-1.5 rounded-full bg-emerald-400" />
-                              Sales
-                              <span className="ml-auto font-semibold">${payload[0]?.value}.00</span>
-                            </div>
-                          </div>
-                        );
-                      }}
-                    />
-                    <Bar dataKey="sales" radius={[6, 6, 2, 2]} maxBarSize={44}>
-                      {chartDatasets[chartPeriod].map((entry) => (
-                        <Cell
-                          key={entry.label}
-                          fill={entry.label === chartHighlight[chartPeriod] ? "#10b981" : "rgba(16, 185, 129, 0.25)"}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-500 dark:text-zinc-400">
-                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-emerald-500" />Booking volume</span>
-                <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-emerald-500/25 dark:bg-emerald-500/30" />Previous period</span>
-                <span className="ml-auto font-medium text-zinc-400 dark:text-zinc-500">Updated 13 minutes ago</span>
-              </div>
-            </article>
-            <SalesOverview />
-          </section>
+          {/* ReUI Chart 4 Balance Area Chart Block in Green */}
+          <ReuiChart4BalanceCard />
 
           <section className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">

@@ -1,30 +1,19 @@
 import { useState } from "react";
 import {
   AirplaneTilt,
-  ArrowUpRight,
   CalendarCheck,
-  CaretDown,
   CheckCircle,
-  Clock,
-  Compass,
   CurrencyDollar,
-  DotsThree,
-  Funnel,
   Kanban,
   MagnifyingGlass,
   MapPin,
   Plus,
-  SortDescending,
-  Sparkle,
   TrendUp,
   UserCircle,
-  UsersThree,
   X,
-  XCircle,
 } from "@phosphor-icons/react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /* ================================================================
