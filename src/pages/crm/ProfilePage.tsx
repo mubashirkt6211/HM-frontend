@@ -1,1353 +1,1325 @@
 /**
- * Profile Page – Centered header, horizontal tabs, email-client Attendance tab
+ * Profile Page – Minimal KgBase / Notion Inspired Executive Dossier
+ * Features:
+ * - Ultra-clean Minimalist 2-Column Split Interface
+ * - Left Sidebar: Large Avatar, Bold Name, About Bio, Edit Buttons & Social/Connect Handles
+ * - Right Column: Minimal Tabs (Activity, Projects & OKRs, Teams & Access Matrix)
+ * - Timeline Feed: Vertical guide line with event nodes (Record Edits ◊, Comments 💬, Project Creations 📁)
+ * - REUI Workspace Access Review Data Grid & 4-Step Application Setup Wizard
  */
-import { useState, useMemo, useEffect } from "react";
-import type { DateRange } from "react-day-picker";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Globe,
+  TwitterLogo,
+  LinkedinLogo,
   EnvelopeSimple,
-  MapPin,
-  ShieldCheck,
-  Phone,
-  Briefcase,
-  Buildings,
-  ArrowLeft,
-  Camera,
-  FileText,
-  Target,
-  ChatCircleText,
-  Check,
-  User,
+  PencilSimple,
+  ChatCircleDots,
+  FolderSimple,
+  Sliders,
   Plus,
   Trash,
-  Clock,
-  Flag,
-  ChatDots,
-  CalendarCheck,
-  ArrowUp,
-  ArrowDown,
-  SquaresFour,
+  Check,
   CheckCircle,
-  XCircle,
+  DotsThreeVertical,
+  PushPin,
+  PushPinSlash,
+  MagnifyingGlass,
+  DownloadSimple,
+  ShieldCheck,
   CaretLeft,
   CaretRight,
+  CaretDown,
+  Star,
+  Sparkle,
+  UserCheck,
+  Briefcase,
+  ArrowRight,
+  Camera,
+  ArrowLeft,
+  DiamondsFour,
+  Gear,
+  CalendarCheck,
+  ListChecks,
+  SlidersHorizontal,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import claraAvatar from "@/assets/clara_avatar.png";
+import avatarJohnson from "@/assets/avatar-johnson.png";
+import avatarKim from "@/assets/avatar-kim.png";
+import avatarPatel from "@/assets/avatar-patel.png";
+import avatarSingh from "@/assets/avatar-singh.png";
+import { IconCalendarWeek } from "@tabler/icons-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MOCK DATA
+// DATA TYPES & PRESETS
 // ─────────────────────────────────────────────────────────────────────────────
-const TEAM_USERS = [
-  { id: 1, name: "Clara Lefèvre", avatar: "https://i.pravatar.cc/100?u=clara" },
-  { id: 2, name: "James Okafor", avatar: "https://i.pravatar.cc/100?u=james" },
-  { id: 3, name: "Priya Nair", avatar: "https://i.pravatar.cc/100?u=priya" },
-  { id: 4, name: "Lucas Meyer", avatar: "https://i.pravatar.cc/100?u=lucas" },
-  { id: 5, name: "Amina Diallo", avatar: "https://i.pravatar.cc/100?u=amina" },
-  { id: 6, name: "Ravi Shankar", avatar: "https://i.pravatar.cc/100?u=ravi" },
+interface UserProfileData {
+  name: string;
+  role: string;
+  department: string;
+  email: string;
+  phone: string;
+  location: string;
+  website: string;
+  twitter: string;
+  linkedin: string;
+  accessLevel: string;
+  bio: string;
+  avatar: string;
+}
+
+interface MemberAccessRow {
+  id: string;
+  name: string;
+  role: string;
+  statusText: string;
+  isOnline: boolean;
+  avatar: string;
+  isPinned: boolean;
+  settings: boolean;
+  billing: boolean;
+  integrations: "on" | "off" | "warning";
+  users: boolean;
+  permissions: boolean;
+}
+
+const INITIAL_MEMBERS_GRID: MemberAccessRow[] = [
+  {
+    id: "m1",
+    name: "Leila Cole",
+    role: "Workspace owner",
+    statusText: "Online",
+    isOnline: true,
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+    isPinned: true,
+    settings: true,
+    billing: true,
+    integrations: "on",
+    users: true,
+    permissions: true,
+  },
+  {
+    id: "m2",
+    name: "Aiden Brooks",
+    role: "Platform admin",
+    statusText: "Last active 3m ago",
+    isOnline: false,
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
+    isPinned: true,
+    settings: true,
+    billing: true,
+    integrations: "on",
+    users: false,
+    permissions: false,
+  },
+  {
+    id: "m3",
+    name: "Jonah Voss",
+    role: "Integrations lead",
+    statusText: "Online",
+    isOnline: true,
+    avatar: avatarKim,
+    isPinned: false,
+    settings: true,
+    billing: true,
+    integrations: "warning",
+    users: false,
+    permissions: false,
+  },
+  {
+    id: "m4",
+    name: "Kira Santos",
+    role: "Growth ops lead",
+    statusText: "Online",
+    isOnline: true,
+    avatar: avatarPatel,
+    isPinned: false,
+    settings: true,
+    billing: true,
+    integrations: "off",
+    users: true,
+    permissions: false,
+  },
+  {
+    id: "m5",
+    name: "Kris Owens",
+    role: "Support lead",
+    statusText: "Last active 2d ago",
+    isOnline: false,
+    avatar: avatarJohnson,
+    isPinned: false,
+    settings: true,
+    billing: false,
+    integrations: "off",
+    users: false,
+    permissions: false,
+  },
 ];
 
-const INITIAL_OBJECTIVES = [
+const REUI_CRM_TIMELINE = [
   {
-    id: 1, title: "Review Website Design 2.0", description: "C-level review phase", category: "Website", priority: "High", completed: false, dueDate: "Tomorrow", progress: 20,
-    assignees: [1, 2, 3],
-    commentList: [
-      { id: 1, userId: 2, text: "Designs look great, just need minor alignment fixes.", time: "2h ago" },
-      { id: 2, userId: 3, text: "Will review the export flow by tomorrow.", time: "5h ago" },
-    ]
+    id: 1,
+    date: "May 2026",
+    title: "v2.5 Release Channels & FHIR Telemetry Integration",
+    description: "Create staged release channels for beta clinical teams, enterprise hospital accounts, and internal QA cohorts. Added real-time vitals telemetry sync.",
+    badges: [
+      { text: "New", color: "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+      { text: "Team Rollout", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Channel Permissions", color: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800" },
+      { text: "Scheduled Publishing", color: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800" },
+    ],
   },
   {
-    id: 2, title: "Review React Components", description: "New react components code review", category: "Dashboard", priority: "Normal", completed: false, dueDate: "25 April", progress: 0,
-    assignees: [1, 4],
-    commentList: [
-      { id: 1, userId: 4, text: "Found a bug in the DatePicker component.", time: "1d ago" },
-    ]
+    id: 2,
+    date: "Apr 2026",
+    title: "v2.4 AI Assist & Patient Triage",
+    description: "Added workspace summaries, prompt presets, faster doctor consultation note reviews, and automated patient intake triage suggestions.",
+    badges: [
+      { text: "New", color: "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+      { text: "Faster Reviews", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Prompt Library", color: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800" },
+      { text: "Review Summaries", color: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" },
+    ],
   },
   {
-    id: 3, title: "Mentor 3 junior designers", description: "Bi-weekly sync and portfolio review", category: "Team", priority: "Normal", completed: true, dueDate: "Completed", progress: 100,
-    assignees: [1, 5, 6],
-    commentList: [
-      { id: 1, userId: 5, text: "Session was super helpful, thanks Clara!", time: "3d ago" },
-      { id: 2, userId: 6, text: "Portfolio review done ✅", time: "2d ago" },
-    ]
+    id: 3,
+    date: "Mar 2026",
+    title: "v2.3 Theme Studio & HIPAA Audit Governance",
+    description: "Introduced token previews, component states, Level IV HIPAA security governance, and one-click CSS & compliance report exports.",
+    badges: [
+      { text: "Improved", color: "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800" },
+      { text: "Design Systems", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Token Previews", color: "bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800" },
+      { text: "CSS Export", color: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700" },
+    ],
   },
   {
-    id: 4, title: "High-Resolution Analytics Dashboard", description: "Finalize SVG charting logic", category: "Clinical", priority: "High", completed: false, dueDate: "Monday", progress: 45,
-    assignees: [1, 2],
-    commentList: []
+    id: 4,
+    date: "Feb 2026",
+    title: "v2.2 Live Collaborative Patient Charting",
+    description: "Improved shared cursors, presence labels, multi-doctor chart editing, and conflict-safe draft recovery for emergency room logs.",
+    badges: [
+      { text: "Improved", color: "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800" },
+      { text: "Collaboration", color: "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700" },
+      { text: "Presence Labels", color: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800" },
+      { text: "Draft Recovery", color: "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+    ],
   },
 ];
 
-const LOGIN_TIMES = ["08:52", "09:01", "08:44", "09:31", "08:58", "08:47", "09:03", "08:55", "09:18", "08:40", "09:27", "08:51", "09:05", "08:33", "09:12", "08:49"];
-const LOGOUT_TIMES = ["17:04", "17:32", "17:15", "16:55", "17:22", "18:01", "17:08", "17:45", "17:30", "18:10", "17:00", "17:50", "17:20", "18:05", "16:48", "17:38"];
-
-const calcHours = (login: string, logout: string) => {
-  const [lh, lm] = login.split(":").map(Number);
-  const [oh, om] = logout.split(":").map(Number);
-  const diff = (oh * 60 + om) - (lh * 60 + lm);
-  return `${Math.floor(diff / 60)}h ${diff % 60}m`;
-};
-
-const calcMinutes = (login: string, logout: string) => {
-  const [lh, lm] = login.split(":").map(Number);
-  const [oh, om] = logout.split(":").map(Number);
-  return (oh * 60 + om) - (lh * 60 + lm);
-};
-
-const TODAY_REF = new Date();
-const STATUSES_CYCLE = ["Present", "Present", "Present", "Late", "Absent", "Present", "Present"];
-
-const buildAttendanceMap = () => {
-  const map: Record<string, { status: string; login: string | null; logout: string | null; hours: string | null; minutes: number | null }> = {};
-  const now = new Date();
-
-  // Generate for the entire current year
-  const start = new Date(now.getFullYear(), 0, 1);
-  const end = new Date(now.getFullYear(), 11, 31);
-
-  let workIdx = 0;
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
-    // Compare dates without time for accurate 'Future' marking
-    const dCopy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const todayCopy = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    if (dCopy > todayCopy) {
-      map[key] = { status: "Future", login: null, logout: null, hours: null, minutes: null };
-    } else {
-      const dow = d.getDay();
-      if (dow === 0) { // Sunday only
-        map[key] = { status: "Weekend", login: null, logout: null, hours: null, minutes: null };
-      } else {
-        const status = STATUSES_CYCLE[workIdx % STATUSES_CYCLE.length];
-        const li = workIdx % LOGIN_TIMES.length;
-        const login = status === "Absent" ? null : LOGIN_TIMES[li];
-        const logout = status === "Absent" ? null : LOGOUT_TIMES[li];
-        map[key] = {
-          status,
-          login,
-          logout,
-          hours: login && logout ? calcHours(login, logout) : null,
-          minutes: login && logout ? calcMinutes(login, logout) : null,
-        };
-        workIdx++;
-      }
-    }
-  }
-  return map;
-};
-const ATTENDANCE_MAP = buildAttendanceMap();
-
-const HOLIDAYS: Record<string, string> = {
-  "2026-01-14": "Makar Sankranti",
-  "2026-01-26": "Republic Day",
-  "2026-03-20": "Holi",
-  "2026-04-02": "Good Friday",
-  "2026-04-14": "Ambedkar Jayanti",
-  "2026-05-01": "Labour Day",
-  "2026-06-15": "Eid al-Adha",
-  "2026-07-04": "HMS Foundation Day",
-};
-
-const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const PRESET_AVATARS = [
+  claraAvatar,
+  avatarJohnson,
+  avatarKim,
+  avatarPatel,
+  avatarSingh,
+  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300",
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROFILE PAGE
+// MAIN PROFILE PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-interface ProfilePageProps { onBack: () => void; }
+interface ProfilePageProps {
+  onBack: () => void;
+  onNavigate?: (page: string) => void;
+  initialWizardMode?: boolean;
+}
 
-export function ProfilePage({ onBack }: ProfilePageProps) {
-  const [activeTab, setActiveTab] = useState("Attendance");
-  const [objectives, setObjectives] = useState(INITIAL_OBJECTIVES);
-  const [isAdding, setIsAdding] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
+export function ProfilePage({ onBack, onNavigate, initialWizardMode = false }: ProfilePageProps) {
+  // Wizard Setup state: toggle between Initial Wizard vs Setup Complete Dossier
+  const [isSetupCompleted, setIsSetupCompleted] = useState(!initialWizardMode);
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(2);
+  const [profile, setProfile] = useState<UserProfileData>({
+    name: "Clara Lefèvre",
+    role: "Senior Product Manager & HealthTech Lead",
+    department: "Clinical R&D",
+    email: "clara.lefevre@hms-health.com",
+    phone: "+33 (0) 1 42 68 53 00",
+    location: "Paris, France / San Francisco",
+    website: "https://hms-health.com/clara",
+    twitter: "@clara_health",
+    linkedin: "in/clara-lefevre",
+    accessLevel: "Level 4 (Executive Staff)",
+    bio: "Just a designer & HealthTech lead. Born in Canada, raised in Slovakia. Currently crafting pixels and clinical CRM systems @HMS Systems.",
+    avatar: claraAvatar,
+  });
 
-  const tabs = [
-    { id: "Infos", icon: UserIcon, label: "Info" },
-    { id: "Objectives", icon: Target, label: "Objectives" },
-    { id: "Attendance", icon: CalendarCheck, label: "Attendance" },
-    { id: "Documents", icon: FileText, label: "Documents" },
-    { id: "Reviews", icon: ChatCircleText, label: "Reviews" },
-  ];
+  const [activeTab, setActiveTab] = useState<"activity" | "projects" | "teams" | "attendance">("activity");
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const toggleObjective = (id: number) =>
-    setObjectives(prev => prev.map(obj =>
-      obj.id === id ? { ...obj, completed: !obj.completed, progress: !obj.completed ? 100 : 0 } : obj
-    ));
-
-  const deleteObjective = (id: number) =>
-    setObjectives(prev => prev.filter(obj => obj.id !== id));
-
-  const handleAddTask = (e: React.FormEvent, assignees: number[], priority = "Normal") => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-    setObjectives(prev => [...prev, {
-      id: Date.now(), title: newTitle, description: "Quickly added task",
-      category: "Personal", priority, completed: false,
-      dueDate: "Today", progress: 0, assignees, commentList: [],
-    }]);
-    setNewTitle("");
-    setIsAdding(false);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   return (
-    <div className="pb-16 w-full px-4 md:px-10 min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pb-20 w-full max-w-full min-w-0 px-2 sm:px-4 md:px-6 pt-4 transition-colors">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-50 bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-zinc-700/50 dark:border-zinc-200"
+          >
+            <Sparkle size={18} weight="fill" className="text-amber-400 shrink-0" />
+            <span className="text-xs font-bold tracking-wide">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Back */}
-      <div className="flex items-center justify-start py-8">
-        <button onClick={onBack}
-          className="flex items-center gap-2 text-[13px] font-bold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors group">
-          <ArrowLeft weight="bold" size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
+      {/* Top Header Bar */}
+      <div className="flex items-center justify-between pb-4 mb-6 border-b border-zinc-100 dark:border-zinc-900 w-full">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft weight="bold" size={14} />
+          Dashboard
         </button>
-      </div>
 
-      {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-4 animate-in fade-in slide-in-from-top-4 duration-700">
-        <div className="relative group shrink-0 mt-2">
-          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-4 border-white dark:border-zinc-900 shadow-xl ring-1 ring-zinc-200 dark:ring-zinc-800">
-            <img src={claraAvatar} alt="Clara Lefèvre" className="w-full h-full object-cover" />
-          </div>
-          <button className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 flex items-center justify-center shadow-lg hover:scale-110 transition-transform border-4 border-white dark:border-zinc-900">
-            <Camera weight="fill" size={14} />
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => onNavigate?.("todo")}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all border border-zinc-200/60 dark:border-zinc-700 cursor-pointer group"
+          >
+            <ListChecks weight="duotone" className="size-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+            To Do
+          </button>
+
+          <button
+            onClick={() => onNavigate?.("calendar")}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all border border-zinc-200/60 dark:border-zinc-700 cursor-pointer group"
+          >
+            <IconCalendarWeek className="size-4 text-sky-500 group-hover:scale-110 transition-transform" />
+            Calendar
+          </button>
+
+          <button
+            onClick={() => setIsSetupCompleted(false)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all border border-zinc-200/60 dark:border-zinc-700"
+          >
+            <Sliders size={14} weight="bold" className="text-indigo-500" />
+            Profile Setup
           </button>
         </div>
+      </div>
 
-        <div className="flex-1 space-y-6">
+      {/* ── MINIMAL 2-COLUMN SPLIT LAYOUT (TAKES FULL AVAILABLE SPACE) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start w-full max-w-full min-w-0">
+        {/* ── LEFT COLUMN: Avatar, Name, About & Connect (3 or 4 cols full width) ── */}
+        <div className="lg:col-span-3 xl:col-span-3 space-y-8 w-full min-w-0">
+          {/* Avatar & Name */}
           <div className="space-y-4">
-            <div className="text-center md:text-left space-y-1">
-              <h1 className="text-3xl md:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Clara Lefèvre</h1>
-              <p className="text-[14px] font-bold text-zinc-400 dark:text-zinc-500">Product Manager · R&D Product</p>
+            <div className="relative w-32 h-32 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm mx-auto md:mx-0 group cursor-pointer">
+              <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
+              <button
+                onClick={() => setIsAvatarModalOpen(true)}
+                className="absolute inset-0 bg-zinc-950/40 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+              >
+                <Camera size={20} weight="bold" />
+              </button>
             </div>
 
-            {/* Metrics Row */}
-            <div className="flex items-center justify-center md:justify-start gap-12 pt-2">
-              {[
-                { label: "Attendance rate", value: "98%", status: "success" },
-                { label: "Unassigned tasks", value: "8 tasks", status: "none" },
-                { label: "Requirements met", value: "16/33", status: "none" },
-              ].map((m, i) => (
-                <div key={i} className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-zinc-400 dark:text-zinc-500">{m.label}</span>
-                  <div className="flex items-center gap-2">
-                    {m.status === "success" && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-                    <span className="text-[16px] font-black text-zinc-900 dark:text-white">{m.value}</span>
-                  </div>
+            <div className="text-center md:text-left">
+              <h1 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{profile.name}</h1>
+            </div>
+          </div>
+
+          {/* About Section */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">About</h3>
+            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              {profile.bio}
+            </p>
+
+            <button
+              onClick={() => setIsEditProfileOpen(true)}
+              className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all mt-2"
+            >
+              <PencilSimple size={14} weight="bold" />
+              Edit page
+            </button>
+          </div>
+
+          {/* Connect Section */}
+          <div className="space-y-3 pt-2">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Connect</h3>
+
+            <div className="space-y-2.5 text-xs font-semibold">
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500 flex items-center gap-2">
+                  <Globe size={14} className="text-sky-500" /> Website
+                </span>
+                <a href={profile.website} target="_blank" rel="noreferrer" className="text-sky-600 dark:text-sky-400 hover:underline truncate max-w-[150px]">
+                  {profile.website}
+                </a>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500 flex items-center gap-2">
+                  <TwitterLogo size={14} className="text-sky-400" /> Twitter
+                </span>
+                <span className="text-sky-600 dark:text-sky-400">{profile.twitter}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500 flex items-center gap-2">
+                  <LinkedinLogo size={14} className="text-blue-600" /> LinkedIn
+                </span>
+                <span className="text-sky-600 dark:text-sky-400">{profile.linkedin}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500 flex items-center gap-2">
+                  <EnvelopeSimple size={14} className="text-indigo-500" /> Email
+                </span>
+                <span className="text-zinc-900 dark:text-zinc-200 truncate max-w-[150px]">{profile.email}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsWizardOpen(true)}
+              className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all mt-2"
+            >
+              <PencilSimple size={14} weight="bold" />
+              Edit services
+            </button>
+          </div>
+        </div>
+
+        {/* ── RIGHT COLUMN: Minimal Tab Headers & Vertical Timeline Feed (9 cols) ── */}
+        <div className="lg:col-span-9 xl:col-span-9 space-y-8 w-full min-w-0">
+          {/* Tab Header: Activity | Projects | Teams */}
+          <div className="flex items-center gap-8 border-b border-zinc-100 dark:border-zinc-900 pb-3">
+            <button
+              onClick={() => setActiveTab("activity")}
+              className={cn(
+                "text-xs font-bold transition-all pb-1 relative",
+                activeTab === "activity"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              Activity
+            </button>
+
+            <button
+              onClick={() => setActiveTab("projects")}
+              className={cn(
+                "text-xs font-bold transition-all pb-1 relative",
+                activeTab === "projects"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              Projects
+            </button>
+
+            <button
+              onClick={() => setActiveTab("teams")}
+              className={cn(
+                "text-xs font-bold transition-all pb-1 relative",
+                activeTab === "teams"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              Teams & Access
+            </button>
+
+            <button
+              onClick={() => setActiveTab("attendance")}
+              className={cn(
+                "text-xs font-bold transition-all pb-1 relative flex items-center gap-1.5",
+                activeTab === "attendance"
+                  ? "text-zinc-950 dark:text-white border-b-2 border-zinc-950 dark:border-white"
+                  : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              Attendance
+              <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 text-[10px] font-black">
+                Live
+              </span>
+            </button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {/* ── REUI APPLICATION TIMELINE BLOCK (EXACT SPECIFICATION) ── */}
+            {activeTab === "activity" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-6 pt-2"
+              >
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">
+                    Release & Activity Changelog
+                  </h3>
+                  <p className="text-xs font-medium text-zinc-400 mt-1">
+                    Recent releases, fixes, FHIR telemetry logs, and platform updates.
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Main Tabs (Pill / Segmented Control Style) */}
-          <div className="flex items-center justify-end">
-            <div className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl animate-in fade-in slide-in-from-right-4 duration-1000">
-              {tabs.map((tab) => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "flex items-center px-4 py-2 rounded-xl text-[12px] font-black transition-all relative group",
-                    activeTab === tab.id
-                      ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-sm"
-                      : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300"
-                  )}>
-                  <div className="flex items-center overflow-hidden">
-                    <tab.icon weight={activeTab === tab.id ? "fill" : "bold"} size={16} className="shrink-0" />
-                    <span className={cn(
-                      "whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out",
-                      activeTab === tab.id
-                        ? "max-w-[100px] ml-2 opacity-100"
-                        : "max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:ml-2 group-hover:opacity-100"
-                    )}>
-                      {tab.label}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                <div className="relative space-y-8 pt-4">
+                  {/* Center Vertical Timeline Track Line */}
+                  <div className="absolute left-[92px] top-6 bottom-4 w-px bg-zinc-200 dark:border-zinc-800" />
+
+                  {REUI_CRM_TIMELINE.map((item) => (
+                    <div key={item.id} className="flex items-start gap-4 relative group">
+                      {/* Left Date Column */}
+                      <div className="w-20 shrink-0 text-right text-xs font-semibold text-zinc-400 pt-0.5">
+                        {item.date}
+                      </div>
+
+                      {/* Center Node (Hollow Circle Ring) */}
+                      <div className="w-4 h-4 rounded-full border-2 border-zinc-400 dark:border-zinc-500 bg-white dark:bg-zinc-950 shrink-0 relative z-10 mt-0.5" />
+
+                      {/* Right Item Content & Pill Badges */}
+                      <div className="flex-1 space-y-2 min-w-0">
+                        <h4 className="text-sm font-extrabold text-zinc-900 dark:text-white leading-snug">
+                          {item.title}
+                        </h4>
+
+                        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          {item.description}
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          {item.badges.map((b, idx) => (
+                            <span
+                              key={idx}
+                              className={cn(
+                                "px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border transition-all",
+                                b.color
+                              )}
+                            >
+                              {b.text}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── PROJECTS TAB ── */}
+            {activeTab === "projects" && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+                <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-2">
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white">Healthcare CRM 2.0 Architectural Review</h4>
+                  <p className="text-xs text-zinc-400">FHIR data standard compliance and security audit phase</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── TEAMS & ACCESS MATRIX TAB (REUI Data Grid) ── */}
+            {activeTab === "teams" && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <OverviewTab profile={profile} showToast={showToast} />
+              </motion.div>
+            )}
+
+            {/* ── HEALTHCARE STAFF ATTENDANCE TAB ── */}
+            {activeTab === "attendance" && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <AttendanceTab profile={profile} showToast={showToast} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Tab content */}
-      <AnimatePresence mode="wait">
-        {activeTab === "Objectives" && (
-          <ObjectivesView key="objectives" objectives={objectives} onToggle={toggleObjective} onDelete={deleteObjective}
-            isAdding={isAdding} setIsAdding={setIsAdding} newTitle={newTitle} setNewTitle={setNewTitle} onAdd={handleAddTask} />
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {isEditProfileOpen && (
+          <EditProfileModal
+            profile={profile}
+            setProfile={setProfile}
+            onClose={() => setIsEditProfileOpen(false)}
+            showToast={showToast}
+          />
         )}
-        {activeTab === "Infos" && <InfosView key="infos" />}
-        {activeTab === "Attendance" && <AttendanceView key="attendance" />}
-        {activeTab === "Documents" && <PlaceholderView key="documents" icon={FileText} label="Documents" />}
-        {activeTab === "Reviews" && <PlaceholderView key="reviews" icon={ChatCircleText} label="Reviews" />}
+      </AnimatePresence>
+
+      {/* Avatar Change Modal */}
+      <AnimatePresence>
+        {isAvatarModalOpen && (
+          <AvatarModal
+            currentAvatar={profile.avatar}
+            onSelect={(newAvatar) => {
+              setProfile((p) => ({ ...p, avatar: newAvatar }));
+              setIsAvatarModalOpen(false);
+              showToast("Profile picture updated!");
+            }}
+            onClose={() => setIsAvatarModalOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* REUI Application Wizard Modal */}
+      <AnimatePresence>
+        {isWizardOpen && (
+          <ApplicationWizardModal
+            profile={profile}
+            setProfile={setProfile}
+            onClose={() => setIsWizardOpen(false)}
+            showToast={showToast}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ATTENDANCE VIEW  —  Email-client split-pane layout
+// REUI BLOCK: APPLICATION WIZARD MODAL (4-STEP STEPPER)
 // ─────────────────────────────────────────────────────────────────────────────
-function AttendanceView() {
-  const todayRef = TODAY_REF;
-  const [currentTime, setCurrentTime] = useState(new Date());
+function ApplicationWizardModal({
+  profile,
+  setProfile,
+  onClose,
+  showToast,
+}: {
+  profile: UserProfileData;
+  setProfile: React.Dispatch<React.SetStateAction<UserProfileData>>;
+  onClose: () => void;
+  showToast: (msg: string) => void;
+}) {
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
-  /* ── clock ── */
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // Form states
+  const [name, setName] = useState(profile.name);
+  const [roleTitle, setRoleTitle] = useState(profile.role);
+  const [department, setDepartment] = useState(profile.department);
+  const [email, setEmail] = useState(profile.email);
+  const [npiNumber, setNpiNumber] = useState("NPI-8842-HMS");
+  const [selectedRoleCard, setSelectedRoleCard] = useState("exec");
+  const [accessLevel, setAccessLevel] = useState("Level 4 Executive");
+  const [hipaaVerified, setHipaaVerified] = useState(true);
+  const [fhirSyncEnabled, setFhirSyncEnabled] = useState(true);
+  const [twoFactor, setTwoFactor] = useState(true);
 
-  /* ── navigation ── */
-  const minDate = new Date(todayRef); minDate.setMonth(minDate.getMonth() - 3); minDate.setDate(1);
-  const maxDate = new Date(todayRef); maxDate.setMonth(maxDate.getMonth() + 3); maxDate.setDate(1);
+  const roleCards = [
+    {
+      id: "exec",
+      title: "Executive Director & Medical Admin",
+      desc: "Full governance over patient records, FHIR standards, telemetry alarms, and staff privileges.",
+      badge: "Level 4 Executive",
+      icon: ShieldCheck,
+    },
+    {
+      id: "clinical",
+      title: "Attending Physician & Clinical Lead",
+      desc: "Access to Electronic Health Records (EHR), patient charting, prescription writing, and lab orders.",
+      badge: "Level 3 Clinical",
+      icon: UserCheck,
+    },
+    {
+      id: "ops",
+      title: "Care Coordinator & Ward Lead",
+      desc: "Bed occupancy management, nurse shift scheduling, biometric clock-in, and patient intake triage.",
+      badge: "Level 2 Operations",
+      icon: Briefcase,
+    },
+  ];
 
-  const [year, setYear] = useState(todayRef.getFullYear());
-  const [month, setMonth] = useState(todayRef.getMonth());
-
-  const canPrev = new Date(year, month - 1, 1) >= minDate;
-  const canNext = new Date(year, month + 1, 1) <= maxDate;
-
-  function prevMonth() {
-    const d = new Date(year, month - 1, 1);
-    if (d >= minDate) { setYear(d.getFullYear()); setMonth(d.getMonth()); setSelectedKey(null); }
-  }
-  function nextMonth() {
-    const d = new Date(year, month + 1, 1);
-    if (d <= maxDate) { setYear(d.getFullYear()); setMonth(d.getMonth()); setSelectedKey(null); }
-  }
-
-  /* ── selection + filter ── */
-  const todayKey = `${todayRef.getFullYear()}-${String(todayRef.getMonth() + 1).padStart(2, "0")}-${String(todayRef.getDate()).padStart(2, "0")}`;
-  const [selectedKey, setSelectedKey] = useState<string | null>(todayKey);
-  const [filter, setFilter] = useState<"All" | "Present" | "Late" | "Absent" | "Holiday">("All");
-  const reqWorkMin = 480; // 8 hours standard
-
-  /* ── leave modal ── */
-  const [showLeave, setShowLeave] = useState(false);
-  const [leaveType, setLeaveType] = useState("Casual Leave");
-  const [leaveRange, setLeaveRange] = useState<DateRange | undefined>(undefined);
-  const [leaveReason, setLeaveReason] = useState("");
-  const [leaveSubmitted, setLeaveSubmitted] = useState(false);
-  const [calOpen, setCalOpen] = useState(false);
-  const [showDayDetails, setShowDayDetails] = useState(false);
-  const [leaveApps, setLeaveApps] = useState([
-    { id: 101, type: "Earned Leave", from: new Date(2026, 3, 5), to: new Date(2026, 3, 7), status: "Approved", response: "Approved by Admin", date: "2 Apr" },
-    { id: 102, type: "Sick Leave", from: new Date(2026, 3, 10), to: new Date(2026, 3, 10), status: "Rejected", response: "Documentation required", date: "8 Apr" },
-    { id: 103, type: "Casual Leave", from: new Date(2026, 3, 15), to: new Date(2026, 3, 16), status: "Pending", response: "Under review", date: "10 Apr" },
-  ]);
-
-  const LEAVE_TYPES = ["Sick Leave", "Casual Leave", "Emergency Leave", "Earned Leave", "Maternity/Paternity"];
-  const LEAVE_BALANCES: Record<string, { total: number; used: number }> = {
-    "Sick Leave": { total: 8, used: 1 },
-    "Casual Leave": { total: 12, used: 3 },
-    "Emergency Leave": { total: 3, used: 0 },
-    "Earned Leave": { total: 5, used: 2 },
-    "Maternity/Paternity": { total: 90, used: 0 },
-  };
-
-  const handleLeaveSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!leaveRange?.from || !leaveRange?.to) return;
-    setLeaveSubmitted(true);
-
-    const newApp = {
-      id: Date.now(),
-      type: leaveType,
-      from: leaveRange.from,
-      to: leaveRange.to,
-      status: "Pending",
-      response: "Awaiting review",
-      date: format(new Date(), "d MMM")
-    };
-
-    setTimeout(() => {
-      setLeaveApps(prev => [newApp, ...prev]);
-      setShowLeave(false);
-      setLeaveSubmitted(false);
-      setLeaveRange(undefined);
-      setLeaveReason("");
-      setLeaveType("Casual Leave");
-    }, 1800);
-  };
-
-  /* ── monthly stats ── */
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const dateKey = (y: number, m: number, d: number) =>
-    `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-
-  const monthStats = useMemo(() => {
-    let present = 0, late = 0, absent = 0, totalMin = 0, workedDays = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const rec = ATTENDANCE_MAP[dateKey(year, month, d)];
-      if (!rec || rec.status === "Future" || rec.status === "Weekend") continue;
-      if (rec.status === "Present") present++;
-      if (rec.status === "Late") late++;
-      if (rec.status === "Absent") absent++;
-      if (rec.minutes) { totalMin += rec.minutes; workedDays++; }
-    }
-    const working = present + late + absent;
-    const rate = working > 0 ? Math.round(((present + late) / working) * 100) : 0;
-    const avgMin = workedDays > 0 ? Math.round(totalMin / workedDays) : 0;
-    return { present, late, absent, rate, avgH: Math.floor(avgMin / 60), avgM: avgMin % 60, working };
-  }, [year, month, daysInMonth]);
-
-  /* ── list of days for the left pane ── */
-  const dayList = useMemo(() => {
-    const rows: { key: string; day: number; dow: string; rec: typeof ATTENDANCE_MAP[string]; holiday: string | null }[] = [];
-    const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    for (let d = daysInMonth; d >= 1; d--) {
-      const k = dateKey(year, month, d);
-      const rec = ATTENDANCE_MAP[k];
-      if (!rec) continue;
-      // apply filter
-      if (filter === "Holiday" && !HOLIDAYS[k]) continue;
-      if (filter === "Present" && rec.status !== "Present") continue;
-      if (filter === "Late" && rec.status !== "Late") continue;
-      if (filter === "Absent" && rec.status !== "Absent") continue;
-      if (filter === "All" && (rec.status === "Weekend" || rec.status === "Future")) continue;
-      rows.push({ key: k, day: d, dow: DOW[new Date(year, month, d).getDay()], rec, holiday: HOLIDAYS[k] ?? null });
-    }
-    return rows;
-  }, [year, month, daysInMonth, filter]);
-
-  const selectedRec = selectedKey ? ATTENDANCE_MAP[selectedKey] : null;
-  const selectedDay = selectedKey ? parseInt(selectedKey.split("-")[2]) : null;
-  const selectedHoliday = selectedKey ? HOLIDAYS[selectedKey] ?? null : null;
-
-  /* ── mini calendar for detail pane ── */
-  /* ── Kokonut Calendar Grid Logic ── */
-  const firstDayIdx = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-indexed for CalendarPage style
-  const totalCells = Math.ceil((firstDayIdx + daysInMonth) / 7) * 7;
-
-  /* ── status helpers ── */
-  const STATUS_COLOR: Record<string, string> = {
-    Present: "bg-emerald-500",
-    Late: "bg-amber-400",
-    Absent: "bg-rose-500",
-    Holiday: "bg-blue-400",
-  };
-  const STATUS_BADGE: Record<string, string> = {
-    Present: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800",
-    Late: "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
-    Absent: "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800",
-    Future: "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border border-zinc-200 dark:border-zinc-700",
-    Weekend: "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border border-zinc-200 dark:border-zinc-700",
-  };
-  const STATUS_AVATAR_BG: Record<string, string> = {
-    Present: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400",
-    Late: "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
-    Absent: "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400",
-    Future: "bg-zinc-100 dark:bg-zinc-800 text-zinc-500",
-    Weekend: "bg-zinc-100 dark:bg-zinc-800 text-zinc-400",
-    Holiday: "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
+  const handleComplete = () => {
+    setProfile((prev) => ({
+      ...prev,
+      name,
+      role: roleTitle,
+      department,
+      email,
+      accessLevel,
+    }));
+    onClose();
+    showToast("Healthcare CRM Wizard Completed! Staff Profile & Permissions deployed!");
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-      className="pb-5">
-
-      {/* ── Top bar ── */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col">
-            <h2 className="text-[22px] font-black text-zinc-950 dark:text-white tracking-tight leading-none">Attendance</h2>
-            <p className="text-[12px] font-bold text-zinc-400 mt-1.5 uppercase tracking-widest">Digital Registry 2026</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 backdrop-blur-md p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+      >
+        {/* Wizard Top Header */}
+        <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                Healthcare CRM Setup Wizard
+              </span>
+              <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                Staff Onboarding & Clinical Access Matrix
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+            >
+              ✕
+            </button>
           </div>
 
-          <div className="h-10 w-px bg-zinc-100 dark:bg-zinc-800 hidden md:block" />
+          {/* Stepper Progress Bar */}
+          <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-6">
+            <div
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 h-full rounded-full transition-all duration-500"
+              style={{ width: `${(step / 4) * 100}%` }}
+            />
+          </div>
 
-          <div className="items-center gap-4 hidden md:flex">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.2em]">Real-time Status</span>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[14px] font-black text-zinc-600 dark:text-zinc-300 tabular-nums">
-                  {format(currentTime, "HH:mm:ss")}
+          {/* Stepper Pills */}
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { num: 1, label: "Identity & NPI" },
+              { num: 2, label: "Role Privileges" },
+              { num: 3, label: "HIPAA & FHIR" },
+              { num: 4, label: "Review & Deploy" },
+            ].map((s) => (
+              <button
+                key={s.num}
+                onClick={() => setStep(s.num as any)}
+                className={cn(
+                  "flex items-center gap-2 p-2 rounded-xl text-xs font-black transition-all border",
+                  step === s.num
+                    ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-xs"
+                    : step > s.num
+                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                      : "bg-white dark:bg-zinc-900 text-zinc-400 border-zinc-200 dark:border-zinc-800"
+                )}
+              >
+                <span
+                  className={cn(
+                    "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                    step === s.num
+                      ? "bg-white text-zinc-950 dark:bg-zinc-950 dark:text-white"
+                      : step > s.num
+                        ? "bg-emerald-500 text-white"
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
+                  )}
+                >
+                  {step > s.num ? <Check size={10} weight="bold" /> : s.num}
                 </span>
-              </div>
-            </div>
-
+                <span className="truncate hidden sm:inline">{s.label}</span>
+              </button>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* ── Attendance Layout Container ── */}
-      <div className="max-w-[1400px] mx-auto w-full animate-in fade-in duration-1000">
-
-        {/* ── Main Dashboard Shell ── */}
-        <div className="flex flex-col bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden mb-12">
-
-          {/* Shell Top: Filter sub-bar */}
-          <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0 h-16 px-8 bg-zinc-50/40 dark:bg-zinc-900">
-            <div className="flex items-center gap-2 flex-1">
-              {[
-                { id: "All", label: "All", icon: SquaresFour, count: monthStats.working },
-                { id: "Present", label: "Present", icon: CheckCircle, count: monthStats.present, color: "emerald" },
-                { id: "Late", label: "Late", icon: Clock, count: monthStats.late, color: "amber" },
-                { id: "Absent", label: "Absent", icon: XCircle, count: monthStats.absent, color: "rose" },
-                { id: "Holiday", label: "Holiday", icon: Flag, count: Object.keys(HOLIDAYS).filter(k => k.startsWith(`${year}-${String(month + 1).padStart(2, "0")}`)).length, color: "blue" },
-              ].map(f => (
-                <button key={f.id} onClick={() => setFilter(f.id as any)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-bold transition-all border",
-                    filter === f.id
-                      ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-sm"
-                      : "bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600"
-                  )}>
-                  <f.icon size={14} weight={filter === f.id ? "fill" : "bold"} className={cn(
-                    filter !== f.id && {
-                      "emerald": "text-emerald-500",
-                      "amber": "text-amber-500",
-                      "rose": "text-rose-500",
-                      "blue": "text-blue-500",
-                    }[f.color as string]
-                  )} />
-                  {f.label}
-                  {f.count !== undefined && (
-                    <span className={cn("ml-1 text-[10px] opacity-60", filter === f.id ? "text-white/70 dark:text-zinc-500" : "text-zinc-400 underline decoration-zinc-100 underline-offset-4")}>
-                      {f.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Leave Application Log Popover */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button className="relative w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all group">
-                    <ChatDots weight="bold" size={16} />
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 border-2 border-white dark:border-zinc-950 rounded-full" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-0 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-950 overflow-hidden" align="end">
-                  <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-                    <p className="text-[13px] font-black text-zinc-900 dark:text-white">Leave Application Log</p>
-                    <p className="text-[11px] font-bold text-zinc-400 mt-0.5">Track your recent requests</p>
-                  </div>
-                  <div className="max-h-[350px] overflow-y-auto p-2 space-y-1">
-                    {leaveApps.map(app => (
-                      <div key={app.id} className="p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800">
-                        <div className="flex items-start justify-between mb-1.5">
-                          <span className="text-[12px] font-black text-zinc-900 dark:text-white">{app.type}</span>
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider",
-                            app.status === "Approved" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" :
-                              app.status === "Rejected" ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" :
-                                "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-                          )}>
-                            {app.status}
-                          </span>
-                        </div>
-                        <p className="text-[11px] font-bold text-zinc-400">
-                          {format(app.from, "d MMM")} — {format(app.to, "d MMM yyyy")}
-                        </p>
-                        <div className="mt-2 p-2 rounded-lg bg-zinc-50/50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                          <p className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 leading-relaxed italic">
-                            "{app.response}"
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between mt-2.5 px-0.5">
-                          <span className="text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">{app.date}</span>
-                          {app.status === "Approved" && (
-                            <button className="text-[10px] font-black text-blue-600 dark:text-blue-400 hover:underline">Download Form</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              {/* Month navigation (CalendarPage Style) */}
-              <div className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg p-0.5">
-                <button onClick={prevMonth} disabled={!canPrev} className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 transition-colors disabled:opacity-30">
-                  <CaretLeft size={16} weight="bold" />
-                </button>
-                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 px-3 min-w-[110px] text-center">{MONTH_NAMES[month]} {year}</span>
-                <button onClick={nextMonth} disabled={!canNext} className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 transition-colors disabled:opacity-30">
-                  <CaretRight size={16} weight="bold" />
-                </button>
+        {/* Wizard Body Steps */}
+        <div className="p-6 md:p-8 flex-1 overflow-y-auto custom-scrollbar space-y-6">
+          {/* STEP 1: IDENTITY & NPI CREDENTIALS */}
+          {step === 1 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 1: Clinical Identity & Medical NPI Credentials</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Configure staff name, medical license ID, and hospital department</p>
               </div>
 
-              <button onClick={() => setShowLeave(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 rounded-md text-xs font-semibold shadow-md shadow-zinc-200/50 dark:shadow-none transition-all hover:scale-[1.03] active:scale-[0.97]">
-                <Plus size={14} weight="bold" />
-                Request Leave
-              </button>
-            </div>
-          </div>
-
-          <div className="p-0">
-            {/* ── Day Labels (CalendarPage Header Style) ── */}
-            <div className="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => (
-                <div key={i} className="py-3 text-center text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest border-r border-zinc-100 dark:border-zinc-800 last:border-r-0">
-                  {day}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Staff Full Name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
                 </div>
-              ))}
-            </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Clinical Role / Specialty</label>
+                  <input
+                    type="text"
+                    value={roleTitle}
+                    onChange={(e) => setRoleTitle(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Hospital Department</label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-400 uppercase">Medical License / NPI Number</label>
+                  <input
+                    type="text"
+                    value={npiNumber}
+                    onChange={(e) => setNpiNumber(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold outline-none"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-            {/* ── Grid Grid (CalendarPage Cell Style) ── */}
-            <div className="grid grid-cols-7">
-              {Array.from({ length: totalCells }).map((_, idx) => {
-                const dayNum = idx - firstDayIdx + 1;
-                const inMonth = dayNum >= 1 && dayNum <= daysInMonth;
-                const k = inMonth ? dateKey(year, month, dayNum) : null;
-                const rec = k ? ATTENDANCE_MAP[k] : null;
-                const isSel = k === selectedKey;
-                const isToday = k === todayKey;
-                const hol = k ? HOLIDAYS[k] : null;
+          {/* STEP 2: HEALTHCARE ROLE & PRIVILEGES */}
+          {step === 2 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 2: Healthcare Role & Access Privileges</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Select staff role template to assign EHR patient charting privileges</p>
+              </div>
 
-                const matchesFilter = filter === "All" ||
-                  (filter === "Present" && rec?.status === "Present") ||
-                  (filter === "Late" && rec?.status === "Late") ||
-                  (filter === "Absent" && rec?.status === "Absent") ||
-                  (filter === "Holiday" && hol);
+              <div className="space-y-3">
+                {roleCards.map((rc) => {
+                  const Icon = rc.icon;
+                  const isSelected = selectedRoleCard === rc.id;
+                  return (
+                    <div
+                      key={rc.id}
+                      onClick={() => {
+                        setSelectedRoleCard(rc.id);
+                        setAccessLevel(rc.badge);
+                      }}
+                      className={cn(
+                        "p-4 rounded-2xl border flex items-center justify-between cursor-pointer transition-all",
+                        isSelected
+                          ? "bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-500 shadow-xs"
+                          : "bg-zinc-50/50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", isSelected ? "bg-indigo-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500")}>
+                          <Icon size={20} weight="bold" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-zinc-900 dark:text-white">{rc.title}</p>
+                          <p className="text-xs font-medium text-zinc-400 mt-0.5">{rc.desc}</p>
+                        </div>
+                      </div>
 
-                const showStatus = rec && rec.status !== "Weekend" && rec.status !== "Future" && matchesFilter;
-
-                return (
-                  <div key={idx}
-                    onClick={() => {
-                      if (!inMonth || !k) return;
-                      // Only allow opening past or current days
-                      if (k > todayKey) return;
-                      setSelectedKey(k);
-                      setShowDayDetails(true);
-                    }}
-                    className={cn(
-                      "min-h-[100px] border-b border-r border-zinc-100 dark:border-zinc-800 last:border-r-0 p-2 transition-all relative group cursor-pointer",
-                      !inMonth && "bg-zinc-50/30 dark:bg-zinc-900/10 grayscale opacity-40",
-                      inMonth && k && k > todayKey && "cursor-default opacity-60", // Visual hint for future
-                      inMonth && k && k <= todayKey && "hover:bg-zinc-50/80 dark:hover:bg-zinc-900/30",
-                      isToday && "bg-blue-50/40 dark:bg-blue-900/10"
-                    )}>
-
-                    {/* Day number (Top Right Circle) */}
-                    <div className="flex justify-end mb-2">
-                      <span className={cn(
-                        "w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold transition-colors",
-                        !inMonth && "text-zinc-300 dark:text-zinc-700",
-                        inMonth && !isToday && "text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100",
-                        isToday && "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900",
-                      )}>
-                        {inMonth ? dayNum : (dayNum <= 0 ? (new Date(year, month, 0).getDate() + dayNum) : (dayNum - daysInMonth))}
+                      <span className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[10px] font-black uppercase shrink-0">
+                        {rc.badge}
                       </span>
                     </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
 
-                    {/* Cell Content (Event Pill Style) */}
-                    {inMonth && (
-                      <div className="flex flex-col gap-0.5">
-                        {hol && (
-                          <div className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/50 truncate animate-in zoom-in-95">
-                            <Flag size={10} weight="fill" className="shrink-0" />
-                            <span className="truncate">{hol}</span>
-                          </div>
-                        )}
-                        {showStatus && (
-                          <div className={cn(
-                            "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-all truncate border border-transparent shadow-sm",
-                            rec.status === "Present" ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-l-2 border-l-emerald-400" :
-                              rec.status === "Late" ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-l-2 border-l-amber-400" :
-                                "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-l-2 border-l-rose-400"
-                          )}>
-                            <span className={cn("w-1.5 h-1.5 rounded-full shrink-0",
-                              rec.status === "Present" ? "bg-emerald-500" :
-                                rec.status === "Late" ? "bg-amber-500" : "bg-rose-500"
-                            )} />
-                            <span className="truncate">{rec.status}</span>
-                            {rec.login && <span className="shrink-0 opacity-50 ml-auto">{rec.login}</span>}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Day Details Modal ── */}
-      <AnimatePresence>
-        {showDayDetails && selectedKey && selectedRec && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
-            onClick={e => { if (e.target === e.currentTarget) setShowDayDetails(false); }}>
-            <motion.div initial={{ opacity: 0, scale: 0.93, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.93, y: 20 }}
-              transition={{ type: "spring", damping: 22, stiffness: 280 }}
-              className="bg-white rounded-[2rem] shadow-2xl border border-zinc-200 w-full max-w-sm overflow-hidden p-0">
-
-              <div className="flex flex-col animate-in fade-in duration-500">
-                {/* Header Card */}
-                <div className="p-6 pb-2 relative overflow-hidden group">
-                  <div className="relative z-10 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[20px] font-black text-zinc-950 tracking-tighter">
-                        {selectedDay} {MONTH_NAMES[month]}
-                      </h4>
-                      <p className="text-[14px] font-bold text-zinc-400">
-                        {format(new Date(selectedKey), "EEEE")} · {selectedKey === todayKey ? "Today" : "Archive"}
-                      </p>
-                    </div>
-                    <button onClick={() => setShowDayDetails(false)}
-                      className="w-10 h-10 rounded-full border border-zinc-100 flex items-center justify-center text-zinc-400 hover:bg-zinc-50 transition-all">
-                      <svg viewBox="0 0 256 256" className="w-4 h-4 fill-current">
-                        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="px-6 pb-8 flex flex-col gap-5 overflow-y-auto max-h-[60vh] custom-scrollbar">
-                  {/* Compliance Status Card */}
-                  {selectedRec.status !== "Weekend" && selectedRec.status !== "Future" ? (
-                    <div className={cn(
-                      "p-5 rounded-[2rem] border relative overflow-hidden shadow-sm transition-all",
-                      selectedRec.status === "Present" ? "bg-emerald-500 text-white border-emerald-400" :
-                        selectedRec.status === "Late" ? "bg-amber-400 text-zinc-950 border-amber-300" :
-                          "bg-rose-500 text-white border-rose-400"
-                    )}>
-                      {/* Decorative background element */}
-                      <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12">
-                        <CalendarCheck weight="fill" size={100} />
-                      </div>
-
-                      <div className="relative z-10 flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={cn("w-2 h-2 rounded-full animate-pulse",
-                              selectedRec.status === "Present" ? "bg-emerald-200" :
-                                selectedRec.status === "Late" ? "bg-amber-900/40" : "bg-rose-200"
-                            )} />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Compliance Status</span>
-                          </div>
-                          <span className="text-[11px] font-black uppercase tracking-widest">{selectedRec.status}</span>
-                        </div>
-                        <div className="flex items-end justify-between">
-                          <div>
-                            <p className="text-[36px] font-black leading-none tracking-tighter tabular-nums">{selectedRec.hours || "--:--"}</p>
-                            <p className="text-[11px] font-bold mt-2 opacity-70">Authenticated Work Hours</p>
-                          </div>
-                          {selectedRec.minutes && (
-                            <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 text-center border border-white/10">
-                              <p className="text-[14px] font-black leading-none">{Math.round((selectedRec.minutes / 480) * 100)}%</p>
-                              <p className="text-[8px] font-black uppercase tracking-widest mt-1 opacity-60">Goal</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-8 rounded-[2rem] bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-center space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 mx-auto flex items-center justify-center text-zinc-300 dark:text-zinc-600 shadow-sm">
-                        <CalendarCheck size={24} weight="bold" />
-                      </div>
-                      <div>
-                        <h5 className="text-[15px] font-black text-zinc-950 dark:text-white leading-none">{selectedRec.status}</h5>
-                        <p className="text-[12px] font-bold text-zinc-400 mt-2">No biometric activity recorded for this period.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedRec.login && (
-                    <div className="space-y-6">
-                      {/* Professional Timeline */}
-                      <div className="space-y-4">
-                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] px-1">Biometric Timeline</p>
-                        <div className="relative pl-6 space-y-8 before:absolute before:left-[10px] before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-100 dark:before:bg-zinc-800">
-                          {[
-                            { label: "Check-in Authentication", time: selectedRec.login, icon: ArrowDown, color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20", desc: "Terminal ID: HMS-S01-A" },
-                            { label: "Check-out Authentication", time: selectedRec.logout, icon: ArrowUp, color: "text-rose-500 bg-rose-50 dark:bg-rose-950/20", desc: "Terminal ID: HMS-S01-C" }
-                          ].map((item, i) => (
-                            <div key={i} className="relative group/time">
-                              <div className={cn("absolute -left-[24px] top-1 w-4 h-4 rounded-full border-4 border-white dark:border-zinc-950 flex items-center justify-center z-10", item.color)}>
-                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                              </div>
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <p className="text-[13px] font-black text-zinc-900 dark:text-white leading-none">{item.label}</p>
-                                  <p className="text-[11px] font-bold text-zinc-400 mt-1">{item.desc}</p>
-                                </div>
-                                <span className="text-[14px] font-black text-zinc-950 dark:text-white tabular-nums">{item.time}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Biometric Metadata Section */}
-                      <div className="p-6 rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-900/50 border border-dashed border-zinc-200 dark:border-zinc-800 space-y-5">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck size={14} weight="fill" className="text-zinc-400" />
-                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Biometric Metadata</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-y-6 gap-x-8">
-                          {[
-                            { label: "Device ID", value: "HMS-T09-PX" },
-                            { label: "Terminal", value: "South Wing B2" },
-                            { label: "Method", value: "Neural (Face)" },
-                            { label: "Network", value: "HMS-Private" },
-                          ].map((m, i) => (
-                            <div key={i} className="space-y-1.5">
-                              <p className="text-[9px] font-black text-zinc-300 dark:text-zinc-600 uppercase tracking-[0.1em]">{m.label}</p>
-                              <p className="text-[12px] font-bold text-zinc-700 dark:text-zinc-300 leading-none">{m.value}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedHoliday && (
-                    <div className="p-5 rounded-[2rem] bg-zinc-950 text-white flex items-center gap-4 border border-zinc-800">
-                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-lg">
-                        <Flag weight="fill" size={18} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Public Holiday</p>
-                        <p className="text-[15px] font-black text-white tracking-tight leading-tight">{selectedHoliday}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+          {/* STEP 3: HIPAA, FHIR & BIOMETRICS */}
+          {step === 3 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 3: HIPAA Compliance & FHIR Integration</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Configure PHI privacy controls and automated telemetry feeds</p>
               </div>
 
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Leave Request Modal ── */}
-      <AnimatePresence>
-        {showLeave && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
-            onClick={e => { if (e.target === e.currentTarget) setShowLeave(false); }}>
-            <motion.div initial={{ opacity: 0, scale: 0.93, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.93, y: 20 }}
-              transition={{ type: "spring", damping: 22, stiffness: 280 }}
-              className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-lg overflow-hidden">
-
-              {/* Modal top-bar */}
-              <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-100 dark:border-zinc-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-zinc-950 dark:bg-white flex items-center justify-center">
-                    <CalendarCheck weight="fill" size={14} className="text-white dark:text-zinc-950" />
-                  </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
                   <div>
-                    <h3 className="text-[14px] font-black text-zinc-900 dark:text-white leading-none">Request Leave</h3>
-                    <p className="text-[11px] font-bold text-zinc-400 mt-0.5">{MONTH_NAMES[month]} {year}</p>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">HIPAA Level IV PHI Privacy Encryption</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Enforces 256-bit AES encryption on electronic medical records</p>
                   </div>
+                  <button onClick={() => setHipaaVerified(!hipaaVerified)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", hipaaVerified ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform shadow-xs", hipaaVerified && "translate-x-4")} />
+                  </button>
                 </div>
-                <button onClick={() => setShowLeave(false)}
-                  className="w-7 h-7 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
-                  <svg viewBox="0 0 256 256" className="w-3 h-3 fill-current"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" /></svg>
-                </button>
-              </div>
 
-              <div className="p-6 max-h-[80vh] overflow-y-auto">
-                <AnimatePresence mode="wait">
-                  {leaveSubmitted ? (
-                    <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center justify-center py-10 gap-4">
-                      <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center">
-                        <Check weight="bold" size={28} className="text-white" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[15px] font-black text-zinc-900 dark:text-white">Request submitted!</p>
-                        <p className="text-[12px] font-bold text-zinc-400 mt-1">Your manager will be notified.</p>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.form key="form" onSubmit={handleLeaveSubmit} className="space-y-5">
-
-                      {/* Leave type grid */}
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2.5">Leave type</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {LEAVE_TYPES.slice(0, 3).map(t => {
-                            const bal = LEAVE_BALANCES[t];
-                            return (
-                              <button key={t} type="button" onClick={() => setLeaveType(t)}
-                                className={cn(
-                                  "flex flex-col items-center gap-1 p-3 rounded-2xl border text-center transition-all",
-                                  leaveType === t
-                                    ? "bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white"
-                                    : "bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
-                                )}>
-                                <span className={cn("text-[12px] font-black", leaveType === t ? "text-white dark:text-zinc-950" : "text-zinc-700 dark:text-zinc-300")}>
-                                  {t.replace(" Leave", "").replace("Emergency", "Emerg.")}
-                                </span>
-                                <span className={cn("text-[10px] font-bold", leaveType === t ? "text-zinc-400 dark:text-zinc-600" : "text-zinc-400")}>
-                                  {bal.total - bal.used} left
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          {LEAVE_TYPES.slice(3).map(t => {
-                            const bal = LEAVE_BALANCES[t];
-                            return (
-                              <button key={t} type="button" onClick={() => setLeaveType(t)}
-                                className={cn(
-                                  "flex flex-col items-center gap-1 p-3 rounded-2xl border text-center transition-all",
-                                  leaveType === t
-                                    ? "bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white"
-                                    : "bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
-                                )}>
-                                <span className={cn("text-[12px] font-black", leaveType === t ? "text-white dark:text-zinc-950" : "text-zinc-700 dark:text-zinc-300")}>
-                                  {t}
-                                </span>
-                                <span className={cn("text-[10px] font-bold", leaveType === t ? "text-zinc-400 dark:text-zinc-600" : "text-zinc-400")}>
-                                  {bal.total - bal.used} left
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Date range picker */}
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2.5">Date range</p>
-                        <Popover open={calOpen} onOpenChange={setCalOpen}>
-                          <PopoverTrigger asChild>
-                            <button type="button"
-                              className="w-full flex items-center justify-between px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[13px] font-black text-left transition-all hover:border-zinc-400">
-                              <span className={leaveRange?.from ? "text-zinc-900 dark:text-white" : "text-zinc-400"}>
-                                {leaveRange?.from && leaveRange?.to
-                                  ? `${format(leaveRange.from, "dd MMM")} → ${format(leaveRange.to, "dd MMM yyyy")}`
-                                  : "Select date range"}
-                              </span>
-                              <CalendarCheck weight="bold" size={14} className="text-zinc-400" />
-                            </button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden" align="start">
-                            <Calendar mode="range" selected={leaveRange} onSelect={setLeaveRange} numberOfMonths={1}
-                              className="rounded-2xl border-0" />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      {/* Live summary */}
-                      {leaveRange?.from && leaveRange?.to && (() => {
-                        let workDays = 0;
-                        const cur = new Date(leaveRange.from);
-                        while (cur <= leaveRange.to) {
-                          if (cur.getDay() !== 0 && cur.getDay() !== 6) workDays++;
-                          cur.setDate(cur.getDate() + 1);
-                        }
-                        const bal = LEAVE_BALANCES[leaveType];
-                        const remaining = bal.total - bal.used - workDays;
-                        return (
-                          <div className="grid grid-cols-3 gap-2">
-                            {[
-                              { label: "Days requested", value: workDays, color: "text-zinc-900 dark:text-white" },
-                              { label: "Type balance", value: bal.total - bal.used, color: "text-zinc-900 dark:text-white" },
-                              { label: "After approval", value: remaining, color: remaining >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400" },
-                            ].map(s => (
-                              <div key={s.label} className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-3 text-center">
-                                <p className={cn("text-[18px] font-black leading-none", s.color)}>{s.value}</p>
-                                <p className="text-[10px] font-bold text-zinc-400 mt-1 leading-tight">{s.label}</p>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Reason */}
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">
-                          Reason <span className="text-zinc-300 dark:text-zinc-600 normal-case font-bold tracking-normal">(optional)</span>
-                        </p>
-                        <textarea value={leaveReason} onChange={e => setLeaveReason(e.target.value)} rows={3}
-                          placeholder="Briefly describe the reason for leave…"
-                          className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[13px] font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none resize-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors" />
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-3 pt-1">
-                        <button type="button" onClick={() => setShowLeave(false)}
-                          className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 text-[13px] font-black hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
-                          Cancel
-                        </button>
-                        <button type="submit" disabled={!leaveRange?.from || !leaveRange?.to}
-                          className="flex-1 py-2.5 rounded-xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[13px] font-black shadow hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none">
-                          Submit Request
-                        </button>
-                      </div>
-                    </motion.form>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// OBJECTIVES VIEW
-// ─────────────────────────────────────────────────────────────────────────────
-function ObjectivesView({ objectives, onToggle, onDelete, isAdding, setIsAdding, newTitle, setNewTitle, onAdd }: any) {
-  const [filterTab, setFilterTab] = useState("Pending");
-
-  const filteredObjectives = useMemo(() => {
-    if (filterTab === "Pending") return objectives.filter((o: any) => !o.completed);
-    if (filterTab === "Completed") return objectives.filter((o: any) => o.completed);
-    return objectives;
-  }, [objectives, filterTab]);
-
-  const stats = useMemo(() => {
-    const total = objectives.length;
-    const completedCount = objectives.filter((o: any) => o.completed).length;
-    return { percentage: total > 0 ? Math.round((completedCount / total) * 100) : 0, completedCount, total };
-  }, [objectives]);
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-10 pb-20">
-      <div className="flex items-center justify-between px-2">
-        <div className="space-y-1">
-          <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight leading-none">
-            To-do <span className="text-zinc-400 ml-1">{stats.total}</span>
-          </h3>
-          <p className="text-[12px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Global Progress: {stats.percentage}%</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="w-9 h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-900 transition-all">
-            <DotsThree size={24} weight="bold" />
-          </button>
-          <button onClick={() => setIsAdding(true)} className="w-9 h-9 rounded-xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center hover:scale-105 transition-all shadow-lg active:scale-95">
-            <Plus size={20} weight="bold" />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-1.5 p-1 bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-2xl w-fit">
-        {["All", "Pending", "Completed"].map(tab => (
-          <button key={tab} onClick={() => setFilterTab(tab)}
-            className={cn("px-5 py-1.5 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all",
-              filterTab === tab ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-sm" : "text-zinc-400 hover:text-zinc-600"
-            )}>
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div className="min-h-[400px] space-y-6">
-        {isAdding && (
-          <AddTaskForm newTitle={newTitle} setNewTitle={setNewTitle} onAdd={onAdd} onCancel={() => setIsAdding(false)} />
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {filteredObjectives.map((obj: any) => (
-              <TaskCard key={obj.id} obj={obj} onToggle={onToggle} onDelete={onDelete} />
-            ))}
-          </AnimatePresence>
-        </div>
-        {filteredObjectives.length === 0 && !isAdding && (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
-            <div className="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-300"><Target size={32} /></div>
-            <p className="text-sm font-bold text-zinc-400">No tasks found in this category.</p>
-          </div>
-        )}
-      </div>
-
-      {!isAdding && (
-        <button onClick={() => setIsAdding(true)} className="w-full py-6 flex items-center justify-center gap-3 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-black text-sm group transition-all">
-          <Plus weight="bold" size={20} className="group-hover:rotate-90 transition-transform duration-500" /> Add Task
-        </button>
-      )}
-    </motion.div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TASK CARD
-// ─────────────────────────────────────────────────────────────────────────────
-function TaskCard({ obj, onToggle, onDelete }: any) {
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<{ id: number; userId: number; text: string; time: string }[]>(obj.commentList ?? []);
-  const [newComment, setNewComment] = useState("");
-
-  const handleAddComment = () => {
-    const text = newComment.trim();
-    if (!text) return;
-    setComments(prev => [...prev, { id: Date.now(), userId: 1, text, time: "Just now" }]);
-    setNewComment("");
-  };
-
-  const assignedUsers = (obj.assignees ?? []).map((id: number) => TEAM_USERS.find(u => u.id === id)).filter(Boolean);
-
-  return (
-    <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-      className={cn("group bg-white dark:bg-zinc-900 rounded-[28px] border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all relative overflow-hidden", obj.completed && "opacity-60")}>
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-400 text-[10px] font-black uppercase tracking-widest border border-zinc-100 dark:border-zinc-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600" /> To do
-            </div>
-            <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border", {
-              "Normal": "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/50",
-              "High": "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-800/50",
-              "Urgent": "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-800/50",
-            }[obj.priority as string] ?? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/50")}>
-              <Flag weight="fill" size={10} /> {obj.priority}
-            </div>
-          </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={() => onToggle(obj.id)}
-              className={cn("w-7 h-7 rounded-lg flex items-center justify-center transition-all",
-                obj.completed ? "bg-emerald-500 text-white" : "bg-zinc-50 dark:bg-zinc-800 text-zinc-400 hover:text-emerald-500")}>
-              <Check weight="bold" size={13} />
-            </button>
-            <button onClick={() => onDelete(obj.id)}
-              className="w-7 h-7 rounded-lg bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-500 transition-all">
-              <Trash weight="bold" size={13} />
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-1 mb-4">
-          <h4 className={cn("text-[16px] font-black text-zinc-950 dark:text-white tracking-tight leading-tight", obj.completed && "line-through text-zinc-400 dark:text-zinc-600")}>
-            {obj.title}
-          </h4>
-          <p className="text-[12px] font-bold text-zinc-400 flex items-start gap-1">
-            <span className="text-zinc-300 dark:text-zinc-700">↳</span>{obj.description}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between pt-3 border-t border-zinc-50 dark:border-zinc-800/50">
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-1.5">
-              {assignedUsers.slice(0, 4).map((u: any) => (
-                <div key={u.id} title={u.name} className="w-6 h-6 rounded-full border-2 border-white dark:border-zinc-900 overflow-hidden shrink-0">
-                  <img src={u.avatar} className="w-full h-full object-cover" />
-                </div>
-              ))}
-              {assignedUsers.length > 4 && (
-                <div className="w-6 h-6 rounded-full border-2 border-white dark:border-zinc-900 bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[9px] font-black text-zinc-600 dark:text-zinc-300">
-                  +{assignedUsers.length - 4}
-                </div>
-              )}
-            </div>
-            <button onClick={() => setShowComments(p => !p)}
-              className={cn("flex items-center gap-1 text-[11px] font-black transition-colors",
-                showComments ? "text-zinc-900 dark:text-white" : "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300")}>
-              <ChatDots size={14} weight="bold" /> {comments.length}
-            </button>
-            <div className={cn("flex items-center gap-1 text-[11px] font-black",
-              obj.dueDate === "Tomorrow" ? "text-orange-500" : "text-zinc-400 dark:text-zinc-600")}>
-              <Clock size={13} weight="bold" /> {obj.dueDate}
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="relative w-5 h-5">
-              <svg className="w-5 h-5 -rotate-90">
-                <circle cx="10" cy="10" r="8" className="stroke-zinc-100 dark:stroke-zinc-800" strokeWidth="2.5" fill="none" />
-                <motion.circle initial={{ pathLength: 0 }} animate={{ pathLength: obj.progress / 100 }}
-                  cx="10" cy="10" r="8"
-                  className={cn(obj.progress === 100 ? "stroke-emerald-500" : "stroke-zinc-300 dark:stroke-zinc-500")}
-                  strokeWidth="2.5" fill="none" strokeDasharray="50 50" />
-              </svg>
-            </div>
-            <span className="text-[11px] font-black text-zinc-900 dark:text-white">{obj.progress}%</span>
-          </div>
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {showComments && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className="border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/40 px-4 pt-3 pb-3 space-y-3">
-              {comments.length === 0 && (
-                <p className="text-[11px] font-bold text-zinc-400 text-center py-2">No comments yet. Be the first!</p>
-              )}
-              {comments.map(c => {
-                const user = TEAM_USERS.find(u => u.id === c.userId);
-                return (
-                  <div key={c.id} className="flex gap-2 items-start">
-                    <img src={user?.avatar ?? "https://i.pravatar.cc/100"} className="w-6 h-6 rounded-full object-cover shrink-0 mt-0.5 border border-white dark:border-zinc-700" />
-                    <div className="flex-1 bg-white dark:bg-zinc-900 rounded-2xl rounded-tl-sm px-3 py-2 border border-zinc-100 dark:border-zinc-800">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[11px] font-black text-zinc-900 dark:text-white">{user?.name ?? "Unknown"}</span>
-                        <span className="text-[10px] font-bold text-zinc-400">{c.time}</span>
-                      </div>
-                      <p className="text-[12px] font-medium text-zinc-600 dark:text-zinc-300 leading-snug">{c.text}</p>
-                    </div>
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
+                  <div>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">FHIR R4 Telemetry Data Endpoint Sync</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Automated sync with hospital laboratory & ICU vitals feeds</p>
                   </div>
-                );
-              })}
-              <div className="flex gap-2 items-center">
-                <img src={TEAM_USERS[0].avatar} className="w-6 h-6 rounded-full object-cover shrink-0 border border-white dark:border-zinc-700" />
-                <div className="flex-1 flex items-center gap-2 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 px-3 py-1.5">
-                  <input value={newComment} onChange={e => setNewComment(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddComment(); } }}
-                    placeholder="Add a comment…"
-                    className="flex-1 bg-transparent text-[12px] font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none" />
-                  <button type="button" onClick={handleAddComment}
-                    className="w-6 h-6 rounded-full bg-zinc-950 dark:bg-white flex items-center justify-center shrink-0 hover:scale-110 active:scale-95 transition-all">
-                    <svg viewBox="0 0 256 256" className="w-3 h-3 fill-white dark:fill-zinc-950"><path d="M228.1,26.6a21.1,21.1,0,0,0-21.1,0L31.6,133.8A21,21,0,0,0,33.3,172l57.6,18.9L114,240a21,21,0,0,0,39.6-2.4Z" /></svg>
+                  <button onClick={() => setFhirSyncEnabled(!fhirSyncEnabled)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", fhirSyncEnabled ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform shadow-xs", fhirSyncEnabled && "translate-x-4")} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700">
+                  <div>
+                    <p className="text-xs font-black text-zinc-900 dark:text-white">Hardware Passkey / Biometric 2FA</p>
+                    <p className="text-[11px] font-bold text-zinc-400">Enforces YubiKey / OTP login for medical staff</p>
+                  </div>
+                  <button onClick={() => setTwoFactor(!twoFactor)} className={cn("w-10 h-6 rounded-full transition-colors relative p-0.5", twoFactor ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700")}>
+                    <div className={cn("w-5 h-5 rounded-full bg-white transition-transform shadow-xs", twoFactor && "translate-x-4")} />
                   </button>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+            </motion.div>
+          )}
+
+          {/* STEP 4: REVIEW & DEPLOYMENT */}
+          {step === 4 && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+              <div>
+                <h3 className="text-lg font-black text-zinc-900 dark:text-white">Step 4: Final Summary & Deployment</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Review healthcare staff onboarding summary before deploying privileges</p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-4">
+                <div className="flex items-center gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                  <img src={profile.avatar} alt="Avatar" className="w-12 h-12 rounded-2xl object-cover" />
+                  <div>
+                    <h4 className="text-base font-black text-zinc-900 dark:text-white">{name}</h4>
+                    <p className="text-xs font-bold text-indigo-500">{roleTitle} • {department}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs font-bold">
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">NPI License</span>
+                    <p className="text-zinc-900 dark:text-zinc-100">{npiNumber}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">Clearance Level</span>
+                    <p className="text-zinc-900 dark:text-zinc-100">{accessLevel}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">HIPAA Class IV</span>
+                    <p className="text-emerald-600 font-black">Verified & Encrypted</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-zinc-400">FHIR R4 Sync</span>
+                    <p className="text-indigo-600 font-black">Active Endpoint Sync</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-950/50">
+          <button
+            disabled={step === 1}
+            onClick={() => setStep((s) => Math.max(1, s - 1) as any)}
+            className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-extrabold text-zinc-600 dark:text-zinc-300 disabled:opacity-30 disabled:pointer-events-none hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          >
+            <CaretLeft size={16} weight="bold" />
+            Previous
+          </button>
+
+          {step < 4 ? (
+            <button
+              onClick={() => setStep((s) => Math.min(4, s + 1) as any)}
+              className="flex items-center gap-1.5 px-6 py-2.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-xs font-black rounded-xl shadow-xs hover:scale-105 transition-all"
+            >
+              Next Step
+              <ArrowRight size={14} weight="bold" />
+            </button>
+          ) : (
+            <button
+              onClick={handleComplete}
+              className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md hover:scale-105 transition-all"
+            >
+              <CheckCircle size={16} weight="fill" />
+              Deploy Healthcare Privileges
+            </button>
+          )}
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ADD TASK FORM
+// DATA GRID VIEW (REUI WORKSPACE ACCESS MATRIX)
 // ─────────────────────────────────────────────────────────────────────────────
-function AddTaskForm({ newTitle, setNewTitle, onAdd, onCancel }: any) {
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([1]);
-  const [priority, setPriority] = useState<"Normal" | "High" | "Urgent">("Normal");
+function OverviewTab({
+  profile,
+  showToast,
+}: {
+  profile: UserProfileData;
+  showToast: (msg: string) => void;
+}) {
+  const [members, setMembers] = useState<MemberAccessRow[]>(INITIAL_MEMBERS_GRID);
+  const [roleFilter, setRoleFilter] = useState("All roles");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const toggleUser = (id: number) =>
-    setSelectedUsers(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
+  const togglePin = (id: string) => {
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, isPinned: !m.isPinned } : m)));
+    showToast("Updated pinned member rows!");
+  };
+
+  const toggleSettingPermission = (id: string, field: "settings" | "billing" | "users" | "permissions") => {
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, [field]: !m[field] } : m)));
+    showToast("Permission updated!");
+  };
+
+  const filteredMembers = useMemo(() => {
+    return members.filter((m) => {
+      const matchesSearch = !searchQuery.trim() || m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.role.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [members, searchQuery]);
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.97, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="bg-white dark:bg-zinc-900 rounded-3xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 overflow-hidden">
-      <form onSubmit={e => onAdd(e, selectedUsers, priority)} className="p-5 space-y-4">
-        <input autoFocus
-          className="w-full bg-transparent text-[17px] font-black text-zinc-950 dark:text-white outline-none placeholder:text-zinc-300 dark:placeholder:text-zinc-700"
-          placeholder="What needs to be done?" value={newTitle} onChange={e => setNewTitle(e.target.value)} />
-
-        <div className="space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Priority</p>
-          <div className="flex gap-2">
-            {([
-              { label: "Normal", dot: "bg-blue-400", active: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700" },
-              { label: "High", dot: "bg-rose-400", active: "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700" },
-              { label: "Urgent", dot: "bg-orange-400", active: "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700" },
-            ] as const).map(p => (
-              <button key={p.label} type="button" onClick={() => setPriority(p.label)}
-                className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black border transition-all",
-                  priority === p.label ? p.active : "bg-zinc-50 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
-                )}>
-                <span className={cn("w-1.5 h-1.5 rounded-full", p.dot)} />{p.label}
-              </button>
-            ))}
-          </div>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Workspace Access Matrix</h3>
+          <span className="text-xs text-zinc-400">{members.length} members configured</span>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Assign to</p>
-          <div className="flex flex-wrap gap-2">
-            {TEAM_USERS.map(u => {
-              const sel = selectedUsers.includes(u.id);
-              return (
-                <button key={u.id} type="button" onClick={() => toggleUser(u.id)}
-                  className={cn("flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full text-[11px] font-black border transition-all",
-                    sel ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white"
-                      : "bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
-                  )}>
-                  <img src={u.avatar} className="w-4 h-4 rounded-full object-cover" />
-                  {u.name.split(" ")[0]}
-                  {sel && <Check weight="bold" size={9} className="ml-0.5" />}
-                </button>
-              );
-            })}
-          </div>
+        <div className="overflow-x-auto rounded-xl border border-zinc-100 dark:border-zinc-800">
+          <table className="w-full text-left text-xs font-semibold">
+            <thead>
+              <tr className="bg-zinc-50 dark:bg-zinc-950 text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
+                <th className="py-2.5 px-3">Member</th>
+                <th className="py-2.5 px-3 text-center">Settings</th>
+                <th className="py-2.5 px-3 text-center">Billing</th>
+                <th className="py-2.5 px-3 text-center">Users</th>
+                <th className="py-2.5 px-3 text-center">Permissions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {filteredMembers.map((m) => (
+                <tr key={m.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                  <td className="py-2.5 px-3 flex items-center gap-2.5">
+                    <img src={m.avatar} alt={m.name} className="w-7 h-7 rounded-full object-cover" />
+                    <div>
+                      <p className="font-bold text-zinc-900 dark:text-zinc-100">{m.name}</p>
+                      <p className="text-[10px] text-zinc-400">{m.role}</p>
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-3 text-center">
+                    <button onClick={() => toggleSettingPermission(m.id, "settings")} className={cn("w-8 h-4.5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.settings ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
+                      <div className={cn("w-3.5 h-3.5 rounded-full bg-white transition-transform shadow-xs", m.settings && "translate-x-3.5")} />
+                    </button>
+                  </td>
+                  <td className="py-2.5 px-3 text-center">
+                    <button onClick={() => toggleSettingPermission(m.id, "billing")} className={cn("w-8 h-4.5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.billing ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
+                      <div className={cn("w-3.5 h-3.5 rounded-full bg-white transition-transform shadow-xs", m.billing && "translate-x-3.5")} />
+                    </button>
+                  </td>
+                  <td className="py-2.5 px-3 text-center">
+                    <button onClick={() => toggleSettingPermission(m.id, "users")} className={cn("w-8 h-4.5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.users ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
+                      <div className={cn("w-3.5 h-3.5 rounded-full bg-white transition-transform shadow-xs", m.users && "translate-x-3.5")} />
+                    </button>
+                  </td>
+                  <td className="py-2.5 px-3 text-center">
+                    <button onClick={() => toggleSettingPermission(m.id, "permissions")} className={cn("w-8 h-4.5 rounded-full transition-colors relative p-0.5 inline-block align-middle", m.permissions ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700")}>
+                      <div className={cn("w-3.5 h-3.5 rounded-full bg-white transition-transform shadow-xs", m.permissions && "translate-x-3.5")} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
-          <p className="text-[11px] font-bold text-zinc-400">
-            {selectedUsers.length} assignee{selectedUsers.length !== 1 ? "s" : ""} · <span className="font-black text-zinc-600 dark:text-zinc-300">{priority}</span>
-          </p>
-          <div className="flex gap-2">
-            <button type="button" onClick={onCancel}
-              className="px-4 py-2 rounded-xl text-zinc-500 text-[12px] font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">Cancel</button>
-            <button type="submit"
-              className="px-5 py-2 rounded-xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[12px] font-black shadow hover:scale-105 active:scale-95 transition-all">
-              Create Task
-            </button>
-          </div>
-        </div>
-      </form>
+      </div>
     </motion.div>
   );
 }
 
+function EditProfileModal({
+  profile,
+  setProfile,
+  onClose,
+  showToast,
+}: {
+  profile: UserProfileData;
+  setProfile: React.Dispatch<React.SetStateAction<UserProfileData>>;
+  onClose: () => void;
+  showToast: (msg: string) => void;
+}) {
+  const [formData, setFormData] = useState({ ...profile });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-zinc-900 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-800 w-full max-w-xl space-y-6 shadow-2xl">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800">
+          <h3 className="text-xl font-black text-zinc-900 dark:text-white">Edit Minimal Profile</h3>
+          <button onClick={onClose} className="p-2 text-zinc-400">✕</button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-zinc-400 uppercase">Full Name</label>
+            <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-bold outline-none" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-zinc-400 uppercase">Role</label>
+            <input type="text" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-bold outline-none" />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <button onClick={onClose} className="px-4 py-2 text-xs font-bold text-zinc-500">Cancel</button>
+          <button
+            onClick={() => {
+              setProfile(formData);
+              onClose();
+              showToast("Profile details updated!");
+            }}
+            className="px-6 py-2.5 bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 text-xs font-black rounded-xl"
+          >
+            Save Changes
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function AvatarModal({
+  currentAvatar,
+  onSelect,
+  onClose,
+}: {
+  currentAvatar: string;
+  onSelect: (avatar: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 w-full max-w-md space-y-6 shadow-2xl">
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
+          <h3 className="text-lg font-black text-zinc-900 dark:text-white">Choose Profile Picture</h3>
+          <button onClick={onClose} className="p-1 text-zinc-400">✕</button>
+        </div>
+
+        <div className="flex flex-wrap gap-3 justify-center">
+          {PRESET_AVATARS.map((av, idx) => (
+            <button
+              key={idx}
+              onClick={() => onSelect(av)}
+              className={cn(
+                "w-14 h-14 rounded-2xl overflow-hidden border-2 transition-all hover:scale-105",
+                currentAvatar === av ? "border-indigo-600" : "border-zinc-200 dark:border-zinc-800"
+              )}
+            >
+              <img src={av} alt="Preset" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// INFOS VIEW
+// ATTENDANCE TAB COMPONENT (HEALTHCARE STAFF SHIFT & BIOMETRIC LOGS)
 // ─────────────────────────────────────────────────────────────────────────────
-function InfosView() {
-  const details = [
-    { label: "Email Address", value: "clara@coconut.health", icon: EnvelopeSimple },
-    { label: "Phone", value: "+33 (0) 1 42 68 53 00", icon: Phone },
-    { label: "Location", value: "Paris - HQ-04", icon: MapPin },
-    { label: "Department", value: "Product R&D", icon: Buildings },
-    { label: "Access Level", value: "Level 4 (Admin)", icon: ShieldCheck },
-    { label: "Role", value: "Senior Product Manager", icon: Briefcase },
+function AttendanceTab({
+  profile,
+  showToast,
+}: {
+  profile: UserProfileData;
+  showToast: (msg: string) => void;
+}) {
+  const [clockedIn, setClockedIn] = useState(true);
+
+  const attendanceLogs = [
+    {
+      id: "a1",
+      date: "2026-08-08",
+      shift: "Morning ICU Ward B",
+      clockIn: "08:32 AM",
+      clockOut: "In Progress",
+      duration: "5h 46m",
+      method: "Biometric YubiKey",
+      status: "Present",
+      statusColor: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    },
+    {
+      id: "a2",
+      date: "2026-08-07",
+      shift: "Clinical R&D Lab",
+      clockIn: "08:45 AM",
+      clockOut: "05:30 PM",
+      duration: "8h 45m",
+      method: "FaceID Kiosk #2",
+      status: "On Time",
+      statusColor: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    },
+    {
+      id: "a3",
+      date: "2026-08-06",
+      shift: "Night Emergency Duty",
+      clockIn: "07:55 PM",
+      clockOut: "04:15 AM",
+      duration: "8h 20m",
+      method: "Passkey Card #84",
+      status: "Overtime (+2h)",
+      statusColor: "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+    },
+    {
+      id: "a4",
+      date: "2026-08-05",
+      shift: "Tele-health Consultation",
+      clockIn: "09:00 AM",
+      clockOut: "05:00 PM",
+      duration: "8h 00m",
+      method: "Remote OTP",
+      status: "Remote",
+      statusColor: "bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+    },
+    {
+      id: "a5",
+      date: "2026-08-04",
+      shift: "Morning ICU Ward B",
+      clockIn: "09:18 AM",
+      clockOut: "05:30 PM",
+      duration: "8h 12m",
+      method: "Biometric YubiKey",
+      status: "Late (+18m)",
+      statusColor: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-      className="bg-white dark:bg-zinc-900 rounded-[42px] border border-zinc-200 dark:border-zinc-800 shadow-sm p-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-        {details.map(d => (
-          <div key={d.label} className="space-y-3">
-            <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 text-[11px] font-black uppercase tracking-[0.2em]">
-              <d.icon weight="fill" size={14} />{d.label}
-            </div>
-            <p className="text-[17px] font-black text-zinc-900 dark:text-white tracking-tight">{d.value}</p>
+    <div className="space-y-6 pt-2">
+      {/* Live Clock-In Status Banner */}
+      <div className="p-6 rounded-3xl bg-zinc-900 text-white dark:bg-zinc-900 border border-zinc-800 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+              {clockedIn ? "Currently Clocked In" : "Currently Off Duty"}
+            </span>
           </div>
-        ))}
-      </div>
-      <div className="mt-16 pt-16 border-t border-zinc-100 dark:border-zinc-800">
-        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-8 leading-none">Administrative Credentials</h3>
-        <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed text-[15px] font-medium max-w-3xl">
-          Clara Lefèvre is a Senior staff member within the HMS Product Architecture team.
-          She oversees the end-to-end design lifecycle of multi-regional medical hubs with a focus on high-fidelity clinical analytics and seamless patient-provider workflows.
-        </p>
-      </div>
-    </motion.div>
-  );
-}
+          <h3 className="text-xl font-black tracking-tight text-white">
+            ICU Ward B & Telemetry Desk
+          </h3>
+          <p className="text-xs font-medium text-zinc-400">
+            Clock-in verified at 08:32 AM • Biometric YubiKey #NPI-8842
+          </p>
+        </div>
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PLACEHOLDER VIEW
-// ─────────────────────────────────────────────────────────────────────────────
-function PlaceholderView({ icon: Icon, label }: { icon: any; label: string }) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-      className="flex flex-col items-center justify-center py-32 space-y-4 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
-      <div className="w-16 h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-300 dark:text-zinc-600">
-        <Icon size={32} weight="bold" />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setClockedIn(!clockedIn);
+              showToast(clockedIn ? "Clocked out successfully!" : "Clocked in successfully!");
+            }}
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-2",
+              clockedIn
+                ? "bg-rose-600 hover:bg-rose-700 text-white"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white"
+            )}
+          >
+            {clockedIn ? "Clock Out" : "Clock In Duty"}
+          </button>
+
+          <button
+            onClick={() => showToast("Shift swap request sent to Duty Director!")}
+            className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-all border border-zinc-700"
+          >
+            Request Shift Swap
+          </button>
+        </div>
       </div>
-      <p className="text-sm font-bold text-zinc-400 dark:text-zinc-500">{label} coming soon.</p>
-    </motion.div>
-  );
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// UTILITIES
-// ─────────────────────────────────────────────────────────────────────────────
-function UserIcon(props: any) { return <User {...props} weight="bold" />; }
+      {/* KPI Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <span className="text-[10px] font-black uppercase text-zinc-400">Days Present</span>
+          <p className="text-xl font-black text-zinc-900 dark:text-white">24 / 25</p>
+          <p className="text-[11px] font-bold text-emerald-600">96.2% Punctuality</p>
+        </div>
 
-function DotsThree(props: any) {
-  return (
-    <svg viewBox="0 0 256 256" {...props}>
-      <path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM204,116a12,12,0,1,0,12,12A12,12,0,0,0,204,116ZM52,116a12,12,0,1,0,12,12A12,12,0,0,0,52,116Z" />
-    </svg>
+        <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <span className="text-[10px] font-black uppercase text-zinc-400">Total Shift Hours</span>
+          <p className="text-xl font-black text-zinc-900 dark:text-white">184.5 Hrs</p>
+          <p className="text-[11px] font-bold text-zinc-400">August 2026</p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <span className="text-[10px] font-black uppercase text-zinc-400">Overtime Earned</span>
+          <p className="text-xl font-black text-purple-600 dark:text-purple-400">14.5 Hrs</p>
+          <p className="text-[11px] font-bold text-purple-600">+$435.00 Bonus</p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-1">
+          <span className="text-[10px] font-black uppercase text-zinc-400">PTO Leave Balance</span>
+          <p className="text-xl font-black text-sky-600 dark:text-sky-400">8 Days</p>
+          <p className="text-[11px] font-bold text-sky-600">Paid Leave Avail.</p>
+        </div>
+      </div>
+
+      {/* Daily Attendance Logs Table */}
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-black text-zinc-900 dark:text-white">
+              Biometric Attendance & Shift Logs
+            </h3>
+            <p className="text-xs font-medium text-zinc-400">
+              Verified clinical clock-in logs and biometric timestamps
+            </p>
+          </div>
+
+          <button
+            onClick={() => showToast("Exporting monthly attendance log PDF...")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+          >
+            <DownloadSimple size={14} weight="bold" />
+            Export Log
+          </button>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-zinc-100 dark:border-zinc-800">
+          <table className="w-full text-left text-xs font-semibold">
+            <thead>
+              <tr className="bg-zinc-50 dark:bg-zinc-950 text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
+                <th className="py-3 px-4">Date</th>
+                <th className="py-3 px-4">Shift / Ward</th>
+                <th className="py-3 px-4">Clock In</th>
+                <th className="py-3 px-4">Clock Out</th>
+                <th className="py-3 px-4">Duration</th>
+                <th className="py-3 px-4">Verification</th>
+                <th className="py-3 px-4 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {attendanceLogs.map((log) => (
+                <tr key={log.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                  <td className="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">
+                    {log.date}
+                  </td>
+                  <td className="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-bold">
+                    {log.shift}
+                  </td>
+                  <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">
+                    {log.clockIn}
+                  </td>
+                  <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">
+                    {log.clockOut}
+                  </td>
+                  <td className="py-3 px-4 font-bold text-zinc-900 dark:text-zinc-100">
+                    {log.duration}
+                  </td>
+                  <td className="py-3 px-4 text-zinc-400 font-medium">
+                    {log.method}
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <span
+                      className={cn(
+                        "px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border inline-block",
+                        log.statusColor
+                      )}
+                    >
+                      {log.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }

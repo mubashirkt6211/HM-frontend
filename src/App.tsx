@@ -20,6 +20,7 @@ import { EmailPage } from "@/pages/crm/EmailPage";
 import { ItineraryBuilderPage } from "@/pages/crm/ItineraryBuilderPage";
 import { ServiceSetupPage } from "@/pages/crm/ServiceSetupPage";
 import { CrmConfigPage } from "@/pages/crm/CrmConfigPage";
+import { CampaignsPage } from "@/pages/crm/CampaignsPage";
 import { Hammer, Tooth, Sparkle, TreeStructure, User, Users, Star, Megaphone, ClipboardText, Funnel, Buildings, Briefcase, Handshake, ChartLineUp, ShieldCheck, ClockClockwise } from "@phosphor-icons/react";
 import { UserRole } from "@/models/user";
 
@@ -40,8 +41,37 @@ const normalizePageId = (page: string): PageType => {
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("dashboard");
+  const [pageHistory, setPageHistory] = useState<string[]>(["dashboard"]);
   const [activeDashboardTab, setActiveDashboardTab] = useState("Dashboard");
   const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
+
+  const handleNavigate = (page: string) => {
+    const target = normalizePageId(page);
+    if (target === "dashboard") {
+      setPageHistory(["dashboard"]);
+    } else {
+      setPageHistory((prev) => {
+        const existingIdx = prev.indexOf(target);
+        if (existingIdx !== -1) {
+          return prev.slice(0, existingIdx + 1);
+        } else {
+          return [...prev, target];
+        }
+      });
+    }
+    setCurrentPage(target);
+  };
+
+  const handleBack = () => {
+    if (pageHistory.length > 1) {
+      const prevPage = pageHistory[pageHistory.length - 2];
+      setPageHistory((prev) => prev.slice(0, prev.length - 1));
+      setCurrentPage(prevPage as PageType);
+    } else {
+      setPageHistory(["dashboard"]);
+      setCurrentPage("dashboard");
+    }
+  };
 
   const normalizedCurrentPage = normalizePageId(currentPage);
 
@@ -56,7 +86,7 @@ function App() {
       case "leads":
         return <LeadsPage />;
       case "pipeline":
-        return <PipelinePage />;
+        return <PipelinePage onNavigate={handleNavigate} />;
       case "tasks":
         return <TasksPage />;
       case "doctors":
@@ -76,11 +106,13 @@ function App() {
       case "emails":
         return <EmailPage />;
       case "profile":
-        return <ProfilePage onBack={() => setCurrentPage("dashboard")} />;
+        return <ProfilePage onBack={handleBack} onNavigate={handleNavigate} initialWizardMode={false} />;
+      case "setup-wizard":
+        return <ProfilePage onBack={handleBack} onNavigate={handleNavigate} initialWizardMode={true} />;
       case "company-setup":
-        return <CompanySetupPage onBack={() => setCurrentPage("dashboard")} />;
+        return <CompanySetupPage onBack={handleBack} />;
       case "todo":
-        return <TodoPage />;
+        return <TodoPage onBack={handleBack} onNavigate={handleNavigate} pageHistory={pageHistory} />;
       case "analytics":
         return <ComingSoonPage title="Forecast" icon={Funnel} />;
       case "accounts":
@@ -114,7 +146,7 @@ function App() {
       case "people":
         return <ComingSoonPage title="People" icon={Users} />;
       case "sales-navigator":
-        return <ComingSoonPage title="Campaigns" icon={Megaphone} />;
+        return <CampaignsPage onNavigate={handleNavigate} />;
       case "emails-marketing-agency":
         return <ComingSoonPage title="Sequences" icon={ClipboardText} />;
       case "automations":
@@ -126,7 +158,7 @@ function App() {
       case "orthodontics":
         return <ComingSoonPage title="Orthodontics Registry" icon={Tooth} />;
       case "calendar":
-        return <CalendarPage />;
+        return <CalendarPage onBack={handleBack} onNavigate={handleNavigate} pageHistory={pageHistory} />;
       case "itinerary-builder":
         return <ItineraryBuilderPage />;
       default:
@@ -137,12 +169,13 @@ function App() {
   return (
     <AppLayout
       currentPage={currentPage}
-      onPageChange={(page) => setCurrentPage(page as PageType)}
+      onPageChange={handleNavigate}
       isFullPage={false}
       onTabChange={setActiveDashboardTab}
       activeTab={activeDashboardTab}
       userRole={userRole}
       setUserRole={setUserRole}
+      pageHistory={pageHistory}
     >
       {renderPage()}
     </AppLayout>

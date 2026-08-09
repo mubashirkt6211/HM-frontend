@@ -1,24 +1,26 @@
 import React, { useState } from "react";
-import { 
-  PanelLeft, 
-  UserCheck, 
-  Users, 
-  CreditCard, 
-  Settings, 
-  HelpCircle, 
-  LogOut, 
-  Plus, 
-  Zap, 
-  Home, 
-  ChevronRight, 
-  LayoutDashboard, 
-  Calendar, 
-  UserSquare, 
-  Bell, 
-  CheckCircle2, 
-  Inbox, 
-  Layers, 
-  Archive, 
+import {
+  PanelLeft,
+  UserCheck,
+  Users,
+  CreditCard,
+  Settings,
+  HelpCircle,
+  LogOut,
+  Plus,
+  Zap,
+  Home,
+  ChevronRight,
+  LayoutDashboard,
+  Calendar,
+  CalendarDays,
+  ListTodo,
+  UserSquare,
+  Bell,
+  CheckCircle2,
+  Inbox,
+  Layers,
+  Archive,
   BellRing,
   MessageSquare,
   CheckSquare,
@@ -59,6 +61,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { UserRole } from "@/models/user"
 import { MapTrifold } from "@phosphor-icons/react";
+import { IconCalendarWeek } from "@tabler/icons-react";
+import claraAvatar from "@/assets/clara_avatar.png";
 
 
 const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
@@ -66,7 +70,7 @@ const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
   analytics: { label: "Forecast", icon: TrendingUp },
   leads: { label: "Leads", icon: Target },
   todo: { label: "To Do", icon: CheckCircle2 },
-  calendar: { label: "Calendar", icon: Calendar },
+  calendar: { label: "Calendar", icon: IconCalendarWeek },
   "itinerary-builder": { label: "Itinerary Builder", icon: MapTrifold },
   accounts: { label: "Accounts", icon: Briefcase },
   deals: { label: "Deals", icon: Handshake },
@@ -183,7 +187,8 @@ export function SiteHeader({
   activeTab,
   onPageChange,
   userRole,
-  setUserRole
+  setUserRole,
+  pageHistory
 }: {
   onTabChange?: (tab: string) => void;
   onPageChange?: (page: string) => void;
@@ -191,6 +196,7 @@ export function SiteHeader({
   activeTab?: string;
   userRole?: UserRole;
   setUserRole?: (role: UserRole) => void;
+  pageHistory?: string[];
 }) {
 
   const { toggleSidebar } = useSidebar();
@@ -211,6 +217,8 @@ export function SiteHeader({
   const filteredNotifications = notifications.filter(n => n.category === activeCategory);
   const getCategoryCount = (cat: string) => notifications.filter(n => n.category === cat).length;
 
+  const breadcrumbItems = (pageHistory && pageHistory.length > 0) ? pageHistory : [currentPage];
+
   return (
     <header className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md rounded-t-[20px] shrink-0 sticky top-0 z-10 w-full h-16 px-6 md:px-10 no-scrollbar">
       <div className="flex items-center gap-3">
@@ -223,22 +231,34 @@ export function SiteHeader({
         <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
 
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-sm">
-          <div className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer transition-colors">
-            <Home className="w-3.5 h-3.5" />
-            <span className="text-[13px] font-medium">Home</span>
-          </div>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
-          <div className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100">
-            <pageMeta.icon className="w-3.5 h-3.5" />
-            <span className="text-[13px] font-semibold">{pageMeta.label}</span>
-          </div>
-          {/* {activeTab && activeTab !== pageMeta.label && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
-                <span className="text-[13px] font-semibold text-zinc-600 dark:text-zinc-400">{activeTab}</span>
-              </>
-            )} */}
+        <nav className="flex items-center gap-1.5 text-sm overflow-x-auto no-scrollbar py-1">
+          {breadcrumbItems.map((pageId, idx, arr) => {
+            const isLast = idx === arr.length - 1;
+            const meta = pageId === "dashboard"
+              ? { label: "Home", icon: Home }
+              : (PAGE_META[pageId] ?? { label: pageId, icon: LayoutDashboard });
+            const Icon = meta.icon;
+
+            return (
+              <div key={`${pageId}-${idx}`} className="flex items-center gap-1.5 shrink-0">
+                {idx > 0 && (
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
+                )}
+                <button
+                  type="button"
+                  disabled={isLast}
+                  onClick={() => onPageChange?.(pageId)}
+                  className={`flex items-center gap-1.5 transition-colors shrink-0 ${isLast
+                    ? "text-zinc-900 dark:text-zinc-100 font-semibold cursor-default"
+                    : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 font-medium cursor-pointer"
+                    }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[13px]">{meta.label}</span>
+                </button>
+              </div>
+            );
+          })}
         </nav>
 
       </div>
@@ -339,7 +359,7 @@ export function SiteHeader({
                     {/* Avatar */}
                     <div className="relative shrink-0">
                       <Avatar className="h-9 w-9 border border-zinc-200 dark:border-zinc-800">
-                        <AvatarImage src={notification.user.avatar} />
+                        <AvatarImage src='https://i.pinimg.com/736x/6e/92/7d/6e927d30b46375b6e9e93f4483e3564a.jpg' />
                         <AvatarFallback className="bg-zinc-100 dark:bg-zinc-800 text-[10px]">{notification.user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       {notification.unread && (
@@ -434,27 +454,37 @@ export function SiteHeader({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Avatar className="h-9 w-9 cursor-pointer border-2 border-zinc-100 dark:border-zinc-800 hover:ring-4 hover:ring-zinc-50 dark:hover:ring-zinc-900/50 transition-all duration-300">
-              <AvatarImage src="https://i.pinimg.com/1200x/39/86/91/398691f123726a5763e9c47980964fff.jpg" alt="@sophie" />
-              <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white">SB</AvatarFallback>
+              <AvatarImage src={claraAvatar} alt="@clara" />
+              <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white">CL</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-64 p-1.5 rounded-[22px] border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)]" align="end" sideOffset={8}>
-            <DropdownMenuLabel className="p-3 pt-2">
+            <DropdownMenuLabel className="p-3 pt-2 cursor-pointer" onClick={() => onPageChange?.("profile")}>
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Sophie Bennett</span>
-                  <span className="text-[11px] font-medium text-zinc-400">sophie@ui.live</span>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">Clara Lefèvre</span>
+                  <span className="text-[11px] font-medium text-zinc-400">clara.lefevre@hms-health.com</span>
                 </div>
                 <div className="relative">
                   <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-blue-500 opacity-20 blur-sm"></div>
-                  <Avatar className="h-10 w-10 border-2 border-white dark:border-zinc-900 shadow-sm relative">
-                    <AvatarImage src="https://i.pinimg.com/1200x/39/86/91/398691f123726a5763e9c47980964fff.jpg" />
+                  <Avatar className="h-12 w-12 border-2 border-white dark:border-zinc-900 shadow-sm relative">
+                    <AvatarImage src={claraAvatar} />
                   </Avatar>
                 </div>
               </div>
             </DropdownMenuLabel>
 
             <div className="space-y-0.5">
+              {/* <DropdownMenuItem
+                onClick={() => onPageChange?.("setup-wizard")}
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:text-white" />
+                </div>
+                <span className="text-[13px] font-extrabold text-zinc-900 dark:text-zinc-100">Profile Setup</span>
+              </DropdownMenuItem> */}
+
               <DropdownMenuItem
                 onClick={() => onPageChange?.("profile")}
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"

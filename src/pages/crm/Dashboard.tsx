@@ -223,8 +223,8 @@ function ReuiCatalogHealthCard() {
             item.badgeType === "positive"
               ? "#10b981"
               : item.badgeType === "negative"
-              ? "#f43f5e"
-              : "#f59e0b";
+                ? "#f43f5e"
+                : "#f59e0b";
 
           return (
             <div key={idx} className="flex flex-col justify-between space-y-3">
@@ -247,8 +247,8 @@ function ReuiCatalogHealthCard() {
                         item.badgeType === "positive"
                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
                           : item.badgeType === "negative"
-                          ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
-                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                            ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
+                            : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
                       )}
                     >
                       {item.badgeText}
@@ -828,8 +828,8 @@ function SalesOverview() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`rounded-full px-3 py-1 font-semibold transition-all outline-none focus:outline-none ${activeTab === tab
-                ? "bg-zinc-900 text-white dark:bg-emerald-600 dark:text-white shadow-sm"
-                : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              ? "bg-zinc-900 text-white dark:bg-emerald-600 dark:text-white shadow-sm"
+              : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
               }`}
           >
             {tab}

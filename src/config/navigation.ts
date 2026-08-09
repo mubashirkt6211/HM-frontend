@@ -30,6 +30,7 @@ import {
 import { CheckCircle2, LayoutGrid } from "lucide-react";
 
 import { UserRole } from "@/models/user";
+import { IconCalendarEvent, IconListCheck, IconMapSearch, IconPipeline, IconSmartHome, IconTax, IconTransactionBitcoin } from "@tabler/icons-react";
 
 export interface NavItemConfig {
     icon?: ElementType;
@@ -57,17 +58,11 @@ export interface NavSectionConfig {
 export const sidebarNavigationSections: NavSectionConfig[] = [
     {
         items: [
-            {
-                icon: LayoutGrid,
-                title: "Dashboard",
-                pageId: "dashboard",
-                subItems: [
-                    { title: "Pipeline", pageId: "pipeline", icon: Funnel },
-                    { title: "Forecast", pageId: "analytics", icon: TrendUp },
-                    { title: "Revenue", pageId: "revenue", icon: Wallet, roles: [UserRole.ADMIN, UserRole.MANAGER] },
-                    { title: "To Do", pageId: "todo", icon: CheckCircle2 },
-                ],
-            },
+            { icon: IconSmartHome, title: "Dashboard", pageId: "dashboard" },
+            { icon: IconPipeline, title: "Pipeline", pageId: "pipeline" },
+            { icon: IconTransactionBitcoin, title: "Forecast", pageId: "analytics" },
+            { icon: IconTax, title: "Revenue", pageId: "revenue", roles: [UserRole.ADMIN, UserRole.MANAGER] },
+            { icon: IconListCheck, title: "To Do", pageId: "todo" },
             { icon: Target, title: "Leads", pageId: "leads", badge: "24", roles: [UserRole.ADMIN, UserRole.DOCTOR, UserRole.RECEPTIONIST] },
             { icon: Briefcase, title: "Accounts", pageId: "accounts", badge: "4" },
             { icon: UserList, title: "Contacts", pageId: "contacts" },
@@ -85,8 +80,8 @@ export const sidebarNavigationSections: NavSectionConfig[] = [
             { icon: UserPlus, title: "Prospects", pageId: "notes" },
             { icon: ChatCenteredDots, title: "Conversations", pageId: "messages", badge: "12" },
             { icon: PhoneCall, title: "Follow-ups", pageId: "tasks" },
-            { icon: CalendarCheck, title: "Calendar", pageId: "calendar" },
-            { icon: MapTrifold, title: "Itinerary Builder", pageId: "itinerary-builder" },
+            { icon: IconCalendarEvent, title: "Calendar", pageId: "calendar" },
+            { icon: IconMapSearch, title: "Itinerary Builder", pageId: "itinerary-builder" },
             { icon: Envelope, title: "Emails", pageId: "emails", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.RECEPTIONIST] },
             { icon: ChartLineUp, title: "Reports", pageId: "reports", roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.DOCTOR] },
             { icon: Sparkle, title: "Automations", pageId: "automations", roles: [UserRole.ADMIN] },
@@ -100,10 +95,11 @@ export const sidebarNavigationSections: NavSectionConfig[] = [
         ],
     },
     {
-        title: "Administration & Security",
+        title: "Settings & Help",
         items: [
+            { icon: Gear, title: "Settings", pageId: "crm-config", badge: "Config", roles: [UserRole.ADMIN] },
+            { icon: UserList, title: "User Profile", pageId: "profile" },
             { icon: ShieldCheck, title: "Privileges & Roles", pageId: "privileges", roles: [UserRole.ADMIN, UserRole.MANAGER] },
-            { icon: Gear, title: "System Config", pageId: "crm-config", badge: "Email/WhatsApp", roles: [UserRole.ADMIN] },
             { icon: Buildings, title: "Company Setup", pageId: "company-setup", roles: [UserRole.ADMIN] },
         ],
     },

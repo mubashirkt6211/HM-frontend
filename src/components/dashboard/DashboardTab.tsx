@@ -68,14 +68,15 @@ import { cn } from "@/lib/utils";
 import { CalendarCheckIcon } from "@phosphor-icons/react/dist/ssr";
 import { CalendarCogIcon, User } from "lucide-react";
 import { Filters, type Filter, type FilterFieldConfig } from "@/components/reui/filters";
+import { IconCalendarMonth, IconDotsVertical } from "@tabler/icons-react";
 
 /* ================================================================
    Types
    ================================================================ */
 
-type Priority = "high" | "medium" | "low";
+export type Priority = "high" | "medium" | "low";
 
-type Task = {
+export type Task = {
   id: string;
   title: string;
   description: string;
@@ -107,9 +108,30 @@ const COLUMN_TITLES: Record<string, string> = {
   on_process: "On Process",
   on_review: "On Review",
   completed: "Completed",
+  new: "New",
+  open: "Open",
+  inprogress: "In-progress",
+  opendeal: "Open-deal",
+  won: "Won",
+  inquiry: "Inquiry",
+  contacted: "Contacted",
+  itinerary: "Itinerary Sent",
+  negotiation: "Negotiation",
+  confirmed: "Confirmed",
 };
 
-type StageKey = "todo" | "on_process" | "on_review" | "completed";
+type StageKey = "todo" | "on_process" | "on_review" | "completed" | "new" | "open" | "inprogress" | "opendeal" | "won";
+
+const DEFAULT_COL_META = {
+  accent: "bg-blue-500",
+  dotColor: "bg-blue-500",
+  bgColor: "bg-blue-50 dark:bg-blue-950/20",
+  borderColor: "border-l-blue-500",
+  badgeBg: "bg-blue-100 dark:bg-blue-900/40",
+  badgeText: "text-blue-600 dark:text-blue-400",
+  plusColor: "text-blue-400",
+  subtitle: "Active stage",
+};
 
 const COLUMN_META: Record<
   string,
@@ -164,6 +186,56 @@ const COLUMN_META: Record<
     plusColor: "text-emerald-400",
     subtitle: "Successfully finished",
   },
+  new: {
+    accent: "bg-sky-500",
+    dotColor: "bg-sky-500",
+    bgColor: "bg-sky-50 dark:bg-sky-950/20",
+    borderColor: "border-l-sky-500",
+    badgeBg: "bg-sky-100 dark:bg-sky-900/40",
+    badgeText: "text-sky-700 dark:text-sky-300",
+    plusColor: "text-sky-400",
+    subtitle: "New lead inquiries",
+  },
+  open: {
+    accent: "bg-violet-500",
+    dotColor: "bg-violet-500",
+    bgColor: "bg-violet-50 dark:bg-violet-950/20",
+    borderColor: "border-l-violet-500",
+    badgeBg: "bg-violet-100 dark:bg-violet-900/40",
+    badgeText: "text-violet-700 dark:text-violet-300",
+    plusColor: "text-violet-400",
+    subtitle: "Active lead discussion",
+  },
+  inprogress: {
+    accent: "bg-amber-500",
+    dotColor: "bg-amber-500",
+    bgColor: "bg-amber-50 dark:bg-amber-950/20",
+    borderColor: "border-l-amber-500",
+    badgeBg: "bg-amber-100 dark:bg-amber-900/40",
+    badgeText: "text-amber-800 dark:text-amber-300",
+    plusColor: "text-amber-400",
+    subtitle: "Deal in progress",
+  },
+  opendeal: {
+    accent: "bg-rose-500",
+    dotColor: "bg-rose-500",
+    bgColor: "bg-rose-50 dark:bg-rose-950/20",
+    borderColor: "border-l-rose-500",
+    badgeBg: "bg-rose-100 dark:bg-rose-900/40",
+    badgeText: "text-rose-700 dark:text-rose-300",
+    plusColor: "text-rose-400",
+    subtitle: "Open opportunity",
+  },
+  won: {
+    accent: "bg-emerald-500",
+    dotColor: "bg-emerald-500",
+    bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
+    borderColor: "border-l-emerald-500",
+    badgeBg: "bg-emerald-100 dark:bg-emerald-900/40",
+    badgeText: "text-emerald-700 dark:text-emerald-300",
+    plusColor: "text-emerald-400",
+    subtitle: "Closed & won",
+  },
 };
 
 const STAGE_STEPS = ["To Do", "On Process", "On Review", "Completed"];
@@ -172,6 +244,11 @@ const COLUMN_STAGE_INDEX: Record<string, number> = {
   on_process: 1,
   on_review: 2,
   completed: 3,
+  new: 0,
+  open: 1,
+  inprogress: 2,
+  opendeal: 3,
+  won: 4,
 };
 
 const PRIORITY_META: Record<Priority, { label: string; dot: string; tone: string }> = {
@@ -976,7 +1053,7 @@ function PipelineColumn({
    Deal/Task Drawer
    ================================================================ */
 
-function TaskDrawer({
+export function TaskDrawer({
   task,
   columnKey,
   positionLabel,
@@ -996,42 +1073,78 @@ function TaskDrawer({
   hasNext: boolean;
 }) {
   const [tab, setTab] = useState("Activity");
-  const details = useMemo(() => buildTaskDetails(task, columnKey), [task, columnKey]);
+  const [activeStage, setActiveStage] = useState(columnKey);
+  const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [followUpDate, setFollowUpDate] = useState("2026-08-15");
+  const [followUpTime, setFollowUpTime] = useState("10:00");
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // Interactive milestone checkboxes for Timeline
+  const [completedMilestones, setCompletedMilestones] = useState<Record<string, boolean>>({
+    "m-1": true,
+    "m-2": true,
+    "m-3": false,
+    "m-4": false,
+  });
+
+  const toggleMilestone = (id: string) => {
+    setCompletedMilestones((prev) => {
+      const nextState = !prev[id];
+      showToast(nextState ? "Milestone marked as complete ✓" : "Milestone reopened");
+      return { ...prev, [id]: nextState };
+    });
+  };
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const details = useMemo(() => buildTaskDetails(task, activeStage), [task, activeStage]);
   const tabs = ["Activity", "Timeline", "Appointments", "Proposals", "Invoices", "Notifications", "Notes", "Tasks"];
-  const priorityMeta = PRIORITY_META[task.priority];
-  const colMeta = COLUMN_META[columnKey];
+  const priorityMeta = PRIORITY_META[task.priority] || { label: "Medium", dot: "bg-amber-500", tone: "bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-300" };
+  const colMeta = COLUMN_META[activeStage] || COLUMN_META[columnKey] || DEFAULT_COL_META;
 
   return (
-    <SheetContent side="right" showCloseButton={false} className="w-full gap-0 overflow-hidden p-0 sm:max-w-[920px]">
+    <SheetContent side="right" showCloseButton={false} className="w-full gap-0 overflow-hidden p-0 sm:max-w-[960px] border-l border-zinc-200 dark:border-zinc-800 shadow-2xl bg-white dark:bg-zinc-950">
       <SheetHeader className="sr-only">
         <SheetTitle>{task.title} task details</SheetTitle>
         <SheetDescription>Details drawer for the selected task</SheetDescription>
       </SheetHeader>
 
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col max-h-screen relative">
+        {/* Toast Notification Banner */}
+        {toastMsg && (
+          <div className="absolute top-14 right-6 z-50 px-4 py-2 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-bold shadow-xl border border-zinc-800 animate-in fade-in slide-in-from-top-2">
+            {toastMsg}
+          </div>
+        )}
+
         {/* top bar */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-3">
+        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-3 shrink-0 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-xs">
           <div className="flex items-center gap-3 text-[13px] text-zinc-500">
-            <div className="flex flex-col overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800">
+            <div className="flex overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xs">
               <button
                 onClick={onPrev}
                 disabled={!hasPrev}
-                className="flex h-5 w-6 items-center justify-center text-zinc-400 hover:bg-zinc-100 disabled:opacity-30 dark:hover:bg-zinc-900"
+                className="flex h-7 w-7 items-center justify-center text-zinc-600 hover:bg-zinc-100 disabled:opacity-30 dark:text-zinc-300 dark:hover:bg-zinc-800 cursor-pointer"
               >
-                <CaretUp className="size-3" />
+                <CaretUp className="size-3.5" />
               </button>
               <button
                 onClick={onNext}
                 disabled={!hasNext}
-                className="flex h-5 w-6 items-center justify-center border-t border-zinc-200 text-zinc-400 hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                className="flex h-7 w-7 items-center justify-center border-l border-zinc-200 text-zinc-600 hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800 cursor-pointer"
               >
-                <CaretDown className="size-3" />
+                <CaretDown className="size-3.5" />
               </button>
             </div>
-            <span>
+            <span className="font-semibold text-zinc-600 dark:text-zinc-300">
               {positionLabel} in{" "}
-              <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                {COLUMN_TITLES[columnKey]}
+              <span className="font-bold text-zinc-900 dark:text-white">
+                {COLUMN_TITLES[activeStage] || COLUMN_TITLES[columnKey]}
               </span>{" "}
               Stage
             </span>
@@ -1039,17 +1152,17 @@ function TaskDrawer({
           <SheetClose asChild>
             <button
               onClick={onClose}
-              className="flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+              className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer p-1"
             >
-              Close
-              <X className="size-3.5" />
+              <span>Close</span>
+              <X className="size-4" />
             </button>
           </SheetClose>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
           {/* left column */}
-          <div className="w-[300px] shrink-0 overflow-y-auto border-r border-zinc-200 dark:border-zinc-800 p-5">
+          <div className="w-full md:w-[320px] shrink-0 overflow-y-auto border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 p-6 space-y-5 bg-zinc-50/40 dark:bg-zinc-900/20 scrollbar-thin relative">
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge className={cn("border-none text-[10px] font-semibold", priorityMeta.tone)}>
                 {priorityMeta.label} Priority
@@ -1061,44 +1174,131 @@ function TaskDrawer({
                   colMeta.badgeText,
                 )}
               >
-                {COLUMN_TITLES[columnKey]}
+                {COLUMN_TITLES[activeStage] || COLUMN_TITLES[columnKey]}
               </Badge>
             </div>
 
-            <p className="mt-3 text-[12px] text-zinc-400">Task #{details.number}</p>
+            <p className="mt-3 text-[12px] text-zinc-400">CRM Lead #{details.number}</p>
             <h2 className="mt-1 text-[20px] font-semibold leading-6 text-zinc-950 dark:text-white">
               {task.title}
             </h2>
             <p className="mt-1 flex items-center gap-1 text-[12px] text-zinc-500">
-              <MapPin className="size-3.5" />
+              <MapPin className="size-3.5 text-zinc-400" />
               {details.address}
             </p>
 
+            {/* ACTION BUTTONS (Update Status, Calendar, 3 Dots) */}
             <div className="mt-4 flex items-center gap-2">
-              <Button size="sm" className="flex-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700">
-                Update Status
-              </Button>
-              <Button variant="outline" size="icon" className="size-9 rounded-full">
-                <CalendarBlank className="size-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="size-9 rounded-full">
-                <DotsThreeVertical className="size-4" />
-              </Button>
+              {/* Update Status DropdownMenu (Portaled, zero clipping) */}
+              <div className="flex-1">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-bold cursor-pointer flex items-center justify-between"
+                    >
+                      <span>Update Status</span>
+                      <CaretDown className="size-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48 rounded-2xl border-zinc-200 dark:border-zinc-800 p-1.5 shadow-xl bg-white dark:bg-zinc-950 z-[100]">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 px-2.5 py-1">Select Stage</div>
+                    {Object.keys(COLUMN_TITLES).map((key) => (
+                      <DropdownMenuItem
+                        key={key}
+                        onClick={() => {
+                          setActiveStage(key);
+                          showToast(`Moved to ${COLUMN_TITLES[key]} stage`);
+                        }}
+                        className={cn(
+                          "w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between cursor-pointer transition-colors",
+                          activeStage === key
+                            ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400"
+                            : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                        )}
+                      >
+                        <span>{COLUMN_TITLES[key]}</span>
+                        {activeStage === key && <Check className="size-3 text-emerald-600" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Calendar Button (Opens Calendar Schedule Dialog) */}
+              <div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsCalendarOpen(true)}
+                  className="size-10 rounded-full cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <IconCalendarMonth className="size-4" />
+                </Button>
+              </div>
+
+              {/* 3 Dots Action Menu (Portaled, zero clipping) */}
+              <div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-10 rounded-full cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    >
+                      <IconDotsVertical className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-2xl border-zinc-200 dark:border-zinc-800 p-1.5 shadow-xl bg-white dark:bg-zinc-950 z-[100]">
+                    <DropdownMenuItem
+                      onClick={() => showToast("Opened Lead Edit Form")}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                    >
+                      ✏️ Edit Lead Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => showToast("PDF Summary Generated")}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                    >
+                      📄 Export PDF Summary
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => showToast("Lead Duplicated")}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                    >
+                      📋 Duplicate Lead
+                    </DropdownMenuItem>
+                    <div className="border-t border-zinc-100 dark:border-zinc-800 my-1" />
+                    <DropdownMenuItem
+                      onClick={() => showToast("Lead Archived")}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer"
+                    >
+                      📦 Archive Lead
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => { showToast("Lead Deleted"); onClose(); }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                    >
+                      🗑️ Delete Lead
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3.5">
+            <div className="mt-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3.5 bg-white dark:bg-zinc-900">
               <div className="flex items-center justify-between">
-                <p className="text-[12px] font-medium text-zinc-500">{COLUMN_TITLES[columnKey]}</p>
-                <button className="text-[12px] font-medium text-blue-600 hover:underline">View</button>
+                <p className="text-[12px] font-medium text-zinc-500">Deal Value ({COLUMN_TITLES[columnKey]})</p>
+                <button className="text-[12px] font-medium text-emerald-600 hover:underline">View Deal</button>
               </div>
-              <p className="mt-1 text-[20px] font-semibold text-zinc-950 dark:text-white">
-                {task.value ?? "—"}
+              <p className="mt-1 text-[20px] font-bold text-zinc-950 dark:text-white">
+                {task.value ?? "$45,000"}
               </p>
             </div>
 
             <div className="mt-5">
               <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">
-                Assignees
+                Lead Assignees
               </p>
               <div className="mt-3 flex -space-x-2">
                 {task.assignees.map((src, i) => (
@@ -1114,54 +1314,54 @@ function TaskDrawer({
 
             <div className="mt-5">
               <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">
-                Contact Details
+                CRM Contact Details
               </p>
               <div className="mt-3 space-y-2.5 text-[13px]">
                 <div className="flex items-start gap-2">
                   <Envelope className="mt-0.5 size-4 text-zinc-400" />
                   <div>
                     <p className="text-[11px] text-zinc-400">Email Address</p>
-                    <p className="text-zinc-700 dark:text-zinc-200">{details.email}</p>
+                    <p className="text-zinc-700 dark:text-zinc-200 font-medium">{details.email}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <Phone className="mt-0.5 size-4 text-zinc-400" />
                   <div>
                     <p className="text-[11px] text-zinc-400">Phone</p>
-                    <p className="text-zinc-700 dark:text-zinc-200">{details.phone}</p>
+                    <p className="text-zinc-700 dark:text-zinc-200 font-medium">{details.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <LinkedinLogo className="mt-0.5 size-4 text-zinc-400" />
                   <div>
-                    <p className="text-[11px] text-zinc-400">Source</p>
-                    <p className="text-zinc-700 dark:text-zinc-200">{details.source}</p>
+                    <p className="text-[11px] text-zinc-400">Lead Source</p>
+                    <p className="text-zinc-700 dark:text-zinc-200 font-medium">{details.source}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="mt-5">
-              <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">Owner</p>
+              <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">Lead Owner</p>
               <div className="mt-3 flex items-center gap-2">
                 <Avatar className="size-8 border border-zinc-200 dark:border-zinc-800">
-                  <AvatarFallback className="bg-zinc-100 text-[11px] font-semibold text-zinc-600">
-                    {(task.owner ?? "U")[0]}
+                  <AvatarFallback className="bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[11px] font-bold">
+                    {(task.owner ?? "A")[0]}
                   </AvatarFallback>
                 </Avatar>
-                <p className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
-                  {task.owner ?? "Unassigned"}
+                <p className="text-[13px] font-bold text-zinc-800 dark:text-zinc-100">
+                  {task.owner ?? "Alex Morgan (Sales Director)"}
                 </p>
               </div>
             </div>
           </div>
 
           {/* right column */}
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
             <div className="flex items-center justify-between">
               <p className="text-[12px] text-zinc-500">
                 Board:{" "}
-                <span className="font-medium text-zinc-800 dark:text-zinc-200">HMS Task Board</span>
+                <span className="font-bold text-zinc-800 dark:text-zinc-200">CRM Pipeline & To-Do Board</span>
               </p>
               <p className="flex items-center gap-1.5 text-[12px] text-zinc-500">
                 <Clock className="size-3.5" />
@@ -1169,18 +1369,18 @@ function TaskDrawer({
               </p>
             </div>
 
-            {/* Stage progress */}
-            <div className="mt-3 flex items-center gap-1 overflow-x-auto rounded-full bg-zinc-100 dark:bg-zinc-900 p-1">
+            {/* Stage progress bar */}
+            <div className="flex items-center gap-1 overflow-x-auto rounded-full bg-zinc-100 dark:bg-zinc-900 p-1 no-scrollbar">
               {STAGE_STEPS.map((step, i) => (
                 <div
                   key={step}
                   className={cn(
-                    "flex-1 whitespace-nowrap rounded-full px-3 py-1.5 text-center text-[11px] font-medium",
+                    "flex-1 whitespace-nowrap rounded-full px-3 py-1.5 text-center text-[11px] font-bold cursor-pointer transition-all",
                     i === details.stageIndex
-                      ? "bg-blue-600 text-white"
+                      ? "bg-emerald-600 text-white shadow-xs"
                       : i < details.stageIndex
-                        ? "text-zinc-400 line-through"
-                        : "text-zinc-500",
+                        ? "text-zinc-400 dark:text-zinc-500 line-through"
+                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200",
                   )}
                 >
                   {step}
@@ -1188,62 +1388,139 @@ function TaskDrawer({
               ))}
             </div>
 
-            {/* Tabs */}
-            <div className="mt-5 flex items-center gap-5 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800 text-[13px]">
+            {/* Tabs Bar */}
+            <div className="flex items-center gap-4 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800 text-[13px] no-scrollbar">
               {tabs.map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
                   className={cn(
-                    "whitespace-nowrap pb-3 font-medium transition",
+                    "whitespace-nowrap pb-2.5 font-bold transition-all relative cursor-pointer",
                     tab === t
-                      ? "border-b-2 border-blue-600 text-blue-600"
-                      : "text-zinc-500 hover:text-zinc-700",
+                      ? "text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400"
+                      : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300",
                   )}
                 >
                   {t}
-                  {t === "Appointments" ? " · 1" : t === "Proposals" ? " · 1" : ""}
+                  {t === "Appointments" ? " · 1" : t === "Proposals" ? " · 1" : t === "Tasks" ? " · 3" : ""}
                 </button>
               ))}
             </div>
 
-            {tab === "Timeline" ? (
-              <div className="mt-4">
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">
-                  This Week
-                </p>
-                <div className="relative mt-4 pl-5">
-                  <div className="absolute left-4 top-0 h-full w-px bg-zinc-200 dark:bg-zinc-800" />
-                  <div className="space-y-6">
-                    {details.timeline.map((item, index) => {
+            {/* TAB CONTENT BRANCHES */}
+            {tab === "Timeline" && (
+              <div className="space-y-4 pt-1">
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-[12px] font-extrabold uppercase tracking-wide text-zinc-400">
+                    Activity Timeline 06
+                  </p>
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800">
+                    Interactive Milestones
+                  </span>
+                </div>
+
+                {/* Timeline 06 Component with Checkboxes */}
+                <div className="relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-200 dark:before:bg-zinc-800">
+                  {details.timeline.map((item, index) => {
+                    const isChecked = !!completedMilestones[`m-${index + 1}`];
+                    return (
+                      <div key={item.id || index} className="relative">
+                        <span
+                          className={cn(
+                            "absolute -left-6 top-1 flex size-5 items-center justify-center rounded-full text-white shadow-xs ring-4 ring-white dark:ring-zinc-950 transition-all",
+                            isChecked ? "bg-emerald-500" : "bg-blue-500"
+                          )}
+                        >
+                          {isChecked ? <Check className="size-3" /> : <Clock className="size-3" />}
+                        </span>
+
+                        <div className="rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                id={`m-${index + 1}`}
+                                checked={isChecked}
+                                onChange={() => toggleMilestone(`m-${index + 1}`)}
+                                className="size-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                              />
+                              <label
+                                htmlFor={`m-${index + 1}`}
+                                className={cn(
+                                  "text-xs font-bold cursor-pointer select-none transition-all",
+                                  isChecked ? "text-zinc-400 dark:text-zinc-500 line-through" : "text-zinc-900 dark:text-white"
+                                )}
+                              >
+                                {item.title}
+                              </label>
+                            </div>
+                            <span className="text-[10px] font-medium text-zinc-400">{item.subtitle || "Recent"}</span>
+                          </div>
+
+                          {item.body && (
+                            <p className={cn("text-xs text-zinc-600 dark:text-zinc-300 pl-6", isChecked && "line-through opacity-60")}>
+                              {item.body}
+                            </p>
+                          )}
+
+                          <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[10px] font-semibold text-zinc-500">
+                            <div className="flex items-center gap-1.5">
+                              <Avatar className="size-5">
+                                <AvatarFallback className="bg-zinc-900 text-white text-[8px]">AP</AvatarFallback>
+                              </Avatar>
+                              <span>Ari Parker &bull; Primary Operator</span>
+                            </div>
+                            <span className={cn("px-2 py-0.5 rounded-full font-bold", isChecked ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400" : "bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400")}>
+                              {isChecked ? "Completed" : "In Progress"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {tab === "Activity" && (
+              <div className="space-y-6">
+                {/* Activity Comment Input */}
+                <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3 bg-zinc-50/50 dark:bg-zinc-900/50 space-y-3">
+                  <textarea
+                    placeholder="Write an activity comment or log update..."
+                    className="w-full text-xs bg-transparent outline-none resize-none min-h-[60px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
+                  />
+                  <div className="flex items-center justify-between border-t border-zinc-200/60 dark:border-zinc-800/80 pt-2">
+                    <div className="flex items-center gap-2 text-zinc-400">
+                      <button className="p-1 hover:text-zinc-700 dark:hover:text-zinc-200"><Paperclip className="size-3.5" /></button>
+                      <button className="p-1 hover:text-zinc-700 dark:hover:text-zinc-200"><CalendarBlank className="size-3.5" /></button>
+                    </div>
+                    <button className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer">
+                      Post Comment
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-[12px] font-bold uppercase tracking-wide text-zinc-400">
+                    Latest Stream
+                  </p>
+                  <div className="space-y-3">
+                    {details.activity.map((item, i) => {
                       const Icon = item.icon;
                       return (
-                        <div key={item.id} className="relative flex gap-4 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                          <div className="relative">
-                            <span
-                              className={cn(
-                                "flex h-10 w-10 items-center justify-center rounded-full border border-white shadow-sm",
-                                item.tone,
-                              )}
-                            >
-                              <Icon className="size-5" />
-                            </span>
-                            {index < details.timeline.length - 1 ? (
-                              <span className="absolute left-1/2 top-full mt-2 block h-12 w-px -translate-x-1/2 bg-zinc-200 dark:bg-zinc-800" />
-                            ) : null}
+                        <div key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800/70">
+                          <div
+                            className={cn(
+                              "flex size-7 shrink-0 items-center justify-center rounded-full mt-0.5",
+                              item.tone,
+                            )}
+                          >
+                            <Icon className="size-3.5" weight="bold" />
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-zinc-900 dark:text-white">
-                              {item.title}
-                            </p>
-                            {item.subtitle ? (
-                              <p className="mt-1 text-[12px] text-zinc-400">{item.subtitle}</p>
-                            ) : null}
-                            {item.body ? (
-                              <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
-                                {item.body}
-                              </div>
-                            ) : null}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-zinc-800 dark:text-zinc-100">{item.title}</p>
+                            <p className="text-[11px] text-zinc-400 mt-0.5">{item.meta}</p>
                           </div>
                         </div>
                       );
@@ -1251,101 +1528,307 @@ function TaskDrawer({
                   </div>
                 </div>
               </div>
-            ) : tab === "Activity" ? (
-              <div className="mt-4">
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">
-                  Latest Activity
-                </p>
-                <div className="mt-3 space-y-3">
-                  {details.activity.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={i} className="flex items-start gap-3">
-                        <div
-                          className={cn(
-                            "flex size-7 shrink-0 items-center justify-center rounded-full",
-                            item.tone,
-                          )}
-                        >
-                          <Icon className="size-3.5" weight="bold" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] text-zinc-800 dark:text-zinc-100">{item.title}</p>
-                          <p className="text-[11px] text-zinc-400">{item.meta}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
+            )}
 
-            <div className="mt-6">
-              <div className="flex items-center justify-between">
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">
-                  Appointments
-                </p>
-                <button className="flex items-center gap-1 text-[12px] font-medium text-emerald-600 hover:underline">
-                  <Plus className="size-3.5" />
-                  Create appointment
-                </button>
-              </div>
-              <div className="mt-3 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-[13px] font-semibold text-zinc-900 dark:text-white">
+            {tab === "Appointments" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] font-bold uppercase tracking-wide text-zinc-400">
+                    Scheduled Appointments
+                  </p>
+                  <button className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                    <Plus className="size-3.5" />
+                    New Appointment
+                  </button>
+                </div>
+                <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 shadow-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-extrabold text-zinc-900 dark:text-white">
                       {details.appointment.date}
                     </p>
-                    <p className="mt-2 flex items-center gap-1.5 text-[13px] text-zinc-700 dark:text-zinc-200">
-                      <span className="size-1.5 rounded-full bg-emerald-500" />
-                      {details.appointment.title}
-                    </p>
-                    <p className="mt-2 text-[12px] text-zinc-500">{details.appointment.time}</p>
-                    <p className="mt-1 flex items-center gap-1.5 text-[12px] text-zinc-500">
-                      <MapPin className="size-3.5" />
-                      {details.appointment.location}
-                    </p>
-                    <p className="mt-1 text-[12px] text-zinc-500">{details.appointment.attendee}</p>
+                    <span className="text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800">
+                      Confirmed
+                    </span>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="flex items-center justify-between">
-                <p className="text-[12px] font-semibold uppercase tracking-wide text-zinc-400">
-                  Proposals
-                </p>
-                <button className="flex items-center gap-1 text-[12px] font-medium text-emerald-600 hover:underline">
-                  <Plus className="size-3.5" />
-                  Create proposal
-                </button>
-              </div>
-              <div className="mt-3 flex items-center justify-between rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 dark:bg-zinc-900">
-                    <FileText className="size-4" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-medium text-zinc-900 dark:text-white">
-                      #{details.proposal.id} {details.proposal.name}
-                    </p>
-                    <p className="text-[11px] text-zinc-400">Sent date {details.proposal.sentDate}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[13px] font-semibold text-zinc-900 dark:text-white">
-                    {details.proposal.amount}
+                  <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-emerald-500" />
+                    {details.appointment.title}
                   </p>
-                  <Badge className="mt-1 border-none bg-amber-100 text-[10px] font-semibold text-amber-700">
-                    {details.proposal.status}
-                  </Badge>
+                  <p className="text-xs text-zinc-500">{details.appointment.time}</p>
+                  <p className="text-xs text-zinc-500 flex items-center gap-1">
+                    <MapPin className="size-3.5 text-zinc-400" />
+                    {details.appointment.location}
+                  </p>
                 </div>
               </div>
-            </div>
+            )}
+
+            {tab === "Proposals" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] font-bold uppercase tracking-wide text-zinc-400">
+                    Proposals & Estimates
+                  </p>
+                  <button className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                    <Plus className="size-3.5" />
+                    Create Proposal
+                  </button>
+                </div>
+                <div className="flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+                      <FileText className="size-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-zinc-900 dark:text-white">
+                        #{details.proposal.id} {details.proposal.name}
+                      </p>
+                      <p className="text-[11px] text-zinc-400">Sent date {details.proposal.sentDate}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-extrabold text-zinc-900 dark:text-white">
+                      {details.proposal.amount}
+                    </p>
+                    <Badge className="mt-1 border-none bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 text-[10px] font-extrabold">
+                      {details.proposal.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "Invoices" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] font-bold uppercase tracking-wide text-zinc-400">
+                    Invoices & Billing
+                  </p>
+                  <button className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                    <Plus className="size-3.5" />
+                    Generate Invoice
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between rounded-2xl border border-zinc-200/80 dark:border-zinc-800 p-4 bg-white dark:bg-zinc-900 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400">
+                        <FileText className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-zinc-900 dark:text-white">
+                          #INV-9824 Service Fee
+                        </p>
+                        <p className="text-[11px] text-zinc-400">Due April 30, 2025</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-extrabold text-zinc-900 dark:text-white">$1,250.00</p>
+                      <Badge className="mt-1 border-none bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 text-[10px] font-extrabold">
+                        Paid
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "Notifications" && (
+              <div className="space-y-4">
+                <p className="text-[12px] font-bold uppercase tracking-wide text-zinc-400">
+                  Task Notifications
+                </p>
+                <div className="space-y-3">
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-zinc-900 dark:text-white">Reminder Alert</span>
+                      <span className="text-[10px] text-zinc-400">10m ago</span>
+                    </div>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300">Follow up scheduled for tomorrow morning at 10:00 AM.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "Notes" && (
+              <div className="space-y-4">
+                <p className="text-[12px] font-bold uppercase tracking-wide text-zinc-400">
+                  Internal Team Notes
+                </p>
+                <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3 bg-white dark:bg-zinc-900 space-y-3">
+                  <textarea
+                    placeholder="Add an internal note..."
+                    className="w-full text-xs bg-transparent outline-none resize-none min-h-[50px] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
+                  />
+                  <div className="flex justify-end">
+                    <button className="px-3 py-1 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold cursor-pointer">
+                      Save Note
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tab === "Tasks" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12px] font-bold uppercase tracking-wide text-zinc-400">
+                    Sub-tasks Checklist
+                  </p>
+                  <button className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                    <Plus className="size-3.5" />
+                    Add Sub-task
+                  </button>
+                </div>
+                <div className="space-y-2.5">
+                  {["Verify contact email & phone", "Send proposal draft to management", "Schedule onboarding call"].map((sub, idx) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800">
+                      <input type="checkbox" className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500" />
+                      <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200">{sub}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
+
+      {/* ── SCHEDULE FOLLOW-UP & TASK MODAL (EXACT CALENDAR PAGE SPECIFICATION) ── */}
+      <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+        <DialogContent className="sm:max-w-xl border border-zinc-200/80 dark:border-zinc-800 p-0 overflow-hidden rounded-2xl shadow-2xl bg-white dark:bg-zinc-950">
+          <div className="p-6 sm:p-8 max-h-[85vh] overflow-y-auto sleek-scroll space-y-6">
+
+            {/* Top Banner / Header */}
+            <div className="pb-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+              <DialogHeader className="text-left space-y-0.5">
+                <DialogTitle className="text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <CalendarBlank className="size-5 text-emerald-600 dark:text-emerald-400" />
+                  Schedule Task & Follow-up
+                </DialogTitle>
+                <DialogDescription className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Set follow-up date, meeting time, priority, and reminders for this CRM lead.
+                </DialogDescription>
+              </DialogHeader>
+
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/50 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Calendar Sync
+              </span>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setIsCalendarOpen(false);
+                showToast(`Follow-up "${task.title}" scheduled for ${followUpDate} at ${followUpTime}`);
+              }}
+              className="space-y-5"
+            >
+              {/* Task Title Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">
+                  Task / Event Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  defaultValue={`Follow-up: ${task.title}`}
+                  className="w-full h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-medium text-zinc-900 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                />
+              </div>
+
+              {/* Date & Time Picker Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                    <CalendarBlank className="size-3.5 text-zinc-400" /> Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={followUpDate}
+                    onChange={(e) => setFollowUpDate(e.target.value)}
+                    className="w-full h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-emerald-500 cursor-pointer"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                    <Clock className="size-3.5 text-zinc-400" /> Time
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={followUpTime}
+                    onChange={(e) => setFollowUpTime(e.target.value)}
+                    className="w-full h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-emerald-500 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Category & Priority Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">
+                    Event Type
+                  </label>
+                  <select className="w-full h-10 px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-medium text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
+                    <option value="followup">Follow-up Call</option>
+                    <option value="demo">Product Demo</option>
+                    <option value="proposal">Proposal Review</option>
+                    <option value="onboarding">Client Onboarding</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">
+                    Priority Level
+                  </label>
+                  <select className="w-full h-10 px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-medium text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer">
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Notes / Agenda */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block">
+                  Follow-up Notes & Agenda
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Add specific details or agenda notes for this scheduled follow-up..."
+                  className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs text-zinc-900 dark:text-white outline-none focus:border-emerald-500 resize-none placeholder:text-zinc-400"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCalendarOpen(false)}
+                  className="h-9 px-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="h-9 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-1.5"
+                >
+                  <CalendarBlank className="size-4" />
+                  <span>Schedule Task</span>
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </DialogContent>
+      </Dialog>
     </SheetContent>
   );
 }
@@ -1412,6 +1895,27 @@ function TimelineView({
 
 export function DashboardTab() {
   const [columns, setColumns] = useState(INITIAL_COLUMNS);
+
+  useEffect(() => {
+    const syncTasks = () => {
+      try {
+        const raw = localStorage.getItem("leadwave_todo_tasks");
+        if (raw) {
+          const stored = JSON.parse(raw);
+          setColumns((prev) => ({
+            ...prev,
+            on_process: [...(stored.on_process || []), ...prev.on_process.filter((t: any) => !stored.on_process?.some((st: any) => st.id === t.id))],
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to sync tasks", e);
+      }
+    };
+    syncTasks();
+    window.addEventListener("crm-flow-updated", syncTasks);
+    return () => window.removeEventListener("crm-flow-updated", syncTasks);
+  }, []);
+
   const [activeFilters, setActiveFilters] = useState<Filter[]>([]);
   const [selected, setSelected] = useState<{ task: Task; columnKey: string } | null>(null);
   const [showAiBanner, setShowAiBanner] = useState(true);
