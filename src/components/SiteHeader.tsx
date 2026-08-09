@@ -13,6 +13,8 @@ import {
   ChevronRight,
   LayoutDashboard,
   Calendar,
+  CalendarDays,
+  ListTodo,
   UserSquare,
   Bell,
   CheckCircle2,
@@ -59,6 +61,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { UserRole } from "@/models/user"
 import { MapTrifold } from "@phosphor-icons/react";
+import { IconCalendarWeek } from "@tabler/icons-react";
 import claraAvatar from "@/assets/clara_avatar.png";
 
 
@@ -67,7 +70,7 @@ const PAGE_META: Record<string, { label: string; icon: React.ElementType }> = {
   analytics: { label: "Forecast", icon: TrendingUp },
   leads: { label: "Leads", icon: Target },
   todo: { label: "To Do", icon: CheckCircle2 },
-  calendar: { label: "Calendar", icon: Calendar },
+  calendar: { label: "Calendar", icon: IconCalendarWeek },
   "itinerary-builder": { label: "Itinerary Builder", icon: MapTrifold },
   accounts: { label: "Accounts", icon: Briefcase },
   deals: { label: "Deals", icon: Handshake },
@@ -184,7 +187,8 @@ export function SiteHeader({
   activeTab,
   onPageChange,
   userRole,
-  setUserRole
+  setUserRole,
+  pageHistory
 }: {
   onTabChange?: (tab: string) => void;
   onPageChange?: (page: string) => void;
@@ -192,6 +196,7 @@ export function SiteHeader({
   activeTab?: string;
   userRole?: UserRole;
   setUserRole?: (role: UserRole) => void;
+  pageHistory?: string[];
 }) {
 
   const { toggleSidebar } = useSidebar();
@@ -212,6 +217,8 @@ export function SiteHeader({
   const filteredNotifications = notifications.filter(n => n.category === activeCategory);
   const getCategoryCount = (cat: string) => notifications.filter(n => n.category === cat).length;
 
+  const breadcrumbItems = (pageHistory && pageHistory.length > 0) ? pageHistory : [currentPage];
+
   return (
     <header className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md rounded-t-[20px] shrink-0 sticky top-0 z-10 w-full h-16 px-6 md:px-10 no-scrollbar">
       <div className="flex items-center gap-3">
@@ -224,22 +231,34 @@ export function SiteHeader({
         <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
 
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-sm">
-          <div className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer transition-colors">
-            <Home className="w-3.5 h-3.5" />
-            <span className="text-[13px] font-medium">Home</span>
-          </div>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
-          <div className="flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100">
-            <pageMeta.icon className="w-3.5 h-3.5" />
-            <span className="text-[13px] font-semibold">{pageMeta.label}</span>
-          </div>
-          {/* {activeTab && activeTab !== pageMeta.label && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
-                <span className="text-[13px] font-semibold text-zinc-600 dark:text-zinc-400">{activeTab}</span>
-              </>
-            )} */}
+        <nav className="flex items-center gap-1.5 text-sm overflow-x-auto no-scrollbar py-1">
+          {breadcrumbItems.map((pageId, idx, arr) => {
+            const isLast = idx === arr.length - 1;
+            const meta = pageId === "dashboard"
+              ? { label: "Home", icon: Home }
+              : (PAGE_META[pageId] ?? { label: pageId, icon: LayoutDashboard });
+            const Icon = meta.icon;
+
+            return (
+              <div key={`${pageId}-${idx}`} className="flex items-center gap-1.5 shrink-0">
+                {idx > 0 && (
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
+                )}
+                <button
+                  type="button"
+                  disabled={isLast}
+                  onClick={() => onPageChange?.(pageId)}
+                  className={`flex items-center gap-1.5 transition-colors shrink-0 ${isLast
+                    ? "text-zinc-900 dark:text-zinc-100 font-semibold cursor-default"
+                    : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 font-medium cursor-pointer"
+                    }`}
+                >
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[13px]">{meta.label}</span>
+                </button>
+              </div>
+            );
+          })}
         </nav>
 
       </div>
@@ -448,7 +467,7 @@ export function SiteHeader({
                 </div>
                 <div className="relative">
                   <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-blue-500 opacity-20 blur-sm"></div>
-                  <Avatar className="h-10 w-10 border-2 border-white dark:border-zinc-900 shadow-sm relative">
+                  <Avatar className="h-12 w-12 border-2 border-white dark:border-zinc-900 shadow-sm relative">
                     <AvatarImage src={claraAvatar} />
                   </Avatar>
                 </div>
@@ -456,7 +475,7 @@ export function SiteHeader({
             </DropdownMenuLabel>
 
             <div className="space-y-0.5">
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 onClick={() => onPageChange?.("setup-wizard")}
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors group"
               >
@@ -464,7 +483,7 @@ export function SiteHeader({
                   <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:text-white" />
                 </div>
                 <span className="text-[13px] font-extrabold text-zinc-900 dark:text-zinc-100">Profile Setup</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
 
               <DropdownMenuItem
                 onClick={() => onPageChange?.("profile")}

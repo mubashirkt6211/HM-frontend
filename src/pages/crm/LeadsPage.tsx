@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useRef, type KeyboardEvent, type ElementType } from "react"
+import { useMemo, useState, useRef, useEffect, type KeyboardEvent, type ElementType } from "react"
 import {
   CaretDown,
   WhatsappLogo,
@@ -606,7 +606,7 @@ function LeadDetailsDrawer({
 
             {/* ReUI Timeline 06 Component */}
             <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-200 dark:before:bg-zinc-800">
-              
+
               {/* Timeline Item 1 */}
               <div className="relative">
                 <span className="absolute -left-6 top-0 flex size-5 items-center justify-center rounded-full bg-[#34C759] text-white shadow-xs ring-4 ring-white dark:ring-zinc-950">
@@ -779,6 +779,47 @@ function LeadDetailsDrawer({
 
 export function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS)
+
+  useEffect(() => {
+    const syncWonLeads = () => {
+      try {
+        const raw = localStorage.getItem("leadwave_won_leads");
+        if (raw) {
+          const wonLeadsList: any[] = JSON.parse(raw);
+          const mapped: Lead[] = wonLeadsList.map((wl) => ({
+            id: wl.id,
+            name: wl.name,
+            company: wl.company || "Client",
+            source: wl.source === "Meta Ads" ? "Meta" : wl.source === "Instagram" ? "Instagram" : wl.source === "WhatsApp" ? "WhatsApp" : "Website",
+            stage: "Won",
+            value: wl.value || "$15,000",
+            status: "Hot",
+            assigned: wl.assignedTo || "Ari Parker",
+            lastActivity: "Just now",
+            email: wl.email,
+            phone: wl.phone,
+            location: "New York, NY",
+            note: wl.description,
+            destination: "Won Package",
+            travelType: "Luxury",
+            travelers: 2,
+          }));
+
+          setLeads((prev) => {
+            const ids = new Set(prev.map((l) => l.id));
+            const newWon = mapped.filter((m) => !ids.has(m.id));
+            return [...newWon, ...prev];
+          });
+        }
+      } catch (e) {
+        console.error("Failed to sync won leads", e);
+      }
+    };
+    syncWonLeads();
+    window.addEventListener("crm-flow-updated", syncWonLeads);
+    return () => window.removeEventListener("crm-flow-updated", syncWonLeads);
+  }, []);
+
   const [filters, setFilters] = useState<Filter[]>([])
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -1018,7 +1059,7 @@ export function LeadsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search leads, destination, or company..."
-                  className="h-9 w-full rounded-xl border border-zinc-200 bg-zinc-50/80 pl-10 pr-3 text-xs text-zinc-800 placeholder:text-zinc-400 outline-none focus:border-zinc-400 focus:bg-white focus:ring-2 focus:ring-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder:text-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-800 transition-all"
+                  className="h-9 w-full rounded-md border border-zinc-200 bg-zinc-50/80 pl-10 pr-3 text-xs text-zinc-800 placeholder:text-zinc-400 outline-none focus:border-zinc-400 focus:bg-white focus:ring-2 focus:ring-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder:text-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-800 transition-all"
                 />
               </div>
               <Filters filters={filters} fields={LEADS_FILTER_FIELDS} onChange={setFilters} />
@@ -1036,7 +1077,7 @@ export function LeadsPage() {
                 <DialogTrigger asChild>
                   <Button
                     size="sm"
-                    className="group relative overflow-hidden h-9 rounded-xl border border-blue-800/40 bg-gradient-to-b from-blue-400 via-blue-600 to-blue-700 px-4 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.15),0_4px_10px_-2px_rgba(37,99,235,0.55)] transition-all duration-150 hover:from-blue-400 hover:via-blue-500 hover:to-blue-600 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.55),inset_0_-1px_1px_rgba(0,0,0,0.15),0_6px_14px_-2px_rgba(37,99,235,0.65)] active:translate-y-px active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] flex items-center gap-1.5 cursor-pointer"
+                    className="group relative overflow-hidden h-9 rounded-md border border-blue-800/40 bg-gradient-to-b from-blue-400 via-blue-600 to-blue-700 px-4 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.15),0_4px_10px_-2px_rgba(37,99,235,0.55)] transition-all duration-150 hover:from-blue-400 hover:via-blue-500 hover:to-blue-600 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.55),inset_0_-1px_1px_rgba(0,0,0,0.15),0_6px_14px_-2px_rgba(37,99,235,0.65)] active:translate-y-px active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] flex items-center gap-1.5 cursor-pointer"
                   >
                     {/* glossy top-half highlight */}
                     <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-xl bg-gradient-to-b from-white/40 to-white/0" />
@@ -1048,7 +1089,7 @@ export function LeadsPage() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-2xl border border-zinc-200/80 dark:border-zinc-800 p-0 overflow-hidden rounded-2xl shadow-2xl bg-white dark:bg-zinc-950">
                   <div className="p-6 sm:p-8 max-h-[82vh] overflow-y-auto sleek-scroll">
-                    
+
                     {/* Top Banner / Header properly using DialogHeader, DialogTitle, and DialogDescription */}
                     <div className="mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                       <DialogHeader className="text-left space-y-0.5">
@@ -1067,7 +1108,7 @@ export function LeadsPage() {
                     </div>
 
                     <form onSubmit={handleAddLeadSubmit} className="space-y-6">
-                      
+
                       {/* Row 1: Lead Category */}
                       <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
                         <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2 flex items-center gap-1">
@@ -1118,7 +1159,7 @@ export function LeadsPage() {
                               className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-3.5 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-xs outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder:text-zinc-500 transition-all"
                             />
                           </div>
-                          
+
                           {showCompanyField ? (
                             <div className="relative animate-in fade-in duration-200">
                               <Buildings className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
@@ -1529,7 +1570,7 @@ export function LeadsPage() {
                             <BookmarkSimple className="size-3.5" />
                             Save draft
                           </button>
-                          
+
                           <button
                             type="submit"
                             className="h-9 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"

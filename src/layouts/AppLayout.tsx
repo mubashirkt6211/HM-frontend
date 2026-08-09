@@ -12,7 +12,8 @@ export function AppLayout({
     activeTab,
     isFullPage = false,
     userRole,
-    setUserRole
+    setUserRole,
+    pageHistory
 }: {
     children: React.ReactNode;
     currentPage?: string;
@@ -22,6 +23,7 @@ export function AppLayout({
     isFullPage?: boolean;
     userRole?: UserRole;
     setUserRole?: (role: UserRole) => void;
+    pageHistory?: string[];
 }) {
 
     // Full page layout for calendar
@@ -53,6 +55,7 @@ export function AppLayout({
                             activeTab={activeTab}
                             userRole={userRole}
                             setUserRole={setUserRole}
+                            pageHistory={pageHistory}
                         />
 
                         <div className={`flex-1 w-full min-w-0 max-w-full overflow-x-hidden ${["dashboard", "doctors", "privileges", "emails", "leads"].includes(currentPage) ? "px-0 pb-6" : "px-6 md:px-10 pb-10"}`}>

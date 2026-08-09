@@ -40,6 +40,9 @@ import {
   ArrowLeft,
   DiamondsFour,
   Gear,
+  CalendarCheck,
+  ListChecks,
+  SlidersHorizontal,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import claraAvatar from "@/assets/clara_avatar.png";
@@ -47,6 +50,7 @@ import avatarJohnson from "@/assets/avatar-johnson.png";
 import avatarKim from "@/assets/avatar-kim.png";
 import avatarPatel from "@/assets/avatar-patel.png";
 import avatarSingh from "@/assets/avatar-singh.png";
+import { IconCalendarWeek } from "@tabler/icons-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA TYPES & PRESETS
@@ -283,10 +287,18 @@ export function ProfilePage({ onBack, onNavigate, initialWizardMode = false }: P
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => onNavigate?.("todo")}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all border border-zinc-200/60 dark:border-zinc-700"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all border border-zinc-200/60 dark:border-zinc-700 cursor-pointer group"
           >
-            <CheckCircle size={14} weight="bold" className="text-emerald-500" />
+            <ListChecks weight="duotone" className="size-4 text-emerald-500 group-hover:scale-110 transition-transform" />
             To Do
+          </button>
+
+          <button
+            onClick={() => onNavigate?.("calendar")}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-all border border-zinc-200/60 dark:border-zinc-700 cursor-pointer group"
+          >
+            <IconCalendarWeek className="size-4 text-sky-500 group-hover:scale-110 transition-transform" />
+            Calendar
           </button>
 
           <button
