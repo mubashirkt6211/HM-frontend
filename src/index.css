@@ -151,6 +151,42 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Sleek custom scrollbars for modals, cards, and scroll containers */
+  .sleek-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(161, 161, 170, 0.4) transparent;
+  }
+
+  .sleek-scroll::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .sleek-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sleek-scroll::-webkit-scrollbar-thumb {
+    background: rgba(161, 161, 170, 0.35);
+    border-radius: 9999px;
+  }
+
+  .sleek-scroll:hover::-webkit-scrollbar-thumb {
+    background: rgba(113, 113, 122, 0.55);
+  }
+
+  .dark .sleek-scroll {
+    scrollbar-color: rgba(113, 113, 122, 0.4) transparent;
+  }
+
+  .dark .sleek-scroll::-webkit-scrollbar-thumb {
+    background: rgba(113, 113, 122, 0.35);
+  }
+
+  .dark .sleek-scroll:hover::-webkit-scrollbar-thumb {
+    background: rgba(161, 161, 170, 0.55);
+  }
 }
 
 @layer base {

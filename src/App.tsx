@@ -21,6 +21,8 @@ import { ItineraryBuilderPage } from "@/pages/crm/ItineraryBuilderPage";
 import { ServiceSetupPage } from "@/pages/crm/ServiceSetupPage";
 import { CrmConfigPage } from "@/pages/crm/CrmConfigPage";
 import { CampaignsPage } from "@/pages/crm/CampaignsPage";
+import { ForecastPage } from "@/pages/crm/ForecastPage";
+import { AccountsPage } from "@/pages/crm/AccountsPage";
 import { Hammer, Tooth, Sparkle, TreeStructure, User, Users, Star, Megaphone, ClipboardText, Funnel, Buildings, Briefcase, Handshake, ChartLineUp, ShieldCheck, ClockClockwise } from "@phosphor-icons/react";
 import { UserRole } from "@/models/user";
 
@@ -113,10 +115,11 @@ function App() {
         return <CompanySetupPage onBack={handleBack} />;
       case "todo":
         return <TodoPage onBack={handleBack} onNavigate={handleNavigate} pageHistory={pageHistory} />;
+      case "forecast":
       case "analytics":
-        return <ComingSoonPage title="Forecast" icon={Funnel} />;
+        return <ForecastPage onNavigate={handleNavigate} />;
       case "accounts":
-        return <ComingSoonPage title="Accounts" icon={Briefcase} />;
+        return <AccountsPage onNavigate={handleNavigate} />;
       case "deals":
         return <ComingSoonPage title="Deals" icon={Handshake} />;
       case "open-deals":

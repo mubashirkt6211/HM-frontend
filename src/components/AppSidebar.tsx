@@ -184,11 +184,13 @@ function NavItem({
         onClick?.();
     };
 
+    const isNumericBadge = badge && !isNaN(Number(badge));
+
     return (
         <SidebarMenuItem>
             <SidebarMenuButton
                 asChild={!onClick && !hasSubItems}
-                tooltip={title}
+                tooltip={badge ? `${title} (${badge})` : title}
                 isActive={isActive}
                 onClick={handleClick}
                 className={cn(
@@ -201,32 +203,56 @@ function NavItem({
             >
                 <div
                     className={cn(
-                        "flex items-center gap-2.5 w-full",
+                        "flex items-center gap-2.5 w-full min-w-0",
                         isCollapsed ? "justify-center" : ""
                     )}
                 >
-                    {Icon && (
-                        <Icon
-                            className={cn(
-                                "w-[18px] h-[18px] shrink-0 transition-all",
-                                isActive ? "text-zinc-900 dark:text-zinc-100" : (iconColor || "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"),
-                                iconFill && "fill-current"
-                            )}
-                        />
-                    )}
+                    <div className="relative inline-flex items-center justify-center shrink-0">
+                        {Icon && (
+                            <Icon
+                                className={cn(
+                                    "w-[18px] h-[18px] shrink-0 transition-all",
+                                    isActive ? "text-zinc-900 dark:text-zinc-100" : (iconColor || "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"),
+                                    iconFill && "fill-current"
+                                )}
+                            />
+                        )}
+                        {isCollapsed && badge && (
+                            <span
+                                className={cn(
+                                    "absolute -top-1.5 -right-2 flex items-center justify-center rounded-full bg-blue-600 dark:bg-blue-500 font-extrabold text-white leading-none shadow-xs border border-white dark:border-zinc-900 pointer-events-none z-10",
+                                    isNumericBadge
+                                        ? "h-4 min-w-[16px] px-1 text-[9px] tabular-nums"
+                                        : "h-2 w-2 p-0"
+                                )}
+                            >
+                                {isNumericBadge ? badge : ""}
+                            </span>
+                        )}
+                    </div>
                     {!isCollapsed && (
-                        <span className="truncate flex-1 tracking-tight">
+                        <span className="truncate flex-1 tracking-tight min-w-0">
                             {title}
                         </span>
                     )}
                     {!isCollapsed && badge && (
-                        <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full shadow-xs">
+                        <span
+                            className={cn(
+                                "ml-auto shrink-0 font-bold tracking-tight inline-flex items-center justify-center shadow-xs transition-colors",
+                                isActive
+                                    ? "bg-blue-600 text-white dark:bg-blue-500 dark:text-white"
+                                    : "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40",
+                                isNumericBadge
+                                    ? "h-5 min-w-[20px] px-1.5 text-[10px] tabular-nums rounded-full"
+                                    : "px-2 py-0.5 text-[10px] rounded-md"
+                            )}
+                        >
                             {badge}
                         </span>
                     )}
                     {!isCollapsed && hasSubItems && (
                         <CaretDown className={cn(
-                            "w-3.5 h-3.5 text-zinc-400 transition-transform duration-200",
+                            "w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 shrink-0",
                             isOpen && "rotate-180"
                         )} />
                     )}

@@ -433,6 +433,20 @@ export function PipelinePage({ onNavigate }: PipelinePageProps = {}) {
             </button>
           )}
 
+          {/* Sales & Revenue Forecast CTA Button */}
+          <Button
+            size="sm"
+            onClick={() => {
+              if (onNavigate) onNavigate("analytics");
+            }}
+            className="group relative overflow-hidden h-9 rounded-md border border-emerald-800/40 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 px-3.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.15),0_4px_10px_-2px_rgba(16,185,129,0.55)] transition-all duration-150 hover:from-emerald-400 hover:via-emerald-500 hover:to-emerald-600 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.55),inset_0_-1px_1px_rgba(0,0,0,0.15),0_6px_14px_-2px_rgba(16,185,129,0.65)] active:translate-y-px active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)] flex items-center gap-1.5 cursor-pointer"
+          >
+            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-md bg-gradient-to-b from-white/40 to-white/0" />
+            <span className="pointer-events-none absolute -inset-y-2 -left-1/2 w-1/3 -skew-x-12 bg-white/25 opacity-0 transition-all duration-500 group-hover:left-[120%] group-hover:opacity-100" />
+            <TrendUp className="relative z-10 size-4" weight="bold" />
+            <span className="relative z-10">Sales Forecast</span>
+          </Button>
+
           {/* Campaign Analytics CTA Button (Exact Leads Page Glossy Button Style) */}
           <Button
             size="sm"

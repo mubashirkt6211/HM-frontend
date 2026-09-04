@@ -499,11 +499,11 @@ export function ItineraryBuilderPage() {
         <section className="mt-8 rounded-3xl border border-zinc-200/80 bg-white p-4 shadow-sm sm:p-6 dark:border-zinc-800 dark:bg-zinc-950">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Browse trips</h2>
-                  <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300">Curated</span>
-                </div>
-                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Browse trips</h2>
+                <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300">Curated</span>
+              </div>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 Find a ready-made travel plan and customize it for your traveler.
               </p>
             </div>
@@ -524,11 +524,10 @@ export function ItineraryBuilderPage() {
               <button
                 key={item}
                 onClick={() => setCategory(item)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  category === item
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${category === item
                     ? "bg-blue-600 text-white"
                     : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                }`}
+                  }`}
               >
                 {item}
               </button>
@@ -554,9 +553,8 @@ export function ItineraryBuilderPage() {
                     <div
                       className="relative flex h-44 items-end gap-3 overflow-hidden px-4 py-3 text-white"
                       style={{
-                        backgroundImage: `linear-gradient(to top, rgba(9, 9, 11, .78), rgba(9, 9, 11, .05)), url(${
-                          destination.image ?? FALLBACK_IMAGE
-                        })`,
+                        backgroundImage: `linear-gradient(to top, rgba(9, 9, 11, .78), rgba(9, 9, 11, .05)), url(${destination.image ?? FALLBACK_IMAGE
+                          })`,
                         backgroundPosition: "center",
                         backgroundSize: "cover",
                       }}
@@ -674,7 +672,7 @@ export function ItineraryBuilderPage() {
         {/* ---------------------------------------------------------------- Wizard */}
         <Dialog open={wizardOpen} onOpenChange={(open) => !open && closeWizard()}>
           {activeTemplate && activeDestination && (
-              <DialogContent className="grid max-h-[min(92vh,920px)] w-[calc(100%-1rem)] max-w-4xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:w-full">
+            <DialogContent className="grid max-h-[min(92vh,920px)] w-[calc(100%-1rem)] max-w-4xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:w-full">
               <DialogHeader className="border-b border-zinc-200 px-6 py-5 dark:border-zinc-800">
                 <div className="flex items-center gap-3">
                   <div
@@ -699,13 +697,12 @@ export function ItineraryBuilderPage() {
                     return (
                       <div key={step.id} className="flex flex-1 items-center gap-2">
                         <div
-                          className={`flex items-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-semibold transition sm:px-3 ${
-                            isActive
+                          className={`flex items-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-semibold transition sm:px-3 ${isActive
                               ? "bg-indigo-600 text-white"
                               : isDone
                                 ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300"
                                 : "bg-zinc-100 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400"
-                          }`}
+                            }`}
                         >
                           {isDone ? <Check className="size-3.5" /> : <StepIcon className="size-3.5" />}
                           <span className="hidden md:inline">{step.label}</span>
@@ -719,383 +716,382 @@ export function ItineraryBuilderPage() {
 
               <div className="min-h-0 overflow-y-auto px-4 py-5 sm:px-6">
                 <div className="space-y-6">
-                {/* ------------------------------------------------ Step 1: Traveler details */}
-                {wizardStep === 1 && (
-                  <div className="space-y-5">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                        Customer name
-                        <div className="relative">
-                          <UsersThree className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                          <input
-                            value={customer.name}
-                            onChange={(e) => updateCustomer("name", e.target.value)}
-                            placeholder="e.g. Anjali Menon"
-                            className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                          />
-                        </div>
-                      </label>
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                        Phone number
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                          <input
-                            value={customer.phone}
-                            onChange={(e) => updateCustomer("phone", e.target.value)}
-                            placeholder="e.g. +91 98765 43210"
-                            className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                          />
-                        </div>
-                      </label>
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                        Email
-                        <div className="relative">
-                          <EnvelopeSimple className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                          <input
-                            value={customer.email}
-                            onChange={(e) => updateCustomer("email", e.target.value)}
-                            placeholder="e.g. anjali@email.com"
-                            className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                          />
-                        </div>
-                      </label>
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                        Travel start date
-                        <div className="relative">
-                          <CalendarBlank className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                          <input
-                            type="date"
-                            value={customer.startDate}
-                            onChange={(e) => updateCustomer("startDate", e.target.value)}
-                            className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                          />
-                        </div>
-                      </label>
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                        Adults
-                        <input
-                          type="number"
-                          min={1}
-                          value={customer.adults}
-                          onChange={(e) => updateCustomer("adults", Number(e.target.value))}
-                          className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                        />
-                      </label>
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                        Children
-                        <input
-                          type="number"
-                          min={0}
-                          value={customer.children}
-                          onChange={(e) => updateCustomer("children", Number(e.target.value))}
-                          className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                        />
-                      </label>
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 sm:col-span-2">
-                        Pickup location
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                          <input
-                            value={customer.pickup}
-                            onChange={(e) => updateCustomer("pickup", e.target.value)}
-                            placeholder="e.g. Kochi International Airport"
-                            className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                          />
-                        </div>
-                      </label>
-                      <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 sm:col-span-2">
-                        Special requests
-                        <textarea
-                          value={customer.notes}
-                          onChange={(e) => updateCustomer("notes", e.target.value)}
-                          placeholder="Dietary needs, accessibility, celebration occasions..."
-                          rows={3}
-                          className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {/* ------------------------------------------------ Step 2: Day-wise itinerary */}
-                {wizardStep === 2 && (
-                  <div className="space-y-4">
-                    {activeDestination?.type === "International" && (
-                      <section className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-950 dark:bg-indigo-950/20">
-                        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Ticket className="size-4 text-indigo-600 dark:text-indigo-400" />
-                              <h3 className="font-semibold text-zinc-900 dark:text-white">Flight documents</h3>
-                            </div>
-                            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                              Add the flight details that will appear on the traveler&apos;s boarding documents.
-                            </p>
+                  {/* ------------------------------------------------ Step 1: Traveler details */}
+                  {wizardStep === 1 && (
+                    <div className="space-y-5">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                          Customer name
+                          <div className="relative">
+                            <UsersThree className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <input
+                              value={customer.name}
+                              onChange={(e) => updateCustomer("name", e.target.value)}
+                              placeholder="e.g. Anjali Menon"
+                              className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                            />
                           </div>
-                          <Badge className="w-fit border-0 bg-white text-indigo-700 shadow-sm dark:bg-zinc-900 dark:text-indigo-300">
-                            International
-                          </Badge>
-                        </div>
+                        </label>
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                          Phone number
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <input
+                              value={customer.phone}
+                              onChange={(e) => updateCustomer("phone", e.target.value)}
+                              placeholder="e.g. +91 98765 43210"
+                              className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                            />
+                          </div>
+                        </label>
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                          Email
+                          <div className="relative">
+                            <EnvelopeSimple className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <input
+                              value={customer.email}
+                              onChange={(e) => updateCustomer("email", e.target.value)}
+                              placeholder="e.g. anjali@email.com"
+                              className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                            />
+                          </div>
+                        </label>
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                          Travel start date
+                          <div className="relative">
+                            <CalendarBlank className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <input
+                              type="date"
+                              value={customer.startDate}
+                              onChange={(e) => updateCustomer("startDate", e.target.value)}
+                              className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                            />
+                          </div>
+                        </label>
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                          Adults
+                          <input
+                            type="number"
+                            min={1}
+                            value={customer.adults}
+                            onChange={(e) => updateCustomer("adults", Number(e.target.value))}
+                            className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                          />
+                        </label>
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                          Children
+                          <input
+                            type="number"
+                            min={0}
+                            value={customer.children}
+                            onChange={(e) => updateCustomer("children", Number(e.target.value))}
+                            className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                          />
+                        </label>
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 sm:col-span-2">
+                          Pickup location
+                          <div className="relative">
+                            <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
+                            <input
+                              value={customer.pickup}
+                              onChange={(e) => updateCustomer("pickup", e.target.value)}
+                              placeholder="e.g. Kochi International Airport"
+                              className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                            />
+                          </div>
+                        </label>
+                        <label className="space-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-200 sm:col-span-2">
+                          Special requests
+                          <textarea
+                            value={customer.notes}
+                            onChange={(e) => updateCustomer("notes", e.target.value)}
+                            placeholder="Dietary needs, accessibility, celebration occasions..."
+                            rows={3}
+                            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
 
-                        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                          {flightDocuments.map((flight) => (
-                            <div key={flight.id} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-indigo-100 dark:bg-zinc-950 dark:ring-zinc-800">
-                              <div className="flex items-center justify-between border-b border-dashed border-zinc-200 px-4 py-3 dark:border-zinc-800">
-                                <div>
-                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">{flight.label}</p>
-                                  <p className="mt-0.5 text-sm font-bold text-zinc-900 dark:text-white">
-                                    {flight.flight} <span className="font-normal text-zinc-400">· {flight.airline}</span>
-                                  </p>
-                                </div>
-                                <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${flight.status === "Boarding" ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300"}`}>
-                                  {flight.status}
-                                </span>
+                  {/* ------------------------------------------------ Step 2: Day-wise itinerary */}
+                  {wizardStep === 2 && (
+                    <div className="space-y-4">
+                      {activeDestination?.type === "International" && (
+                        <section className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-950 dark:bg-indigo-950/20">
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Ticket className="size-4 text-indigo-600 dark:text-indigo-400" />
+                                <h3 className="font-semibold text-zinc-900 dark:text-white">Flight documents</h3>
                               </div>
+                              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                Add the flight details that will appear on the traveler&apos;s boarding documents.
+                              </p>
+                            </div>
+                            <Badge className="w-fit border-0 bg-white text-indigo-700 shadow-sm dark:bg-zinc-900 dark:text-indigo-300">
+                              International
+                            </Badge>
+                          </div>
 
-                              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-4">
-                                <div>
-                                  <p className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">{flight.from}</p>
-                                  <p className="text-[11px] text-zinc-400">{flight.departure}</p>
+                          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                            {flightDocuments.map((flight) => (
+                              <div key={flight.id} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-indigo-100 dark:bg-zinc-950 dark:ring-zinc-800">
+                                <div className="flex items-center justify-between border-b border-dashed border-zinc-200 px-4 py-3 dark:border-zinc-800">
+                                  <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">{flight.label}</p>
+                                    <p className="mt-0.5 text-sm font-bold text-zinc-900 dark:text-white">
+                                      {flight.flight} <span className="font-normal text-zinc-400">· {flight.airline}</span>
+                                    </p>
+                                  </div>
+                                  <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${flight.status === "Boarding" ? "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300"}`}>
+                                    {flight.status}
+                                  </span>
                                 </div>
-                                <div className="flex items-center gap-1 text-indigo-500">
-                                  <span className="h-px w-5 bg-indigo-200 dark:bg-indigo-900" />
-                                  <Ticket className="size-4" />
-                                  <span className="h-px w-5 bg-indigo-200 dark:bg-indigo-900" />
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">{flight.to}</p>
-                                  <p className="text-[11px] text-zinc-400">{flight.arrival}</p>
-                                </div>
-                              </div>
 
-                              <div className="flex items-center justify-between border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
-                                <div>
-                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Travel date</p>
-                                  <p className="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-200">{flight.date}</p>
+                                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-4">
+                                  <div>
+                                    <p className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">{flight.from}</p>
+                                    <p className="text-[11px] text-zinc-400">{flight.departure}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-indigo-500">
+                                    <span className="h-px w-5 bg-indigo-200 dark:bg-indigo-900" />
+                                    <Ticket className="size-4" />
+                                    <span className="h-px w-5 bg-indigo-200 dark:bg-indigo-900" />
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">{flight.to}</p>
+                                    <p className="text-[11px] text-zinc-400">{flight.arrival}</p>
+                                  </div>
                                 </div>
-                                {flight.id === "outbound" && (
-                                  <div
-                                    aria-label="Boarding pass QR preview"
-                                    className="size-12 rounded-md border-4 border-white bg-zinc-900 shadow-sm dark:border-zinc-800"
-                                    style={{ backgroundImage: "repeating-conic-gradient(#18181b 0 25%, #fafafa 0 50%)", backgroundSize: "8px 8px" }}
-                                  />
-                                )}
-                              </div>
 
-                              <div className="grid grid-cols-3 gap-2 border-t border-zinc-100 px-4 py-3 text-[11px] dark:border-zinc-800">
-                                {(["terminal", "gate", "seat"] as const).map((field) => (
-                                  <label key={field} className="space-y-1 font-medium capitalize text-zinc-400">
-                                    {field}
-                                    <input
-                                      value={flight[field]}
-                                      onChange={(event) => updateFlightDocument(flight.id, field, event.target.value)}
-                                      className="h-7 w-full rounded-md border border-zinc-200 bg-zinc-50 px-2 text-xs font-semibold text-zinc-700 outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+                                <div className="flex items-center justify-between border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                                  <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">Travel date</p>
+                                    <p className="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-200">{flight.date}</p>
+                                  </div>
+                                  {flight.id === "outbound" && (
+                                    <div
+                                      aria-label="Boarding pass QR preview"
+                                      className="size-12 rounded-md border-4 border-white bg-zinc-900 shadow-sm dark:border-zinc-800"
+                                      style={{ backgroundImage: "repeating-conic-gradient(#18181b 0 25%, #fafafa 0 50%)", backgroundSize: "8px 8px" }}
                                     />
-                                  </label>
-                                ))}
-                              </div>
+                                  )}
+                                </div>
 
-                              <details className="border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
-                                <summary className="cursor-pointer text-xs font-semibold text-indigo-600 dark:text-indigo-400">Edit flight document</summary>
-                                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                                  {(["flight", "airline", "from", "to", "date", "departure", "arrival", "status"] as const).map((field) => (
-                                    <label key={field} className="space-y-1 text-[11px] font-medium capitalize text-zinc-400">
+                                <div className="grid grid-cols-3 gap-2 border-t border-zinc-100 px-4 py-3 text-[11px] dark:border-zinc-800">
+                                  {(["terminal", "gate", "seat"] as const).map((field) => (
+                                    <label key={field} className="space-y-1 font-medium capitalize text-zinc-400">
                                       {field}
                                       <input
-                                        type={field === "date" ? "date" : "text"}
                                         value={flight[field]}
                                         onChange={(event) => updateFlightDocument(flight.id, field, event.target.value)}
-                                        className="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs text-zinc-700 outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+                                        className="h-7 w-full rounded-md border border-zinc-200 bg-zinc-50 px-2 text-xs font-semibold text-zinc-700 outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                                       />
                                     </label>
                                   ))}
                                 </div>
-                              </details>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    )}
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-zinc-900 dark:text-white">Day-wise activities</h3>
-                        <p className="text-xs text-zinc-500">Edit the plan, meals, and stay for each day.</p>
-                      </div>
-                      <Button variant="outline" size="sm" className="gap-2 rounded-md border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900" onClick={addDay}>
-                        <Plus className="size-4" />
-                        Add day
-                      </Button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {days.map((day, dayIndex) => (
-                        <div key={day.id} className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800">
-                          <div className="flex items-start gap-3">
-                            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-                              {dayIndex + 1}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                                Day {dayIndex + 1}
-                              </p>
-                              <input
-                                value={day.title}
-                                onChange={(e) => updateDayField(day.id, "title", e.target.value)}
-                                className="mt-1 w-full bg-transparent text-sm font-semibold text-zinc-900 outline-none dark:text-white"
-                              />
-                            </div>
-                            <button
-                              aria-label="Remove day"
-                              onClick={() => removeDay(day.id)}
-                              className="grid size-8 shrink-0 place-items-center rounded-lg text-zinc-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
-                            >
-                              <Trash className="size-4" />
-                            </button>
-                          </div>
-
-                          <div className="mt-3 space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-                            {day.activities.map((activity, index) => (
-                              <div key={index} className="flex items-center gap-2">
-                                <NotePencil className="size-3.5 shrink-0 text-zinc-400" />
-                                <input
-                                  value={activity}
-                                  onChange={(e) => updateActivity(day.id, index, e.target.value)}
-                                  placeholder="Add an activity"
-                                  className="h-8 flex-1 rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                                />
-                                <button
-                                  aria-label="Remove activity"
-                                  onClick={() => removeActivity(day.id, index)}
-                                  className="grid size-7 shrink-0 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                                >
-                                  <X className="size-3.5" />
-                                </button>
+                                <details className="border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                                  <summary className="cursor-pointer text-xs font-semibold text-indigo-600 dark:text-indigo-400">Edit flight document</summary>
+                                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                    {(["flight", "airline", "from", "to", "date", "departure", "arrival", "status"] as const).map((field) => (
+                                      <label key={field} className="space-y-1 text-[11px] font-medium capitalize text-zinc-400">
+                                        {field}
+                                        <input
+                                          type={field === "date" ? "date" : "text"}
+                                          value={flight[field]}
+                                          onChange={(event) => updateFlightDocument(flight.id, field, event.target.value)}
+                                          className="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-xs text-zinc-700 outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+                                        />
+                                      </label>
+                                    ))}
+                                  </div>
+                                </details>
                               </div>
                             ))}
-                            <button
-                              onClick={() => addActivity(day.id)}
-                              className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-                            >
-                              <Plus className="size-3.5" />
-                              Add activity
-                            </button>
                           </div>
+                        </section>
+                      )}
 
-                          <div className="mt-3 grid gap-3 border-t border-zinc-100 pt-3 dark:border-zinc-800 sm:grid-cols-2">
-                            <label className="space-y-1 text-xs font-medium text-zinc-500">
-                              <span className="flex items-center gap-1"><Bed className="size-3.5" /> Stay</span>
-                              <input
-                                value={day.stay}
-                                onChange={(e) => updateDayField(day.id, "stay", e.target.value)}
-                                placeholder="Hotel / houseboat name"
-                                className="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                              />
-                            </label>
-                            <label className="space-y-1 text-xs font-medium text-zinc-500">
-                              <span className="flex items-center gap-1"><Car className="size-3.5" /> Transport</span>
-                              <input
-                                value={day.transport}
-                                onChange={(e) => updateDayField(day.id, "transport", e.target.value)}
-                                placeholder="Private car / flight / ferry"
-                                className="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
-                              />
-                            </label>
-                          </div>
-
-                          <div className="mt-3 flex items-center gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-                            {(["breakfast", "lunch", "dinner"] as const).map((meal) => (
-                              <button
-                                key={meal}
-                                onClick={() => toggleMeal(day.id, meal)}
-                                className={`rounded-full px-2.5 py-1 text-[11px] font-medium capitalize transition ${
-                                  day.meals[meal]
-                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                    : "bg-zinc-100 text-zinc-400 dark:bg-zinc-900"
-                                }`}
-                              >
-                                {meal}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ------------------------------------------------ Step 3: Review & generate */}
-                {wizardStep === 3 && (
-                  <div className="space-y-5">
-                    {!generated ? (
-                      <>
-                        <div className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800">
-                          <h3 className="font-semibold text-zinc-900 dark:text-white">Traveler summary</h3>
-                          <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-                            <div className="flex justify-between sm:block">
-                              <dt className="text-zinc-500">Name</dt>
-                              <dd className="font-medium text-zinc-900 dark:text-white">{customer.name || "—"}</dd>
-                            </div>
-                            <div className="flex justify-between sm:block">
-                              <dt className="text-zinc-500">Phone</dt>
-                              <dd className="font-medium text-zinc-900 dark:text-white">{customer.phone || "—"}</dd>
-                            </div>
-                            <div className="flex justify-between sm:block">
-                              <dt className="text-zinc-500">Travelers</dt>
-                              <dd className="font-medium text-zinc-900 dark:text-white">
-                                {customer.adults} adults{customer.children > 0 ? `, ${customer.children} children` : ""}
-                              </dd>
-                            </div>
-                            <div className="flex justify-between sm:block">
-                              <dt className="text-zinc-500">Start date</dt>
-                              <dd className="font-medium text-zinc-900 dark:text-white">{customer.startDate || "—"}</dd>
-                            </div>
-                            <div className="flex justify-between sm:block sm:col-span-2">
-                              <dt className="text-zinc-500">Pickup</dt>
-                              <dd className="font-medium text-zinc-900 dark:text-white">{customer.pickup || "—"}</dd>
-                            </div>
-                          </dl>
-                        </div>
-
-                        <div className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800">
-                          <h3 className="font-semibold text-zinc-900 dark:text-white">
-                            {activeTemplate.name} · {days.length} days
-                          </h3>
-                          <ol className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
-                            {days.map((day, index) => (
-                              <li key={day.id} className="flex gap-2">
-                                <span className="font-semibold text-zinc-400">D{index + 1}</span>
-                                <span>{day.title} — {day.activities.filter(Boolean).length} activities</span>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-8 text-center dark:border-emerald-900 dark:bg-emerald-950/20">
-                        <CheckCircle className="size-10 text-emerald-600" weight="fill" />
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold text-zinc-900 dark:text-white">Itinerary ready</p>
-                          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                            {customer.name || "This traveler"}'s {activeTemplate.name.toLowerCase()} itinerary has
-                            been created. Send it to the customer as a PDF.
-                          </p>
+                          <h3 className="font-semibold text-zinc-900 dark:text-white">Day-wise activities</h3>
+                          <p className="text-xs text-zinc-500">Edit the plan, meals, and stay for each day.</p>
                         </div>
-                        <Button className="gap-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-                          <FilePdf className="size-4" />
-                          Download PDF
+                        <Button variant="outline" size="sm" className="gap-2 rounded-md border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900" onClick={addDay}>
+                          <Plus className="size-4" />
+                          Add day
                         </Button>
                       </div>
-                    )}
-                  </div>
-                )}
+
+                      <div className="space-y-3">
+                        {days.map((day, dayIndex) => (
+                          <div key={day.id} className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800">
+                            <div className="flex items-start gap-3">
+                              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                                {dayIndex + 1}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                                  Day {dayIndex + 1}
+                                </p>
+                                <input
+                                  value={day.title}
+                                  onChange={(e) => updateDayField(day.id, "title", e.target.value)}
+                                  className="mt-1 w-full bg-transparent text-sm font-semibold text-zinc-900 outline-none dark:text-white"
+                                />
+                              </div>
+                              <button
+                                aria-label="Remove day"
+                                onClick={() => removeDay(day.id)}
+                                className="grid size-8 shrink-0 place-items-center rounded-lg text-zinc-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
+                              >
+                                <Trash className="size-4" />
+                              </button>
+                            </div>
+
+                            <div className="mt-3 space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+                              {day.activities.map((activity, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                  <NotePencil className="size-3.5 shrink-0 text-zinc-400" />
+                                  <input
+                                    value={activity}
+                                    onChange={(e) => updateActivity(day.id, index, e.target.value)}
+                                    placeholder="Add an activity"
+                                    className="h-8 flex-1 rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                                  />
+                                  <button
+                                    aria-label="Remove activity"
+                                    onClick={() => removeActivity(day.id, index)}
+                                    className="grid size-7 shrink-0 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                                  >
+                                    <X className="size-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => addActivity(day.id)}
+                                className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                              >
+                                <Plus className="size-3.5" />
+                                Add activity
+                              </button>
+                            </div>
+
+                            <div className="mt-3 grid gap-3 border-t border-zinc-100 pt-3 dark:border-zinc-800 sm:grid-cols-2">
+                              <label className="space-y-1 text-xs font-medium text-zinc-500">
+                                <span className="flex items-center gap-1"><Bed className="size-3.5" /> Stay</span>
+                                <input
+                                  value={day.stay}
+                                  onChange={(e) => updateDayField(day.id, "stay", e.target.value)}
+                                  placeholder="Hotel / houseboat name"
+                                  className="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                                />
+                              </label>
+                              <label className="space-y-1 text-xs font-medium text-zinc-500">
+                                <span className="flex items-center gap-1"><Car className="size-3.5" /> Transport</span>
+                                <input
+                                  value={day.transport}
+                                  onChange={(e) => updateDayField(day.id, "transport", e.target.value)}
+                                  placeholder="Private car / flight / ferry"
+                                  className="h-8 w-full rounded-lg border border-zinc-200 bg-white px-2 text-sm outline-none focus:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-950"
+                                />
+                              </label>
+                            </div>
+
+                            <div className="mt-3 flex items-center gap-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+                              {(["breakfast", "lunch", "dinner"] as const).map((meal) => (
+                                <button
+                                  key={meal}
+                                  onClick={() => toggleMeal(day.id, meal)}
+                                  className={`rounded-full px-2.5 py-1 text-[11px] font-medium capitalize transition ${day.meals[meal]
+                                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                      : "bg-zinc-100 text-zinc-400 dark:bg-zinc-900"
+                                    }`}
+                                >
+                                  {meal}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ------------------------------------------------ Step 3: Review & generate */}
+                  {wizardStep === 3 && (
+                    <div className="space-y-5">
+                      {!generated ? (
+                        <>
+                          <div className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800">
+                            <h3 className="font-semibold text-zinc-900 dark:text-white">Traveler summary</h3>
+                            <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+                              <div className="flex justify-between sm:block">
+                                <dt className="text-zinc-500">Name</dt>
+                                <dd className="font-medium text-zinc-900 dark:text-white">{customer.name || "—"}</dd>
+                              </div>
+                              <div className="flex justify-between sm:block">
+                                <dt className="text-zinc-500">Phone</dt>
+                                <dd className="font-medium text-zinc-900 dark:text-white">{customer.phone || "—"}</dd>
+                              </div>
+                              <div className="flex justify-between sm:block">
+                                <dt className="text-zinc-500">Travelers</dt>
+                                <dd className="font-medium text-zinc-900 dark:text-white">
+                                  {customer.adults} adults{customer.children > 0 ? `, ${customer.children} children` : ""}
+                                </dd>
+                              </div>
+                              <div className="flex justify-between sm:block">
+                                <dt className="text-zinc-500">Start date</dt>
+                                <dd className="font-medium text-zinc-900 dark:text-white">{customer.startDate || "—"}</dd>
+                              </div>
+                              <div className="flex justify-between sm:block sm:col-span-2">
+                                <dt className="text-zinc-500">Pickup</dt>
+                                <dd className="font-medium text-zinc-900 dark:text-white">{customer.pickup || "—"}</dd>
+                              </div>
+                            </dl>
+                          </div>
+
+                          <div className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800">
+                            <h3 className="font-semibold text-zinc-900 dark:text-white">
+                              {activeTemplate.name} · {days.length} days
+                            </h3>
+                            <ol className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+                              {days.map((day, index) => (
+                                <li key={day.id} className="flex gap-2">
+                                  <span className="font-semibold text-zinc-400">D{index + 1}</span>
+                                  <span>{day.title} — {day.activities.filter(Boolean).length} activities</span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-8 text-center dark:border-emerald-900 dark:bg-emerald-950/20">
+                          <CheckCircle className="size-10 text-emerald-600" weight="fill" />
+                          <div>
+                            <p className="font-semibold text-zinc-900 dark:text-white">Itinerary ready</p>
+                            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                              {customer.name || "This traveler"}'s {activeTemplate.name.toLowerCase()} itinerary has
+                              been created. Send it to the customer as a PDF.
+                            </p>
+                          </div>
+                          <Button className="gap-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                            <FilePdf className="size-4" />
+                            Download PDF
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <DialogFooter className="flex shrink-0 flex-row items-center justify-between gap-2 border-t border-zinc-200 px-4 py-3 sm:px-6 sm:py-4 dark:border-zinc-800">
-                  <Button
-                    variant="outline"
-                    className="gap-2 rounded-md border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                <Button
+                  variant="outline"
+                  className="gap-2 rounded-md border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
                   disabled={wizardStep === 1}
                   onClick={() => setWizardStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s))}
                 >
