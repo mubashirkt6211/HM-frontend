@@ -6,13 +6,13 @@ import {
   X, Calendar as CalendarIcon, MapPin,
   ShieldCheck, Warning, Info, Check,
   File, Trash, CloudArrowUp, Flag, ArrowRight, ArrowLeft,
-  CaretDown, Question, CheckCircle, BookmarkSimple, User, Buildings
+  CaretDown, Question, CheckCircle, BookmarkSimple, User, Buildings,
+  VideoCamera, Phone, Envelope, LinkSimple, Paperclip, CurrencyDollar, TrendUp, WarningDiamond
 } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -26,17 +26,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type CalendarEvent = {
   id: string;
   title: string;
   clientName?: string;
-  patientName?: string;
+  companyName?: string;
+  dealValue?: number;
+  dealStage?: string;
   agent?: string;
   supportAgent?: string;
-  nurse?: string;
-  doctor?: string;
+  meetingMode?: "Video Call" | "In-Person" | "Phone Call";
+  meetingUrl?: string;
   attachments?: { name: string; size: string; type: string }[];
   dealNotes?: string;
   report?: string;
@@ -48,7 +51,7 @@ type CalendarEvent = {
   notes?: string;
   priority?: "Low" | "Medium" | "High";
   category?: "Shared" | "Public" | "Archived";
-  assignees?: { name: string; avatar?: string; role: string }[];
+  assignees?: { name: string; avatar?: string; role: string; rsvp?: "Accepted" | "Pending" | "Declined" }[];
 };
 
 type DayEvents = { [key: number]: CalendarEvent[] };
@@ -56,26 +59,26 @@ type DayEvents = { [key: number]: CalendarEvent[] };
 // ─── CRM Mock Data ───────────────────────────────────────────────────
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MOCK_STAFF = [
-  { name: "Ari Parker", avatar: "https://i.pravatar.cc/200?img=45", role: "Senior Sales Agent" },
-  { name: "Sam Rivera", avatar: "https://i.pravatar.cc/200?img=52", role: "Travel Specialist" },
-  { name: "Maya Chen", avatar: "https://i.pravatar.cc/200?img=49", role: "Account Executive" },
-  { name: "Jordan Lee", avatar: "https://i.pravatar.cc/200?img=12", role: "Lead Qualifier" },
-  { name: "Sam Nguyen", avatar: "https://i.pravatar.cc/200?img=33", role: "CRM Manager" },
+  { name: "Ari Parker", avatar: "https://i.pravatar.cc/200?img=45", role: "Senior Sales Agent", rsvp: "Accepted" as const },
+  { name: "Sam Rivera", avatar: "https://i.pravatar.cc/200?img=52", role: "Account Specialist", rsvp: "Accepted" as const },
+  { name: "Maya Chen", avatar: "https://i.pravatar.cc/200?img=49", role: "Account Executive", rsvp: "Pending" as const },
+  { name: "Jordan Lee", avatar: "https://i.pravatar.cc/200?img=12", role: "Lead Qualifier", rsvp: "Accepted" as const },
+  { name: "Sam Nguyen", avatar: "https://i.pravatar.cc/200?img=33", role: "CRM Manager", rsvp: "Accepted" as const },
 ];
 
 const AGENT_OPTIONS = [
   { name: "Ari Parker", avatar: "https://i.pravatar.cc/200?img=45", role: "Senior Sales Agent" },
-  { name: "Sam Rivera", avatar: "https://i.pravatar.cc/200?img=52", role: "Travel Specialist" },
+  { name: "Sam Rivera", avatar: "https://i.pravatar.cc/200?img=52", role: "Account Specialist" },
   { name: "Maya Chen", avatar: "https://i.pravatar.cc/200?img=49", role: "Account Executive" },
   { name: "Jordan Lee", avatar: "https://i.pravatar.cc/200?img=12", role: "Lead Qualifier" },
   { name: "Sam Nguyen", avatar: "https://i.pravatar.cc/200?img=33", role: "CRM Manager" },
 ];
 
 const SUPPORT_AGENT_OPTIONS = [
-  { name: "Alex Vance", avatar: "https://i.pravatar.cc/200?img=11", role: "Customer Success" },
+  { name: "Alex Vance", avatar: "https://i.pravatar.cc/200?img=11", role: "Customer Success Lead" },
   { name: "Taylor Brooks", avatar: "https://i.pravatar.cc/200?img=20", role: "Operations Lead" },
-  { name: "Morgan Ellis", avatar: "https://i.pravatar.cc/200?img=32", role: "Travel Coordinator" },
-  { name: "Chris Logan", avatar: "https://i.pravatar.cc/200?img=47", role: "Booking Assistant" },
+  { name: "Morgan Ellis", avatar: "https://i.pravatar.cc/200?img=32", role: "Solutions Engineer" },
+  { name: "Chris Logan", avatar: "https://i.pravatar.cc/200?img=47", role: "Technical Specialist" },
 ];
 
 const PRIORITY_CONFIG = {
@@ -89,60 +92,100 @@ function getEventCategory(event: CalendarEvent) {
 }
 
 const EVENTS_BY_DAY: DayEvents = {
-  1: [{ id: "e1", title: "Lead Discovery Call", time: "9:00 AM", color: "blue", category: "Shared" }],
+  1: [
+    {
+      id: "e1",
+      title: "Discovery Call - Nexus Cloud",
+      clientName: "Alex Mercer (CTO)",
+      companyName: "Nexus Cloud Technologies",
+      dealValue: 145000,
+      dealStage: "New Leads",
+      agent: "Ari Parker",
+      supportAgent: "Alex Vance",
+      meetingMode: "Video Call",
+      meetingUrl: "https://meet.google.com/crm-nexus-discovery",
+      time: "9:00 AM",
+      endTime: "9:45 AM",
+      color: "blue",
+      category: "Shared",
+      priority: "High",
+      dealNotes: "Discuss enterprise multi-tenant setup, security compliance (SOC2), and custom API integration requirements.",
+      assignees: [
+        { name: "Ari Parker", avatar: "https://i.pravatar.cc/200?img=45", role: "Senior Sales Agent", rsvp: "Accepted" },
+        { name: "Alex Mercer", avatar: "https://i.pravatar.cc/200?img=60", role: "Client CTO", rsvp: "Accepted" },
+      ],
+      attachments: [
+        { name: "Nexus_Discovery_Agenda.pdf", size: "1.4 MB", type: "pdf" },
+        { name: "Enterprise_SaaS_Architecture.png", size: "3.2 MB", type: "png" },
+      ],
+    },
+  ],
   2: [
-    { id: "e2", title: "Maldives Package Consultation", clientName: "Mia Reynolds", agent: "Ari Parker", dealNotes: "Review luxury villa options & honeymoon discounts.", time: "10:00 AM", color: "green", attendees: 2, priority: "High", category: "Public", assignees: [MOCK_STAFF[0], MOCK_STAFF[2]] },
-    { id: "e3", title: "Switzerland Family Itinerary Review", clientName: "Noah Patel", agent: "Sam Rivera", dealNotes: "Finalize train passes and kid-friendly tours.", time: "4:00 PM", color: "purple", attendees: 5, priority: "Medium", category: "Shared", assignees: [MOCK_STAFF[1]] },
-    { id: "e4", title: "Daily Sales Handoff Sync", time: "7:00 PM", color: "red", priority: "Low", category: "Archived" },
+    {
+      id: "e2",
+      title: "Vanguard FinTech Consultation",
+      clientName: "Rachel Sterling (VP Procurement)",
+      companyName: "Vanguard Financial Systems",
+      dealValue: 110000,
+      dealStage: "Open Discussion",
+      agent: "Ari Parker",
+      supportAgent: "Maya Chen",
+      meetingMode: "Video Call",
+      meetingUrl: "https://meet.google.com/crm-vanguard-pitch",
+      time: "10:00 AM",
+      endTime: "11:00 AM",
+      color: "green",
+      attendees: 3,
+      priority: "High",
+      category: "Public",
+      dealNotes: "Review security compliance certificates, SLA guarantees, and enterprise volume discount structure.",
+      assignees: [MOCK_STAFF[0], MOCK_STAFF[2]],
+      attachments: [
+        { name: "Vanguard_Enterprise_SLA_Quote.pdf", size: "2.1 MB", type: "pdf" },
+      ],
+    },
+    {
+      id: "e3",
+      title: "Apex Logistics Contract Review",
+      clientName: "Marcus Vance (COO)",
+      companyName: "Apex Logistics Global",
+      dealValue: 75000,
+      dealStage: "In-Progress",
+      agent: "Sam Rivera",
+      supportAgent: "Taylor Brooks",
+      meetingMode: "In-Person",
+      location: "Apex HQ, Chicago IL",
+      time: "4:00 PM",
+      endTime: "5:00 PM",
+      color: "purple",
+      attendees: 4,
+      priority: "Medium",
+      category: "Shared",
+      dealNotes: "Finalize annual contract terms, SLA commitments, and onboarding timelines for 200 supply chain users.",
+      assignees: [MOCK_STAFF[1]],
+    },
+    {
+      id: "e4",
+      title: "Daily Sales Handoff Sync",
+      time: "7:00 PM",
+      color: "red",
+      priority: "Low",
+      category: "Archived",
+    },
   ],
   3: [{ id: "e5", title: "Weekly Lead Pipeline Review", time: "9:00 AM", color: "blue", category: "Shared" }],
-  5: [{ id: "e6", title: "Thailand Solo Travel Briefing", clientName: "Sofia Chen", agent: "Jordan Lee", dealNotes: "Solo traveler itinerary and hostel recommendations.", time: "9:00 AM", color: "blue", category: "Public" }],
+  5: [{ id: "e6", title: "OmniMedia AI Strategy Session", clientName: "Elena Rostova", companyName: "OmniMedia Digital", dealValue: 48000, dealStage: "Open Deal", agent: "Jordan Lee", time: "9:00 AM", color: "blue", category: "Public" }],
   6: [
-    { id: "e7", title: "Corporate Offsite Proposal", time: "10:30 AM", color: "orange", category: "Shared" },
-    { id: "e8", title: "Santorini Wine Tour Booking", time: "2:30 PM", color: "green", category: "Public" },
+    { id: "e7", title: "Corporate Software Expansion Proposal", time: "10:30 AM", color: "orange", category: "Shared" },
+    { id: "e8", title: "Quarterly Account Review", time: "2:30 PM", color: "green", category: "Public" },
   ],
-  7: [{ id: "e9", title: "Tulum Wedding Package Consult", clientName: "Lucas Garcia", agent: "Ari Parker", dealNotes: "Group accommodation for 50 guests.", time: "9:00 AM", color: "blue", category: "Public" }],
+  7: [{ id: "e9", title: "Enterprise SLA Negotiation", clientName: "Lucas Garcia", agent: "Ari Parker", dealNotes: "Group license onboarding for 150 team members.", time: "9:00 AM", color: "blue", category: "Public" }],
   8: [
-    { id: "e10", title: "Kenya Safari VIP Pitch", time: "11:00 AM", color: "green", category: "Public" },
-    { id: "e11", title: "Swiss Alps Skiing Quote Review", time: "11:00 AM", color: "purple", category: "Shared" },
-  ],
-  9: [
-    { id: "e12", title: "Q3 Campaign Lead Analysis", time: "9:00 AM", color: "slate", category: "Archived" },
-    { id: "e13", title: "Kyoto Cherry Blossom Consultation", time: "1:30 PM", color: "teal", category: "Public" },
+    { id: "e10", title: "FinTech Security Pitch", time: "11:00 AM", color: "green", category: "Public" },
+    { id: "e11", title: "Cloud Infrastructure Quote Review", time: "11:00 AM", color: "purple", category: "Shared" },
   ],
   10: [
-    { id: "e14", title: "Amalfi Coast Offsite Briefing", time: "10:00 AM", color: "green", attendees: 30, priority: "Low", category: "Archived" },
-    { id: "e15", title: "Lisbon Nomad Trip Planning", time: "10:00 AM", color: "pink", priority: "Medium", category: "Public", assignees: [MOCK_STAFF[0]] },
-    { id: "e16", title: "High-Value Deal Closing Call", time: "1:30 PM", color: "blue", priority: "High", category: "Shared", assignees: [MOCK_STAFF[1], MOCK_STAFF[3]] },
-  ],
-  11: [
-    { id: "e17", title: "Europe Multi-City Tour Review", time: "10:30 AM", color: "orange", category: "Shared" },
-    { id: "e18", title: "Greek Islands Yacht Pitch", time: "1:00 PM", color: "pink", category: "Public" },
-  ],
-  14: [
-    { id: "e19", title: "Peru Machu Picchu Trek Briefing", time: "3:30 PM", color: "purple", category: "Shared" },
-  ],
-  15: [
-    { id: "e20", title: "Costa Rica Eco-Lodge Consult", time: "10:30 AM", color: "green", category: "Shared" },
-    { id: "e21", title: "Weekly Agent Performance Check", time: "4:00 PM", color: "purple", category: "Shared" },
-  ],
-  16: [
-    { id: "e22", title: "Hot Lead Follow-up Call", time: "7:00 AM", color: "red", category: "Public" },
-    { id: "e23", title: "Partner Agency Conference", time: "9:30 AM", color: "green", category: "Shared" },
-    { id: "e24", title: "Booking Confirmation Review", time: "3:30 PM", color: "blue", category: "Public" },
-  ],
-  21: [
-    { id: "e25", title: "Monthly CRM Revenue Audit", time: "9:00 AM", color: "purple", category: "Archived" },
-    { id: "e26", title: "Nutrition & Wellness Retreat Consult", time: "1:00 PM", color: "green", category: "Public" },
-    { id: "e27", title: "Urgent Booking Escalation Briefing", time: "7:00 PM", color: "red", category: "Shared" },
-  ],
-  22: [
-    { id: "e28", title: "Vendor & Resort Rates Audit", time: "9:00 AM", color: "slate", category: "Archived" },
-    { id: "e29", title: "Luxury Spa Package Presentation", time: "2:30 PM", color: "blue", category: "Public" },
-  ],
-  30: [
-    { id: "e30", title: "Weekend Lead Triage", time: "4:00 PM", color: "purple", category: "Shared" },
-    { id: "e31", title: "CRM Onboarding & Sales Training", time: "6:30 PM", color: "red", category: "Archived" },
+    { id: "e16", title: "High-Value Deal Closing Call", clientName: "David Sterling", companyName: "Vanguard FinTech", dealValue: 110000, dealStage: "Won Customer", agent: "Ari Parker", time: "1:30 PM", color: "blue", priority: "High", category: "Shared", assignees: [MOCK_STAFF[1], MOCK_STAFF[3]] },
   ],
 };
 
@@ -158,12 +201,21 @@ const COLOR_MAP: Record<string, { bg: string; text: string; dot: string }> = {
   pink: { bg: "bg-pink-50 dark:bg-pink-900/20", text: "text-pink-700 dark:text-pink-300", dot: "bg-pink-500" },
 };
 
+const EVENT_COLORS = [
+  { id: "blue", label: "Blue", dot: "bg-blue-500", ring: "ring-blue-400" },
+  { id: "green", label: "Green", dot: "bg-green-500", ring: "ring-green-400" },
+  { id: "purple", label: "Purple", dot: "bg-purple-500", ring: "ring-purple-400" },
+  { id: "red", label: "Red", dot: "bg-red-500", ring: "ring-red-400" },
+  { id: "orange", label: "Orange", dot: "bg-orange-500", ring: "ring-orange-400" },
+  { id: "teal", label: "Teal", dot: "bg-teal-500", ring: "ring-teal-400" },
+  { id: "pink", label: "Pink", dot: "bg-pink-500", ring: "ring-pink-400" },
+];
+
 // ─── Helpers ─────────────────────────────────────────────────────────
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
 }
 function getFirstDayOfMonth(year: number, month: number) {
-  // 0 = Sun, 1 = Mon … shift so Mon = 0
   return (new Date(year, month, 1).getDay() + 6) % 7;
 }
 function getWeekStartDate(date: Date) {
@@ -172,31 +224,7 @@ function getWeekStartDate(date: Date) {
 }
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-// ─── Small Components ─────────────────────────────────────────────────
-function EventPill({ event, isPast }: { event: CalendarEvent; isPast?: boolean }) {
-  const c = COLOR_MAP[event.color] ?? COLOR_MAP.blue;
-  const prio = event.priority ? PRIORITY_CONFIG[event.priority] : null;
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className={cn(
-        "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium cursor-pointer truncate border border-transparent",
-        c.bg, c.text,
-        prio && cn("border-l-2", prio.border)
-      )}
-    >
-      <span className={cn(
-        "w-1.5 h-1.5 rounded-full shrink-0",
-        c.dot
-      )} />
-      <span className={cn("truncate", isPast && "line-through decoration-current")}>{event.title}</span>
-      <span className="shrink-0 opacity-50">{event.time}</span>
-    </motion.div>
-  );
-}
-
-// ─── Custom Time Picker ──────────────────────────────────────────────
+// ─── Custom Time Picker Component ─────────────────────────────────────
 function TimePicker({ value, onChange, label, icon: Icon }: {
   value: string;
   onChange: (val: string) => void;
@@ -205,7 +233,6 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
 }) {
   const [open, setOpen] = React.useState(false);
 
-  // Parse HH:MM
   const [hStr, mStr] = value.split(":");
   let h = parseInt(hStr, 10);
   const m = parseInt(mStr, 10);
@@ -221,35 +248,34 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
     if (newIsPm && hr < 12) hr += 12;
     if (!newIsPm && hr === 12) hr = 0;
     onChange(`${String(hr).padStart(2, "0")}:${String(newM).padStart(2, "0")}`);
-    setOpen(false); // Close popover after selection
+    setOpen(false);
   }
 
   const fmt = `${h}:${String(m).padStart(2, "0")} ${isPM ? "PM" : "AM"}`;
 
   return (
     <div>
-      <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 block flex items-center gap-1">
+      <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 flex items-center gap-1">
         {Icon && <Icon className="w-3 h-3" />} {label}
       </label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="w-full h-[38px] flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+            className="w-full h-[38px] flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 cursor-pointer"
           >
             {fmt}
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-xl" align="start">
           <div className="flex gap-2">
-            {/* Hours */}
             <div className="flex flex-col gap-1 h-48 overflow-y-auto pr-2 no-scrollbar border-r border-zinc-100 dark:border-zinc-800">
               {hours.map(hour => (
                 <button
                   key={`h-${hour}`}
                   onClick={() => updateTime(hour, m, isPM)}
                   className={cn(
-                    "w-8 h-8 flex items-center justify-center rounded-md text-sm transition-colors",
+                    "w-8 h-8 flex items-center justify-center rounded-md text-sm transition-colors cursor-pointer",
                     h === hour ? "bg-blue-600 text-white font-bold" : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   )}
                 >
@@ -257,7 +283,6 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
                 </button>
               ))}
             </div>
-            {/* Minutes */}
             <div className="flex flex-col gap-1 h-48 overflow-y-auto pr-2 no-scrollbar border-r border-zinc-100 dark:border-zinc-800">
               {minutes.map(minStr => {
                 const min = parseInt(minStr, 10);
@@ -266,7 +291,7 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
                     key={`m-${minStr}`}
                     onClick={() => updateTime(h, min, isPM)}
                     className={cn(
-                      "w-8 h-8 flex items-center justify-center rounded-md text-sm transition-colors",
+                      "w-8 h-8 flex items-center justify-center rounded-md text-sm transition-colors cursor-pointer",
                       m === min ? "bg-blue-600 text-white font-bold" : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     )}
                   >
@@ -275,14 +300,13 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
                 );
               })}
             </div>
-            {/* AM/PM */}
             <div className="flex flex-col gap-1">
               {["AM", "PM"].map(period => (
                 <button
                   key={period}
                   onClick={() => updateTime(h, m, period === "PM")}
                   className={cn(
-                    "w-10 h-10 flex items-center justify-center rounded-md text-xs font-bold transition-colors",
+                    "w-10 h-10 flex items-center justify-center rounded-md text-xs font-bold transition-colors cursor-pointer",
                     (period === "PM") === isPM ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900" : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   )}
                 >
@@ -297,17 +321,31 @@ function TimePicker({ value, onChange, label, icon: Icon }: {
   );
 }
 
-// ─── Add Event Modal (CRM Style matching LeadsPage) ──────────────────
-const EVENT_COLORS = [
-  { id: "blue", label: "Blue", dot: "bg-blue-500", ring: "ring-blue-400" },
-  { id: "green", label: "Green", dot: "bg-green-500", ring: "ring-green-400" },
-  { id: "purple", label: "Purple", dot: "bg-purple-500", ring: "ring-purple-400" },
-  { id: "red", label: "Red", dot: "bg-red-500", ring: "ring-red-400" },
-  { id: "orange", label: "Orange", dot: "bg-orange-500", ring: "ring-orange-400" },
-  { id: "teal", label: "Teal", dot: "bg-teal-500", ring: "ring-teal-400" },
-  { id: "pink", label: "Pink", dot: "bg-pink-500", ring: "ring-pink-400" },
-];
+// ─── Small Components ─────────────────────────────────────────────────
+function EventPill({ event, isPast }: { event: CalendarEvent; isPast?: boolean }) {
+  const c = COLOR_MAP[event.color] ?? COLOR_MAP.blue;
+  const prio = event.priority ? PRIORITY_CONFIG[event.priority] : null;
 
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className={cn(
+        "flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium cursor-pointer truncate border border-transparent hover:shadow-xs transition-all",
+        c.bg, c.text,
+        prio && cn("border-l-2", prio.border)
+      )}
+    >
+      <span className={cn(
+        "w-1.5 h-1.5 rounded-full shrink-0",
+        c.dot
+      )} />
+      <span className={cn("truncate", isPast && "line-through decoration-current")}>{event.title}</span>
+      <span className="shrink-0 opacity-50">{event.time}</span>
+    </motion.div>
+  );
+}
+
+// ─── ORIGINAL FULL-FEATURED ADD EVENT MODAL (RESTORED OLD STYLE) ──────
 function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }: {
   onClose: () => void;
   onAdd: (day: number, event: CalendarEvent) => void;
@@ -362,23 +400,25 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
   return (
     <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-2xl border border-zinc-200/80 dark:border-zinc-800 p-0 overflow-hidden rounded-2xl shadow-2xl bg-white dark:bg-zinc-950">
-        <div className="p-6 sm:p-8 max-h-[82vh] overflow-y-auto sleek-scroll">
+        <div className="p-6 sm:p-8 max-h-[82vh] overflow-y-auto sleek-scroll space-y-6">
 
-          {/* Top Banner / Header */}
-          <div className="mb-6 pb-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+          {/* Top Banner Header */}
+          <div className="pb-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
             <DialogHeader className="text-left space-y-0.5">
               <DialogTitle className="text-base font-extrabold text-zinc-900 dark:text-white flex items-center gap-2">
                 Create New Event
               </DialogTitle>
               <DialogDescription className="text-xs text-zinc-500 dark:text-zinc-400">
-                Configure CRM meetings, client consultations, agent assignments, and travel quotes.
+                Configure CRM meetings, client consultations, agent assignments, and proposals.
               </DialogDescription>
             </DialogHeader>
 
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/50 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Ready to publish
-            </span>
+            <div className="flex items-center gap-2 pr-6">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/50 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Ready to publish
+              </span>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -394,7 +434,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none"
+                      className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none cursor-pointer"
                     >
                       <span className="font-medium">{category} Event</span>
                       <CaretDown className="size-4 text-zinc-400" />
@@ -429,7 +469,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                   placeholder="E.g. Maldives Consultation - Mia Reynolds"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-xs outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder:text-zinc-500 transition-all"
+                  className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-xs outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 transition-all"
                 />
               </div>
             </div>
@@ -442,12 +482,11 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
               </label>
               <div className="flex-1 space-y-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Lead Agent */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
-                        className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none"
+                        className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none cursor-pointer"
                       >
                         <div className="flex items-center gap-2 truncate">
                           <User className="size-4 text-zinc-400" />
@@ -479,12 +518,11 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  {/* Support Agent */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
-                        className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none"
+                        className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none cursor-pointer"
                       >
                         <div className="flex items-center gap-2 truncate">
                           <User className="size-4 text-zinc-400" />
@@ -530,7 +568,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none"
+                      className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
                         <CalendarIcon className="size-4 text-zinc-400" />
@@ -557,100 +595,75 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
               </div>
             </div>
 
-            {/* Row 5: Location / Channel */}
+            {/* Row 5: Priority Level & Color Badges */}
             <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
               <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
-                Location / Channel
-              </label>
-              <div className="flex-1">
-                <div className="relative">
-                  <MapPin className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type="text"
-                    placeholder="E.g. Google Meet, WhatsApp Call, Office HQ"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-3.5 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-xs outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Row 6: Client / Lead Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
-              <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
-                Client / Lead Details
-              </label>
-              <div className="flex-1">
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type="text"
-                    placeholder="Client Name (e.g. Mia Reynolds, Noah Patel)"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-3.5 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-xs outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Row 7: Priority Level */}
-            <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
-              <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
-                Priority Level
-              </label>
-              <div className="flex-1">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3.5 text-sm text-zinc-800 shadow-xs focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 flex items-center justify-between transition-all outline-none"
-                    >
-                      <span className="font-medium">{priority} Priority</span>
-                      <CaretDown className="size-4 text-zinc-400" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56 rounded-xl border-zinc-200 p-1.5 shadow-xl dark:border-zinc-800 bg-white dark:bg-zinc-950 z-[60]">
-                    {(["High", "Medium", "Low"] as const).map((st) => (
-                      <DropdownMenuItem
-                        key={st}
-                        onClick={() => setPriority(st)}
-                        className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                      >
-                        <span>{st} Priority</span>
-                        {priority === st && <CheckCircle className="size-3.5 text-[#34C759]" weight="fill" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            {/* Row 8: Color Tag & Attachments */}
-            <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
-              <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
-                Color Tag &amp; Files
+                Priority &amp; Color Tag
               </label>
               <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
+                  {(["High", "Medium", "Low"] as const).map((p) => {
+                    const cfg = PRIORITY_CONFIG[p];
+                    const isSel = priority === p;
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPriority(p)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border",
+                          isSel
+                            ? cn(cfg.bg, cfg.color, cfg.border, "shadow-xs")
+                            : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                        )}
+                      >
+                        <cfg.icon className="size-3.5" />
+                        {cfg.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
                   {EVENT_COLORS.map((c) => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => setColor(c.id)}
                       className={cn(
-                        "size-7 rounded-full transition-all flex items-center justify-center cursor-pointer",
+                        "size-6 rounded-full transition-transform cursor-pointer flex items-center justify-center",
                         c.dot,
-                        color === c.id ? cn("ring-2 ring-offset-2 dark:ring-offset-zinc-950 scale-110", c.ring) : "opacity-60 hover:opacity-100"
+                        color === c.id && cn("ring-2 ring-offset-2 dark:ring-offset-zinc-950 scale-110", c.ring)
                       )}
-                      title={c.label}
-                    >
-                      {color === c.id && <Check className="size-3.5 text-white stroke-[3]" />}
-                    </button>
+                    />
                   ))}
                 </div>
+              </div>
+            </div>
 
+            {/* Row 6: Location */}
+            <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+              <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
+                Location / Link
+              </label>
+              <div className="flex-1 relative">
+                <MapPin className="absolute left-3.5 top-3 size-4 text-zinc-400" />
+                <input
+                  type="text"
+                  placeholder="E.g. Conference Room A / Zoom Link"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-3.5 text-sm text-zinc-800 placeholder:text-zinc-400 shadow-xs outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Row 7: Proposal & Attachments Uploader */}
+            <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
+              <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
+                Proposals &amp; Documents
+              </label>
+              <div className="flex-1 space-y-3">
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
@@ -693,7 +706,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 transition-colors shadow-xs flex items-center gap-1"
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 transition-colors shadow-xs flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="size-3.5" /> Add files
                   </button>
@@ -711,7 +724,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setAttachments((prev) => prev.filter((_, i) => i !== idx)); }}
-                          className="text-zinc-400 hover:text-red-500 transition-colors"
+                          className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
                         >
                           <Trash className="size-3.5" />
                         </button>
@@ -722,7 +735,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
               </div>
             </div>
 
-            {/* Row 9: Meeting & Deal Notes */}
+            {/* Row 8: Meeting & Deal Notes */}
             <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-2 sm:gap-4 items-start">
               <label className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pt-2">
                 Meeting &amp; Deal Notes
@@ -738,7 +751,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
               </div>
             </div>
 
-            {/* Footer */}
+            {/* Footer Buttons */}
             <div className="pt-6 mt-8 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
               <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 Draft stays private.
@@ -748,7 +761,7 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-9 px-4 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-xs flex items-center gap-1.5 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
+                  className="h-9 px-4 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-xs flex items-center gap-1.5 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   <BookmarkSimple className="size-3.5" />
                   Save draft
@@ -770,6 +783,309 @@ function AddEventModal({ onClose, onAdd, defaultDay, defaultMonth, defaultYear }
   );
 }
 
+// ─── RICH CRM SINGLE EVENT DETAILS MODAL ───
+function SingleEventDetailModal({
+  event,
+  onClose,
+  onDelete,
+}: {
+  event: CalendarEvent;
+  onClose: () => void;
+  onDelete: (eventId: string) => void;
+}) {
+  const [toastMsg, setToastMsg] = React.useState<string | null>(null);
+  const [showConfirmDelete, setShowConfirmDelete] = React.useState(false);
+  const c = COLOR_MAP[event.color] ?? COLOR_MAP.blue;
+  const prio = event.priority ? PRIORITY_CONFIG[event.priority] : null;
+
+  const handleSendReminder = () => {
+    setToastMsg(`📧 Meeting reminder & Google Calendar invite dispatched to attendees!`);
+    setTimeout(() => setToastMsg(null), 4000);
+  };
+
+  return (
+    <>
+      <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DialogContent className="sm:max-w-xl border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-2xl bg-white dark:bg-zinc-950 space-y-4 max-h-[88vh] overflow-y-auto sleek-scroll">
+          
+          {/* Toast Feedback */}
+          {toastMsg && (
+            <div className="p-2.5 rounded-lg bg-zinc-900 text-white text-xs font-bold shadow-xl flex items-center gap-2">
+              <span>{toastMsg}</span>
+            </div>
+          )}
+
+          <DialogHeader className="text-left space-y-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider", c.bg, c.text)}>
+                  {event.category ?? "Shared"} Event
+                </span>
+                {event.meetingMode && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                    {event.meetingMode === "Video Call" ? <VideoCamera className="size-3 text-emerald-500" /> : <Phone className="size-3 text-blue-500" />}
+                    {event.meetingMode}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 pr-6">
+                {prio && (
+                  <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold", prio.bg, prio.color)}>
+                    <prio.icon className="size-3" />
+                    {prio.label} Priority
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <DialogTitle className="text-xl font-extrabold text-zinc-900 dark:text-white">
+                {event.title}
+              </DialogTitle>
+              {event.companyName && (
+                <p className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 flex items-center gap-1">
+                  <Buildings className="size-3.5" />
+                  <span>{event.companyName}</span>
+                </p>
+              )}
+            </div>
+          </DialogHeader>
+
+          {/* Dynamic CRM Info Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
+              <p className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
+                <Clock className="size-3 text-zinc-500" /> Time Schedule
+              </p>
+              <p className="font-extrabold text-xs text-zinc-900 dark:text-white">
+                {event.time} {event.endTime ? `- ${event.endTime}` : ""}
+              </p>
+            </div>
+
+            {event.dealValue ? (
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
+                <p className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
+                  <CurrencyDollar className="size-3 text-emerald-500" /> Deal Value (ACV)
+                </p>
+                <p className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400">
+                  ${event.dealValue.toLocaleString()}
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5">
+                <p className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
+                  <Users className="size-3 text-blue-500" /> Total Attendees
+                </p>
+                <p className="font-extrabold text-xs text-zinc-900 dark:text-white">
+                  {event.attendees ?? (event.assignees?.length || 2)} Confirmed
+                </p>
+              </div>
+            )}
+
+            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-0.5 col-span-2 sm:col-span-1">
+              <p className="text-[10px] font-bold text-zinc-400 flex items-center gap-1">
+                <TrendUp className="size-3 text-purple-500" /> Pipeline Stage
+              </p>
+              <p className="font-extrabold text-xs text-zinc-900 dark:text-white">
+                {event.dealStage || "Open Deal"}
+              </p>
+            </div>
+          </div>
+
+          {/* Client & Assigned Staff Roster */}
+          <div className="space-y-2.5 text-xs">
+            <h4 className="font-extrabold text-zinc-900 dark:text-white flex items-center justify-between">
+              <span>Meeting Participants & RSVPs</span>
+              <span className="text-[10px] text-zinc-400 font-semibold">Verified CRM Contacts</span>
+            </h4>
+
+            <div className="space-y-2">
+              {event.clientName && (
+                <div className="p-3 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/70 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-8 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                      <User className="size-4" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-zinc-900 dark:text-white">{event.clientName}</p>
+                      <p className="text-[10px] text-zinc-400 font-semibold">Client Representative</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                    Accepted
+                  </span>
+                </div>
+              )}
+
+              {event.agent && (
+                <div className="p-3 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/70 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar className="size-8 border border-zinc-200 dark:border-zinc-700">
+                      <AvatarImage src="https://i.pravatar.cc/200?img=45" />
+                      <AvatarFallback>AP</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-extrabold text-zinc-900 dark:text-white">{event.agent}</p>
+                      <p className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Lead Sales Representative</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                    Organizer
+                  </span>
+                </div>
+              )}
+
+              {event.supportAgent && (
+                <div className="p-3 rounded-xl bg-zinc-50/80 dark:bg-zinc-900/70 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar className="size-8 border border-zinc-200 dark:border-zinc-700">
+                      <AvatarImage src="https://i.pravatar.cc/200?img=11" />
+                      <AvatarFallback>AV</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-extrabold text-zinc-900 dark:text-white">{event.supportAgent}</p>
+                      <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">Support Coordinator</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                    Accepted
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Deal Briefing & Meeting Notes */}
+          {(event.notes || event.dealNotes) && (
+            <div className="space-y-1.5 p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs">
+              <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Meeting Agenda &amp; Notes</p>
+              <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium">
+                {event.notes || event.dealNotes}
+              </p>
+            </div>
+          )}
+
+          {/* Attachments Section */}
+          {event.attachments && event.attachments.length > 0 && (
+            <div className="space-y-2 text-xs">
+              <p className="font-extrabold text-zinc-900 dark:text-white flex items-center justify-between">
+                <span>Attached Proposals &amp; Docs ({event.attachments.length})</span>
+              </p>
+              <div className="space-y-1.5">
+                {event.attachments.map((att, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <File className="size-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span className="font-bold text-zinc-900 dark:text-white truncate">{att.name}</span>
+                      <span className="text-[10px] text-zinc-400">({att.size})</span>
+                    </div>
+                    <button className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                      Download
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Footer Quick Action Buttons */}
+          <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800 gap-2 flex-wrap">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowConfirmDelete(true)}
+              className="text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl cursor-pointer"
+            >
+              <Trash className="size-3.5 mr-1" />
+              Delete Event
+            </Button>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSendReminder}
+                className="text-xs font-bold border-zinc-200 dark:border-zinc-800 rounded-xl cursor-pointer"
+              >
+                <Envelope className="size-3.5 mr-1 text-zinc-500" />
+                Send Reminder
+              </Button>
+
+              {event.meetingUrl ? (
+                <Button
+                  size="sm"
+                  onClick={() => window.open(event.meetingUrl, "_blank")}
+                  className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 cursor-pointer flex items-center gap-1.5 shadow-md"
+                >
+                  <VideoCamera className="size-4" />
+                  <span>Join Call</span>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={onClose}
+                  className="text-xs font-bold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 rounded-xl px-4 cursor-pointer"
+                >
+                  Close
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── POSTMAN-STYLE DELETE CONFIRMATION MODAL ── */}
+      <Dialog open={showConfirmDelete} onOpenChange={setShowConfirmDelete}>
+        <DialogContent className="sm:max-w-md border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-2xl bg-white dark:bg-zinc-950 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="size-10 rounded-full bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center font-bold shrink-0">
+              <WarningDiamond className="size-5" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-base font-extrabold text-zinc-900 dark:text-white">
+                Delete Event Confirmation
+              </DialogTitle>
+              <DialogDescription className="text-xs text-zinc-500 dark:text-zinc-400">
+                Are you sure you want to delete <span className="font-extrabold text-zinc-900 dark:text-zinc-100">"{event.title}"</span>? This action cannot be undone.
+              </DialogDescription>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs space-y-1">
+            <p className="font-extrabold text-zinc-900 dark:text-white">{event.title}</p>
+            <p className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold">
+              {event.time} {event.endTime ? `- ${event.endTime}` : ""} • {event.companyName || event.clientName || "CRM Meeting"}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConfirmDelete(false)}
+              className="rounded-xl text-xs font-bold border-zinc-200 dark:border-zinc-800 cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                onDelete(event.id);
+                setShowConfirmDelete(false);
+                onClose();
+              }}
+              className="rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white cursor-pointer shadow-md"
+            >
+              Yes, Delete Event
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () => void; onNavigate?: (page: string) => void; pageHistory?: string[] } = {}) {
   const today = new Date();
   const [year, setYear] = React.useState(today.getFullYear());
@@ -779,6 +1095,7 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
   const [selectedDay, setSelectedDay] = React.useState<number | null>(today.getDate());
   const [showModal, setShowModal] = React.useState(false);
   const [detailModalDay, setDetailModalDay] = React.useState<number | null>(null);
+  const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null);
   const [eventMap, setEventMap] = React.useState<DayEvents>({ ...EVENTS_BY_DAY });
 
   function handleAddEvent(day: number, event: CalendarEvent) {
@@ -786,6 +1103,17 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
       ...prev,
       [day]: [...(prev[day] || []), event],
     }));
+  }
+
+  function handleDeleteEvent(eventId: string) {
+    setEventMap(prev => {
+      const updated: DayEvents = {};
+      Object.keys(prev).forEach(dayStr => {
+        const dayNum = Number(dayStr);
+        updated[dayNum] = (prev[dayNum] || []).filter(e => e.id !== eventId);
+      });
+      return updated;
+    });
   }
 
   const selectedDate = React.useMemo(() => new Date(year, month, selectedDay ?? 1), [year, month, selectedDay]);
@@ -797,7 +1125,7 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
   }, [activeFilter]);
 
   const daysInMonth = getDaysInMonth(year, month);
-  const firstDayIdx = getFirstDayOfMonth(year, month);   // 0 = Mon
+  const firstDayIdx = getFirstDayOfMonth(year, month);
   const totalCells = Math.ceil((firstDayIdx + daysInMonth) / 7) * 7;
 
   function updateSelectedDate(date: Date) {
@@ -847,10 +1175,8 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
 
   return (
     <div className="flex flex-col gap-5 py-6">
-
       {/* ── Toolbar ─────────────────────────────────────── */}
       <div className="flex items-start justify-between">
-        {/* Left: title + filters */}
         <div className="flex flex-col gap-2">
           {pageHistory && pageHistory.length > 1 && (
             <button
@@ -868,7 +1194,7 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
                 key={f}
                 onClick={() => setActiveFilter(f)}
                 className={cn(
-                  "px-3 py-1 rounded-full text-[12px] font-medium transition-colors",
+                  "px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer",
                   activeFilter === f
                     ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
                     : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -880,25 +1206,21 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
           </div>
         </div>
 
-        {/* Right: search + nav + today + view toggle + add */}
         <div className="flex items-center gap-2">
-          {/* Period navigation */}
           <div className="flex items-center gap-0.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-0.5">
-            <button onClick={prevPeriod} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
+            <button onClick={prevPeriod} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors cursor-pointer">
               <CaretLeft className="w-4 h-4" />
             </button>
             <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 px-2">{headerLabel}</span>
-            <button onClick={nextPeriod} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors">
+            <button onClick={nextPeriod} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors cursor-pointer">
               <CaretRight className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Today button */}
-          <button onClick={goToday} className="px-3 py-1.5 text-xs font-medium border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+          <button onClick={goToday} className="px-3 py-1.5 text-xs font-medium border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
             Today
           </button>
 
-          {/* View toggle — pill tabs */}
           <div className="relative flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
             {(["Month", "Week", "Day"] as const).map((mode) => {
               const isActive = viewMode === mode.toLowerCase();
@@ -907,7 +1229,7 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
                   key={mode}
                   onClick={() => setViewMode(mode.toLowerCase() as "month" | "week" | "day")}
                   className={cn(
-                    "relative z-10 px-3 py-1 rounded-md text-xs font-semibold transition-all duration-200",
+                    "relative z-10 px-3 py-1 rounded-md text-xs font-semibold transition-all duration-200 cursor-pointer",
                     isActive
                       ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm"
                       : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
@@ -919,12 +1241,11 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
             })}
           </div>
 
-          {/* Add event */}
           <motion.button
             onClick={() => setShowModal(true)}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-gray-700 text-white dark:text-black dark:bg-white dark:hover:bg-gray-200 rounded-md text-xs font-semibold shadow-md shadow-gray-200 dark:shadow-none transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 hover:bg-gray-700 text-white dark:text-black dark:bg-white dark:hover:bg-gray-200 rounded-md text-xs font-semibold shadow-md cursor-pointer transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add event
@@ -936,7 +1257,6 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
       <div className="rounded-xl border border-zinc-100 dark:border-zinc-800/60 overflow-hidden">
         {viewMode === "month" && (
           <>
-            {/* Day-of-week header */}
             <div className="grid grid-cols-7 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/80 dark:bg-zinc-900">
               {WEEK_DAYS.map(day => (
                 <div key={day} className="py-3 text-center text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider border-r border-zinc-100 dark:border-zinc-800/60 last:border-r-0">
@@ -945,7 +1265,6 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
               ))}
             </div>
 
-            {/* Month cells */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${year}-${month}`}
@@ -994,10 +1313,25 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
                       {isCurrentMonth && (
                         <div className="flex flex-col gap-0.5">
                           {events.slice(0, MAX_VISIBLE).map(ev => (
-                            <EventPill key={ev.id} event={ev} isPast={isPast} />
+                            <div
+                              key={ev.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvent(ev);
+                              }}
+                            >
+                              <EventPill event={ev} isPast={isPast} />
+                            </div>
                           ))}
                           {extra > 0 && (
-                            <div className="text-[10px] font-semibold text-zinc-400 pl-1.5 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300">
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedDay(dayNum);
+                                setDetailModalDay(dayNum);
+                              }}
+                              className="text-[10px] font-semibold text-zinc-400 pl-1.5 cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300"
+                            >
                               {extra} more...
                             </div>
                           )}
@@ -1044,7 +1378,17 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
                     <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">{format(date, "MMM d")}</div>
                     <div className="space-y-1">
                       {events.length > 0 ? (
-                        events.map(ev => <EventPill key={ev.id} event={ev} isPast={date.toDateString() !== today.toDateString() && date < today} />)
+                        events.map(ev => (
+                          <div
+                            key={ev.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedEvent(ev);
+                            }}
+                          >
+                            <EventPill event={ev} isPast={date.toDateString() !== today.toDateString() && date < today} />
+                          </div>
+                        ))
                       ) : (
                         <div className="text-xs text-zinc-400">No events</div>
                       )}
@@ -1068,7 +1412,11 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
                   const c = COLOR_MAP[ev.color] ?? COLOR_MAP.blue;
                   const prio = ev.priority ? PRIORITY_CONFIG[ev.priority] : null;
                   return (
-                    <div key={ev.id} className={cn("rounded-3xl border p-4", c.bg, c.text, "border-transparent")}>
+                    <div
+                      key={ev.id}
+                      onClick={() => setSelectedEvent(ev)}
+                      className={cn("rounded-3xl border p-4 cursor-pointer hover:opacity-90 transition-opacity", c.bg, c.text, "border-transparent")}
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <div className="text-sm font-semibold">{ev.title}</div>
                         <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">{ev.time}</div>
@@ -1092,7 +1440,7 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
         )}
       </div>
 
-      {/* ── Selected Day Panel (mini bottom bar) ─────────────── */}
+      {/* ── Mini Bottom Bar ── */}
       <AnimatePresence>
         {selectedDay != null && selectedEvents.length > 0 && (
           <motion.div
@@ -1111,7 +1459,11 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
               const c = COLOR_MAP[ev.color] ?? COLOR_MAP.blue;
               const prio = ev.priority ? PRIORITY_CONFIG[ev.priority] : null;
               return (
-                <div key={ev.id} className={cn("flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-medium shrink-0", c.bg, c.text)}>
+                <div
+                  key={ev.id}
+                  onClick={() => setSelectedEvent(ev)}
+                  className={cn("flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 cursor-pointer hover:opacity-90 transition-all", c.bg, c.text)}
+                >
                   <span className={cn("w-2 h-2 rounded-full", c.dot)} />
                   <div className="flex flex-col">
                     <span>{ev.title}</span>
@@ -1142,7 +1494,7 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
         )}
       </AnimatePresence>
 
-      {/* Modal */}
+      {/* Modals */}
       <AnimatePresence>
         {showModal && (
           <AddEventModal
@@ -1153,13 +1505,26 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
             defaultYear={year}
           />
         )}
-        {detailModalDay != null && (
+        {selectedEvent && (
+          <SingleEventDetailModal
+            event={selectedEvent}
+            onClose={() => setSelectedEvent(null)}
+            onDelete={handleDeleteEvent}
+          />
+        )}
+        {detailModalDay != null && !selectedEvent && (
           <DayDetailModal
             day={detailModalDay}
             month={month}
             year={year}
             events={(eventMap[detailModalDay] || []).filter(eventMatchesFilter)}
             onClose={() => setDetailModalDay(null)}
+            onSelectEvent={(ev) => setSelectedEvent(ev)}
+            onOpenAddEvent={() => {
+              setSelectedDay(detailModalDay);
+              setDetailModalDay(null);
+              setShowModal(true);
+            }}
           />
         )}
       </AnimatePresence>
@@ -1167,17 +1532,16 @@ export function CalendarPage({ onBack, onNavigate, pageHistory }: { onBack?: () 
   );
 }
 
-function DayDetailModal({ day, month, year, events, onClose }: {
+function DayDetailModal({ day, month, year, events, onClose, onSelectEvent, onOpenAddEvent }: {
   day: number;
   month: number;
   year: number;
   events: CalendarEvent[];
   onClose: () => void;
+  onSelectEvent: (event: CalendarEvent) => void;
+  onOpenAddEvent: () => void;
 }) {
-  const [showAllEvents, setShowAllEvents] = React.useState(false);
   const selectedDate = new Date(year, month, day);
-  const primaryEvent = events[0];
-  const extraEvents = events.slice(1);
 
   const renderEventCard = (ev: CalendarEvent) => {
     const c = COLOR_MAP[ev.color] ?? COLOR_MAP.blue;
@@ -1189,80 +1553,55 @@ function DayDetailModal({ day, month, year, events, onClose }: {
         : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
 
     return (
-      <div key={ev.id} className={cn("rounded-3xl border p-5 shadow-sm", c.bg, c.text, "border-transparent")}>
+      <div
+        key={ev.id}
+        onClick={() => {
+          onClose();
+          onSelectEvent(ev);
+        }}
+        className={cn("rounded-3xl border p-5 shadow-sm cursor-pointer hover:shadow-md transition-all", c.bg, c.text, "border-transparent")}
+      >
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 truncate">{ev.title}</p>
-                <div className="mt-2 grid gap-2 text-sm text-zinc-600 dark:text-zinc-300 sm:grid-cols-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">{ev.title}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                     <Clock className="w-3.5 h-3.5" /> {ev.time}{ev.endTime ? ` - ${ev.endTime}` : ""}
                   </span>
                   {ev.location && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                       <MapPin className="w-3.5 h-3.5" /> {ev.location}
                     </span>
                   )}
-                  {ev.patientName && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                      Patient: {ev.patientName}
+                  {ev.companyName && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                      <Buildings className="w-3.5 h-3.5" /> {ev.companyName}
                     </span>
                   )}
-                  {ev.nurse && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                      Nurse: {ev.nurse}
-                    </span>
-                  )}
-                  {ev.attendees != null && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                      <Users className="w-3.5 h-3.5" /> {ev.attendees} attendee{ev.attendees === 1 ? "" : "s"}
+                  {ev.dealValue && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                      ${ev.dealValue.toLocaleString()} ACV
                     </span>
                   )}
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]", badgeColor)}>{ev.category ?? "Shared"}</span>
+                <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider", badgeColor)}>{ev.category ?? "Shared"}</span>
                 {prio && (
-                  <span className={cn("inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold", prio.bg, prio.color)}>
+                  <span className={cn("inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-extrabold", prio.bg, prio.color)}>
                     <prio.icon className="w-3 h-3" /> {prio.label}
                   </span>
                 )}
               </div>
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {ev.report && (
-                <div className="rounded-3xl bg-white/80 dark:bg-zinc-950/80 p-4 border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">Report</p>
-                  <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">{ev.report}</p>
-                </div>
-              )}
-              {ev.notes && (
-                <div className="rounded-3xl bg-white/80 dark:bg-zinc-950/80 p-4 border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">Notes</p>
-                  <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">{ev.notes}</p>
-                </div>
-              )}
-              {ev.assignees && ev.assignees.length > 0 && (
-                <div className="rounded-3xl bg-white/80 dark:bg-zinc-950/80 p-4 border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">Assigned staff</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {ev.assignees.map((s, i) => (
-                      <div key={i} className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-3 py-2 text-xs text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-                        <Avatar className="size-6 border-2 border-white dark:border-zinc-950 ring-1 ring-zinc-200/50 dark:ring-zinc-800/50">
-                          <AvatarImage src={s.avatar} alt={s.name} />
-                          <AvatarFallback className="text-[8px]">{s.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate">{s.name}</p>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{s.role}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            {(ev.dealNotes || ev.notes) && (
+              <div className="mt-3 rounded-2xl bg-white/80 dark:bg-zinc-950/80 p-3 border border-zinc-100 dark:border-zinc-800 text-xs">
+                <p className="font-bold text-zinc-500 dark:text-zinc-400">Meeting Agenda &amp; Notes:</p>
+                <p className="mt-1 text-zinc-700 dark:text-zinc-200 font-medium">{ev.dealNotes || ev.notes}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1270,69 +1609,63 @@ function DayDetailModal({ day, month, year, events, onClose }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-      />
-      <motion.div
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        className="relative z-10 w-full max-w-2xl rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 shadow-2xl overflow-hidden"
-      >
-        <div className="flex items-start justify-between gap-4 p-6 border-b border-zinc-100 dark:border-zinc-800">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-400">Day details</p>
-            <h2 className="mt-2 text-xl font-bold text-zinc-900 dark:text-zinc-100">{format(selectedDate, "EEEE, MMMM d, yyyy")}</h2>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{events.length} event{events.length === 1 ? "" : "s"}</p>
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="sm:max-w-2xl border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-2xl bg-white dark:bg-zinc-950 space-y-4 max-h-[88vh] overflow-y-auto sleek-scroll">
+        <DialogHeader className="text-left space-y-1 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Day Schedule</p>
+              <DialogTitle className="mt-0.5 text-xl font-extrabold text-zinc-900 dark:text-zinc-100">
+                {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </DialogTitle>
+              <DialogDescription className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                {events.length} event{events.length === 1 ? "" : "s"} scheduled
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2 pr-6">
+              <Button
+                size="sm"
+                onClick={() => {
+                  onClose();
+                  onOpenAddEvent();
+                }}
+                className="h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 flex items-center gap-1 cursor-pointer shrink-0"
+              >
+                <Plus className="size-3.5" />
+                <span>Add Event</span>
+              </Button>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-full p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-300 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="p-6 space-y-4">
+        </DialogHeader>
+
+        <div className="space-y-4 pt-1">
           {events.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800 p-10 text-center text-sm text-zinc-500 dark:text-zinc-400">
-              No events scheduled for this day.
+            <div className="rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-800 p-10 text-center text-sm text-zinc-500 dark:text-zinc-400 space-y-3">
+              <p className="font-semibold">No events scheduled for this day.</p>
+              <Button
+                size="sm"
+                onClick={() => {
+                  onClose();
+                  onOpenAddEvent();
+                }}
+                className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
+              >
+                + Schedule New Event
+              </Button>
             </div>
           ) : (
-            <>
+            <div className="space-y-4">
               {events.length > 1 && (
-                <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{events.length} events scheduled</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Tap the button to expand the full event list.</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowAllEvents(prev => !prev)}
-                      className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900"
-                    >
-                      {showAllEvents ? `Hide ${events.length} events` : `View all ${events.length} events`}
-                    </button>
-                  </div>
+                <div className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-extrabold text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
+                  <span>Showing all {events.length} events for this date</span>
+                  <span className="text-[10px] text-zinc-400 font-semibold">Click any event for full details</span>
                 </div>
               )}
-
-              {primaryEvent && renderEventCard(primaryEvent)}
-
-              {showAllEvents && extraEvents.length > 0 && (
-                <div className="space-y-4">
-                  {extraEvents.map(ev => renderEventCard(ev))}
-                </div>
-              )}
-            </>
+              {events.map((ev) => renderEventCard(ev))}
+            </div>
           )}
         </div>
-      </motion.div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
